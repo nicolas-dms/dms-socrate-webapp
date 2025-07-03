@@ -19,11 +19,52 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background: #f8f6f1;
+  color: #222;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+
+.sidebar {
+  background: #e6e2d8 !important;
+  color: #222 !important;
+  border-right: 1px solid #cfc6b2 !important;
+}
+
+.sidebar .nav-link {
+  color: #222 !important;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
+  background: #d6cbb3 !important;
+  color: #222 !important;
+}
+
+.sidebar .btn {
+  background: #d6cbb3;
+  color: #222;
+  border: none;
+}
+
+.sidebar .btn:hover {
+  background: #cfc6b2;
+}
+
+.sidebar svg {
+  stroke: #222 !important;
+}
+
+main {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(220, 210, 180, 0.08);
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #3d2c1e;
 }
 
 * {
