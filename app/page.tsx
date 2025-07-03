@@ -1,36 +1,14 @@
 "use client";
 import '../i18n/i18n';
 import Image from "next/image";
-import Button from "react-bootstrap/Button";
 import { useTranslation } from "react-i18next";
 import styles from "./page.module.css";
 
 export default function Home() {
   const { t, i18n } = useTranslation();
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
-
   return (
     <div className="container mt-5">
-      <div className="d-flex justify-content-end mb-3">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={() => changeLanguage("en")}
-          className="me-2"
-        >
-          EN
-        </Button>
-        <Button
-          variant="outline-secondary"
-          size="sm"
-          onClick={() => changeLanguage("fr")}
-        >
-          FR
-        </Button>
-      </div>
       <div className="text-center">
         <h1 className="mb-3">{t("welcome")}</h1>
         <p className="lead">{t("description")}</p>

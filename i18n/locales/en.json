@@ -4,5 +4,8 @@
   "home": "Home",
   "profile": "User Profile",
   "settings": "App Settings",
-  "about": "About"
+  "about": "About",
+  "generate": "Generate Exercises",
+  "sessions": "My Sessions",
+  "buycredits": "Buy Credits"
 }

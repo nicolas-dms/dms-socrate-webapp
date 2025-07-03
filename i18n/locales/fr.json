@@ -4,5 +4,8 @@
   "home": "Accueil",
   "profile": "Profil utilisateur",
   "settings": "Paramètres de l'application",
-  "about": "À propos"
+  "about": "À propos",
+  "generate": "Générer des exercices",
+  "sessions": "Mes sessions",
+  "buycredits": "Acheter des crédits"
 }
