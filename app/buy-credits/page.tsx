@@ -1,65 +1,91 @@
 "use client";
 import { useCredits } from "../../context/CreditsContext";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import ProtectedPage from "../../components/ProtectedPage";
 
-const PACKAGES = [
-  { credits: 50, price: 5 },
-  { credits: 200, price: 15 },
-  { credits: 500, price: 30 },
-];
-
-export default function BuyCreditsPage() {
-  const { credits, buyCredits } = useCredits();
+export default function BuyCreditsPage() {const { credits, packages, loading: creditsLoading, purchaseCredits } = useCredits();
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
-  const [selected, setSelected] = useState<{credits: number, price: number} | null>(null);
+  const [selected, setSelected] = useState<{id: string, credits: number, price: number} | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleBuy = (pkg: {credits: number, price: number}) => {
+  const handleBuy = (pkg: {id: string, credits: number, price: number}) => {
     setSelected(pkg);
     setShowModal(true);
     setSuccess(false);
   };
 
   const handleConfirm = async () => {
+    if (!selected) return;
+    
     setLoading(true);
-    await buyCredits(selected!.credits); // mock
-    setLoading(false);
-    setSuccess(true);
+    try {
+      // Mock payment data - in real implementation, integrate with Stripe
+      const paymentData = {
+        payment_method: 'stripe',
+        transaction_id: `mock_${Date.now()}`,
+      };
+      
+      const success = await purchaseCredits(selected.id, paymentData);
+      if (success) {
+        setSuccess(true);
+      }
+    } catch (error) {
+      console.error('Purchase failed:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Show loading state while credits are being fetched
+  if (creditsLoading && !credits) {
+    return (
+      <ProtectedPage>
+        <div className="container mt-5" style={{maxWidth: 500}}>
+          <div className="text-center">
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">{t('common.loading')}</span>
+            </div>
+          </div>
+        </div>
+      </ProtectedPage>
+    );
+  }
   return (
     <ProtectedPage>
       <div className="container mt-5" style={{maxWidth: 500}}>
-        <h2 className="mb-4">Buy Credits</h2>
-        <div className="mb-3">Current balance: <b>{credits}</b> credits</div>
+        <h2 className="mb-4">{t('credits.title')}</h2>
+        <div className="mb-3">
+          {t('credits.currentBalance')}: <b>{credits?.current_balance || 0}</b> {t('credits.credits')}
+        </div>
         <div className="d-flex flex-column gap-3">
-          {PACKAGES.map(pkg => (
-            <div key={pkg.credits} className="d-flex justify-content-between align-items-center border rounded p-3 bg-white">
+          {packages.map(pkg => (
+            <div key={pkg.id} className="d-flex justify-content-between align-items-center border rounded p-3 bg-white">
               <div>
-                <div><b>{pkg.credits} credits</b></div>
-                <div className="text-muted">{pkg.price} €</div>
+                <div><b>{pkg.credits} {t('credits.credits')}</b></div>
+                <div className="text-muted">{pkg.price} {pkg.currency || '€'}</div>
               </div>
-              <Button onClick={() => handleBuy(pkg)}>Buy</Button>
+              <Button onClick={() => handleBuy(pkg)}>{t('credits.buy')}</Button>
             </div>
           ))}
         </div>
         <Modal show={showModal} onHide={() => setShowModal(false)} centered>
           <Modal.Header closeButton>
-            <Modal.Title>Confirm Purchase</Modal.Title>
+            <Modal.Title>{t('credits.confirmPurchase')}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {success ? (
-              <div className="alert alert-success">Purchase successful! Your credits have been updated.</div>
+              <div className="alert alert-success">{t('credits.purchaseSuccessful')}</div>
             ) : (
               <>
-                <div>Package: <b>{selected?.credits}</b> credits</div>
-                <div>Price: <b>{selected?.price} €</b></div>
+                <div>{t('credits.package')}: <b>{selected?.credits}</b> {t('credits.credits')}</div>
+                <div>{t('credits.price')}: <b>{selected?.price} €</b></div>
                 <Button className="mt-3 w-100" onClick={handleConfirm} disabled={loading}>
-                  {loading ? "Processing..." : "Pay (mock Stripe)"}
+                  {loading ? t('credits.processing') : t('credits.payMockStripe')}
                 </Button>
               </>
             )}

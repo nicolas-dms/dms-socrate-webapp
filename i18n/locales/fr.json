@@ -1,11 +1,130 @@
 {
-  "welcome": "Bienvenue sur Socrate IQ !",
+  "welcome": "Bienvenue sur ExoMinutes !",
   "description": "Ceci est la version française de l'application éducative.",
   "home": "Accueil",
+  "login": "Connexion",
   "profile": "Profil utilisateur",
-  "settings": "Paramètres de l'application",
-  "about": "À propos",
-  "generate": "Générer des exercices",
-  "sessions": "Mes sessions",
-  "buycredits": "Acheter des crédits"
+  "settings": "Paramètres de l'application",  "about": "À propos",
+  "contact": "Contact",
+  "generateNav": "Générer des exercices",
+  "sessionsNav": "Mes sessions", 
+  "buycredits": "Acheter des crédits",
+  "logout": "Se déconnecter",  "auth": {
+    "email": "Email",
+    "sending": "Envoi en cours...",
+    "sendMagicLink": "Envoyer le lien magique",
+    "enterMagicCode": "Entrer le code magique",
+    "code": "Code",
+    "verifying": "Vérification...",
+    "verifyCodeLogin": "Vérifier le code et se connecter",
+    "welcomeNewUser": "Bienvenue ! Votre compte a été créé avec succès.",
+    "welcomeBackUser": "Bon retour !",
+    "welcomeBack": "Bon retour sur ExoMinutes",
+    "invalidEmailFormat": "Veuillez saisir une adresse email valide (ex: utilisateur@exemple.com)",
+    "validEmail": "Format d'email valide",
+    "emailHelperText": "Saisissez une adresse email valide pour recevoir votre code de vérification",
+    "emailRequired": "L'adresse email est obligatoire",
+    "invalidCodeFormat": "Le code de vérification doit contenir exactement 6 chiffres",
+    "codeProgress": "Saisissez {{current}} sur {{total}} chiffres"
+  },
+  
+  "generate": {
+    "title": "Générer des exercices",
+    "math": "Mathématiques",
+    "french": "Français",
+    "generateMathExercises": "Générer des exercices de mathématiques",
+    "generateFrenchExercises": "Générer des exercices de français",
+    "level": "Niveau",
+    "exerciseTypes": "Types d'exercices",
+    "numberOfQuestions": "Nombre de questions",
+    "generating": "Génération...",
+    "generatePDF": "Générer le PDF",
+    "pdfReady": "PDF prêt !",
+    "downloadHere": "Télécharger ici",
+    "mathTypes": {
+      "add": "Additions",
+      "sub": "Soustractions",
+      "mul": "Multiplications",
+      "div": "Divisions",
+      "word": "Problèmes"
+    },    "frenchTypes": {
+      "reading": "Lecture",
+      "grammar": "Grammaire",
+      "conjugation": "Conjugaison",
+      "vocab": "Vocabulaire",
+      "dictation": "Dictée"
+    },
+    "validation": {
+      "selectAtLeastOneType": "Veuillez sélectionner au moins un type d'exercice",
+      "insufficientCredits": "Crédits insuffisants pour générer des exercices",
+      "userRequired": "Authentification utilisateur requise",
+      "generationFailed": "Échec de la génération des exercices. Veuillez réessayer.",
+      "downloadFailed": "Échec du téléchargement du PDF",
+      "selectTypes": "Veuillez sélectionner les types d'exercices",
+      "needMoreCredits": "Crédits insuffisants"
+    },
+    "creditsCost": "Coût : {{cost}} crédit par génération",
+    "sessionCreated": "Session d'exercices créée !"
+  },
+    "sessions": {
+    "title": "Mes sessions",
+    "date": "Date",
+    "subject": "Matière",
+    "level": "Niveau",
+    "status": "Statut",
+    "download": "Télécharger",
+    "downloadPDF": "Télécharger PDF",
+    "downloadError": "Échec du téléchargement du PDF",
+    "noSessions": "Aucune session trouvée",
+    "notAvailable": "Non disponible",
+    "statuses": {
+      "pending": "En attente",
+      "completed": "Terminé",
+      "failed": "Échoué"
+    }
+  },
+  
+  "credits": {
+    "title": "Acheter des crédits",
+    "currentBalance": "Solde actuel",
+    "credits": "crédits",
+    "buy": "Acheter",
+    "confirmPurchase": "Confirmer l'achat",
+    "package": "Package",
+    "price": "Prix",
+    "processing": "Traitement...",
+    "payMockStripe": "Payer (simulation Stripe)",
+    "purchaseSuccessful": "Achat réussi ! Vos crédits ont été mis à jour."
+  },
+  
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
+  },  "pages": {
+    "profile": "Page de profil utilisateur (contenu à ajouter)",
+    "settings": "Page des paramètres de l'application (contenu à ajouter)",
+    "about": "Page à propos (contenu à ajouter)",
+    "contact": "Page de contact (contenu à ajouter)",
+    "userInfo": "Informations utilisateur",
+    "newUser": "Nouvel utilisateur",
+    "username": "Nom d'utilisateur",
+    "userId": "ID utilisateur",
+    "profilePicture": "Photo de profil",
+    "noProfilePicture": "Aucune photo de profil",
+    "debugInfo": "Informations de débogage"
+  },
+  
+  "homepage": {
+    "getStarted": "Commencez par éditer",
+    "saveChanges": "Sauvegardez et voyez vos changements instantanément.",
+    "deployNow": "Déployer maintenant",
+    "readDocs": "Lire notre documentation",
+    "learn": "Apprendre",
+    "examples": "Exemples",
+    "goToNext": "Aller sur nextjs.org →"
+  }
 }

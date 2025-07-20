@@ -1,11 +1,131 @@
 {
-  "welcome": "Welcome to Socrate IQ!",
+  "welcome": "Welcome to ExoMinutes!",
   "description": "This is the English version of the educational webapp.",
   "home": "Home",
+  "login": "Login", 
   "profile": "User Profile",
-  "settings": "App Settings",
-  "about": "About",
-  "generate": "Generate Exercises",
-  "sessions": "My Sessions",
-  "buycredits": "Buy Credits"
+  "settings": "App Settings",  "about": "About",
+  "contact": "Contact",
+  "generateNav": "Generate Exercises",
+  "sessionsNav": "My Sessions",
+  "buycredits": "Buy Credits",
+  "logout": "Logout",  "auth": {
+    "email": "Email",
+    "sending": "Sending...",
+    "sendMagicLink": "Send Magic Link",
+    "enterMagicCode": "Enter Magic Code",
+    "code": "Code",
+    "verifying": "Verifying...",
+    "verifyCodeLogin": "Verify Code & Login",
+    "welcomeNewUser": "Welcome! Your account has been created successfully.",
+    "welcomeBackUser": "Welcome back!",
+    "welcomeBack": "Welcome back to ExoMinutes",
+    "invalidEmailFormat": "Please enter a valid email address (e.g., user@example.com)",
+    "validEmail": "Valid email format",
+    "emailHelperText": "Enter a valid email address to receive your verification code",
+    "emailRequired": "Email address is required",
+    "invalidCodeFormat": "Verification code must be exactly 6 digits",
+    "codeProgress": "Enter {{current}} of {{total}} digits"
+  },
+  
+  "generate": {
+    "title": "Generate Exercises",
+    "math": "Math",
+    "french": "French",
+    "generateMathExercises": "Generate Math Exercises",
+    "generateFrenchExercises": "Generate French Exercises",
+    "level": "Level",
+    "exerciseTypes": "Exercise Types",
+    "numberOfQuestions": "Number of Questions",
+    "generating": "Generating...",
+    "generatePDF": "Generate PDF",
+    "pdfReady": "PDF ready!",
+    "downloadHere": "Download here",
+    "mathTypes": {
+      "add": "Additions",
+      "sub": "Subtractions",
+      "mul": "Multiplications",
+      "div": "Divisions",
+      "word": "Word Problems"
+    },    "frenchTypes": {
+      "reading": "Reading",
+      "grammar": "Grammar",
+      "conjugation": "Conjugation",
+      "vocab": "Vocabulary",
+      "dictation": "Dictation"
+    },
+    "validation": {
+      "selectAtLeastOneType": "Please select at least one exercise type",
+      "insufficientCredits": "Insufficient credits to generate exercises",
+      "userRequired": "User authentication required",
+      "generationFailed": "Failed to generate exercises. Please try again.",
+      "downloadFailed": "Failed to download PDF",
+      "selectTypes": "Please select exercise types",
+      "needMoreCredits": "Not enough credits"
+    },
+    "creditsCost": "Cost: {{cost}} credit per generation",
+    "sessionCreated": "Exercise session created!"
+  },
+  "sessions": {
+    "title": "My Sessions",
+    "date": "Date",
+    "subject": "Subject",
+    "level": "Level",
+    "status": "Status",
+    "download": "Download",
+    "downloadPDF": "Download PDF",
+    "downloadError": "Failed to download PDF",
+    "noSessions": "No sessions found",
+    "notAvailable": "Not available",
+    "statuses": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed"
+    }
+  },
+  
+  "credits": {
+    "title": "Buy Credits",
+    "currentBalance": "Current balance",
+    "credits": "credits",
+    "buy": "Buy",
+    "confirmPurchase": "Confirm Purchase",
+    "package": "Package",
+    "price": "Price",
+    "processing": "Processing...",
+    "payMockStripe": "Pay (mock Stripe)",
+    "purchaseSuccessful": "Purchase successful! Your credits have been updated."
+  },
+  
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "pages": {
+    "profile": "User Profile page (content to be added)",
+    "settings": "App Settings page (content to be added)",
+    "about": "About page (content to be added)",
+    "contact": "Contact page (content to be added)",
+    "userInfo": "User Information",
+    "newUser": "New User",
+    "username": "Username",
+    "userId": "User ID",
+    "profilePicture": "Profile Picture",
+    "noProfilePicture": "No profile picture",
+    "debugInfo": "Debug Information"
+  },
+  
+  "homepage": {
+    "getStarted": "Get started by editing",
+    "saveChanges": "Save and see your changes instantly.",
+    "deployNow": "Deploy now",
+    "readDocs": "Read our docs",
+    "learn": "Learn",
+    "examples": "Examples",
+    "goToNext": "Go to nextjs.org →"
+  }
 }
