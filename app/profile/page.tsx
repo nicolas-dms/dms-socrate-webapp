@@ -19,7 +19,11 @@ export default function Profile() {
             <Card.Header>
               <h5 className="mb-0">
                 {t('pages.userInfo')} 
-                {isNewUser && <Badge bg="success" className="ms-2">{t('pages.newUser')}</Badge>}
+                {isNewUser && (
+                  <Badge className="ms-2 badge-light-custom">
+                    {t('pages.newUser')}
+                  </Badge>
+                )}
               </h5>
             </Card.Header>
             <Card.Body>

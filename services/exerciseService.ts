@@ -1,12 +1,16 @@
 import api from './api';
 import { debugLog } from '../utils/debug';
 import { UserCredits, educationUserService } from './userService';
+import { ExerciceGenerationRequest, ExerciceDomain, ExerciceTime, ExerciceType, ExerciceTypeParam, buildExerciceGenerationRequest } from '../types/exerciceTypes';
 
 export interface ExerciseRequest {
-  subject: 'math' | 'french';
-  level: string;
-  exerciseTypes: string[];
-  numberOfQuestions: number;
+  theme: string;
+  class_level: string;
+  exercice_domain: ExerciceDomain;
+  exercice_time: ExerciceTime;
+  exercice_types: ExerciceType[];
+  exercice_type_params: ExerciceTypeParam;
+  specific_requirements?: string;
 }
 
 export interface ExerciseSession {
@@ -14,6 +18,8 @@ export interface ExerciseSession {
   subject: string;
   level: string;
   exercise_types: string[];
+  duration?: string; // Session duration (20 min, 30 min, 40 min)
+  theme?: string; // Reading theme for French exercises
   created_at: string;
   pdf_url?: string;
   status: 'pending' | 'completed' | 'failed';
@@ -29,7 +35,7 @@ export interface CreditPackage {
 export const exerciseService = {  // Generate exercises
   // Note: Exercise endpoints are not yet documented in the API, using mock implementation
   // TODO: Integrate credit deduction when exercise generation is successful
-  generateExercises: async (request: ExerciseRequest): Promise<ExerciseSession> => {
+  generateExercises: async (request: ExerciceGenerationRequest): Promise<ExerciseSession> => {
     debugLog.exercises('Exercise generation request', request);
     try {
       // Try the expected endpoint (may not be implemented yet)
@@ -46,12 +52,12 @@ export const exerciseService = {  // Generate exercises
       // Mock response for development
       const mockSession: ExerciseSession = {
         id: `session_${Date.now()}`,
-        subject: request.subject,
-        level: request.level,
-        exercise_types: request.exerciseTypes,
+        subject: request.exercice_domain,
+        level: request.class_level,
+        exercise_types: request.exercice_types,
         created_at: new Date().toISOString(),
         status: 'completed',
-        pdf_url: '/mock-exercise.pdf'
+        pdf_url: '/exercice_mock.pdf'
       };
       debugLog.exercises('Mock exercise session', mockSession);
       return mockSession;
@@ -68,28 +74,71 @@ export const exerciseService = {  // Generate exercises
       debugLog.exercises('User sessions response', response.data);
       return response.data;
     } catch (error) {
-      debugLog.warn('Sessions API not available, using mock data', error);
-      // Mock sessions for development
-      const mockSessions: ExerciseSession[] = [
-        {
-          id: 'session_1',
-          subject: 'math',
-          level: 'CE1',
-          exercise_types: ['add', 'sub'],
-          created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-          status: 'completed',
-          pdf_url: '/mock-math-session.pdf'
-        },
-        {
-          id: 'session_2',
-          subject: 'french',
-          level: 'CE2',
-          exercise_types: ['reading', 'grammar'],
-          created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          status: 'completed',
-          pdf_url: '/mock-french-session.pdf'
-        }
+      debugLog.warn('Sessions API not available, using mock data', error);      
+      // Mock sessions for development - Generate 40+ random sessions
+      const themes = [
+        'Les animaux de la forêt', 'Une journée à la plage', 'Les métiers', 'Les saisons',
+        'Les légumes du potager', 'L\'espace et les planètes', 'Les contes de fées',
+        'Les sports d\'hiver', 'La vie en ville', 'Les moyens de transport',
+        'Les couleurs de l\'automne', 'Les fruits exotiques', 'Les instruments de musique',
+        'La cuisine française', 'Les fêtes traditionnelles', 'Les océans et les mers',
+        'Les dinosaures', 'La maison écologique', 'Les jeux d\'enfants',
+        'Les inventions célèbres'
       ];
+      
+      const frenchTypes = [
+        ['lecture', 'compréhension'], ['lecture', 'grammaire'], ['lecture', 'vocabulaire'],
+        ['grammaire', 'conjugaison'], ['vocabulaire', 'orthographe'], ['lecture', 'orthographe'],
+        ['grammaire', 'vocabulaire'], ['conjugaison', 'orthographe'], ['lecture', 'grammaire', 'vocabulaire'],
+        ['lecture', 'compréhension', 'grammaire']
+      ];
+      
+      const mathTypes = [
+        ['addition', 'soustraction'], ['multiplication', 'division'], ['numération', 'calcul'],
+        ['géométrie', 'mesures'], ['problèmes', 'calcul'], ['fractions', 'décimaux'],
+        ['addition', 'multiplication'], ['géométrie', 'numération'], ['mesures', 'problèmes'],
+        ['calcul mental', 'opérations']
+      ];
+      
+      const levels = ['CP', 'CE1', 'CE2', 'CM1', 'CM2'];
+      const durations = ['20 min', '30 min', '40 min'];
+      const subjects = ['french', 'math'];
+
+      const mockSessions: ExerciseSession[] = [];
+      
+      // Generate 44 sessions (including original 4)
+      for (let i = 0; i < 44; i++) {
+        const subject = subjects[Math.floor(Math.random() * subjects.length)];
+        const level = levels[Math.floor(Math.random() * levels.length)];
+        const duration = durations[Math.floor(Math.random() * durations.length)];
+        const daysAgo = Math.floor(Math.random() * 90); // Random date within last 90 days
+        
+        let exerciseTypes: string[];
+        let theme: string | undefined;
+        
+        if (subject === 'french') {
+          exerciseTypes = frenchTypes[Math.floor(Math.random() * frenchTypes.length)];
+          theme = themes[Math.floor(Math.random() * themes.length)];
+        } else {
+          exerciseTypes = mathTypes[Math.floor(Math.random() * mathTypes.length)];
+        }
+
+        mockSessions.push({
+          id: `session_${i + 1}`,
+          subject,
+          level,
+          exercise_types: exerciseTypes,
+          duration,
+          theme,
+          created_at: new Date(Date.now() - daysAgo * 86400000).toISOString(),
+          status: 'completed',
+          pdf_url: `/exercice_mock.pdf`
+        });
+      }
+      
+      // Sort by creation date (newest first)
+      mockSessions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
       debugLog.exercises('Mock user sessions', mockSessions);
       return mockSessions;
     }
@@ -100,14 +149,18 @@ export const exerciseService = {  // Generate exercises
   downloadSessionPDF: async (sessionId: string): Promise<Blob> => {
     try {
       debugLog.exercises('Downloading session PDF', { sessionId });
-      const response = await api.get(`/api/education/exercises/sessions/${sessionId}/pdf`, {
-        responseType: 'blob',
-      });
-      debugLog.exercises('PDF download successful');
-      return response.data;
+      
+      // For development, use mock PDF file
+      const response = await fetch('/exercice_mock.pdf');
+      if (!response.ok) {
+        throw new Error('Failed to fetch mock PDF file');
+      }
+      const blob = await response.blob();
+      debugLog.exercises('Mock PDF download successful');
+      return blob;
     } catch (error) {
-      debugLog.error('Failed to download PDF (endpoint may not be implemented)', error);
-      throw new Error('PDF download is not available yet');
+      debugLog.error('Failed to download PDF', error);
+      throw new Error('PDF download failed');
     }
   },
 
@@ -129,7 +182,7 @@ export const exerciseService = {  // Generate exercises
         exercise_types: ['add', 'sub'],
         created_at: new Date().toISOString(),
         status: 'completed',
-        pdf_url: '/mock-exercise.pdf'
+        pdf_url: '/exercice_mock.pdf'
       };
       debugLog.exercises('Mock session details', mockSession);
       return mockSession;
@@ -264,4 +317,26 @@ export const creditsService = {
     };
     return packageCreditsMap[packageId] || 0;
   }
+};
+
+// Helper function to convert legacy ExerciseRequest to new ExerciceGenerationRequest
+export const convertLegacyExerciseRequest = (
+  subject: 'math' | 'french',
+  level: string,
+  exerciseTypes: string[],
+  theme: string = '',
+  exerciceTypeParams: ExerciceTypeParam = {},
+  specificRequirements?: string
+): ExerciceGenerationRequest => {
+  const domain = subject === 'math' ? ExerciceDomain.MATHEMATIQUES : ExerciceDomain.FRANCAIS;
+  
+  return buildExerciceGenerationRequest(
+    level,
+    '30 min', // Default duration
+    exerciseTypes,
+    theme || 'Exercices généraux',
+    domain,
+    exerciceTypeParams,
+    specificRequirements
+  );
 };

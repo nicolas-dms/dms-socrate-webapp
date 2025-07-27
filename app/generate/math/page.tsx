@@ -4,16 +4,15 @@ import { useTranslation } from "react-i18next";
 import Button from "react-bootstrap/Button";
 import ProtectedPage from "../../../components/ProtectedPage";
 import { exerciseService, ExerciseRequest, ExerciseSession } from "../../../services/exerciseService";
-import { useCredits } from "../../../context/CreditsContext";
+import { useSubscription } from "../../../context/SubscriptionContext";
 import { useAuth } from "../../../context/AuthContext";
 
 const levels = ["CP", "CE1", "CE2", "CM1", "CM2"];
-const CREDITS_COST_PER_EXERCISE = 1; // Cost per exercise generation
 
 export default function GenerateMathPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { credits, refreshCredits } = useCredits();
+  const { subscription, canGenerateMore, getRemainingFiches, useCredit } = useSubscription();
   const [level, setLevel] = useState(levels[0]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [numQuestions, setNumQuestions] = useState(10);
@@ -45,10 +44,9 @@ export default function GenerateMathPage() {
       return;
     }
     
-    // Check credits
-    const currentBalance = credits?.current_balance || 0;
-    if (currentBalance < CREDITS_COST_PER_EXERCISE) {
-      setError(t('generate.validation.insufficientCredits', 'Insufficient credits to generate exercises'));
+    // Check subscription limits
+    if (!canGenerateMore()) {
+      setError('Limite d\'abonnement atteinte pour ce mois');
       return;
     }
 
@@ -62,18 +60,19 @@ export default function GenerateMathPage() {
     try {
       // Prepare the exercise request
       const request: ExerciseRequest = {
-        subject: 'math',
-        level: level,
-        exerciseTypes: selectedTypes,
-        numberOfQuestions: numQuestions
+        theme: 'Exercices mathématiques',
+        class_level: level,
+        exercice_domain: 'mathematiques' as any, // TODO: Fix this with proper enum
+        exercice_time: '30 min' as any, // TODO: Fix this with proper enum
+        exercice_types: selectedTypes as any[], // TODO: Fix this with proper enum
+        exercice_type_params: {} // TODO: Add proper params
       };
 
       // Generate the exercises
       const newSession = await exerciseService.generateExercises(request);
       
-      // Use a credit (this would normally be handled by the backend)
-      // For now, we'll refresh credits to get the updated balance
-      await refreshCredits();
+      // Use a fiche from subscription allowance
+      await useCredit();
       
       setSession(newSession);
     } catch (err) {
@@ -103,21 +102,27 @@ export default function GenerateMathPage() {
     }
   };
 
-  const canGenerate = selectedTypes.length > 0 && !generating && 
-                     (credits?.current_balance || 0) >= CREDITS_COST_PER_EXERCISE;
+  const canGenerate = selectedTypes.length > 0 && !generating && canGenerateMore();
 
   return (
     <ProtectedPage>
       <div className="container mt-5" style={{maxWidth: 600}}>
         <h2 className="mb-4">{t('generate.generateMathExercises')}</h2>
         
-        {/* Credits info */}
-        <div className="alert alert-info mb-4">
-          <strong>{t('credits.currentBalance')}: </strong>
-          {credits?.current_balance || 0} {t('credits.credits')}
-          <br />
-          <small>{t('generate.creditsCost', 'Cost: {{cost}} credit per generation', { cost: CREDITS_COST_PER_EXERCISE })}</small>
-        </div>
+        {/* Subscription info - only show when low */}
+        {subscription && (() => {
+          const remainingFiches = getRemainingFiches();
+          const monthlyLimit = subscription.monthlyLimit || 0;
+          const tenPercentLimit = Math.floor(monthlyLimit * 0.1);
+          
+          return remainingFiches <= tenPercentLimit && (
+            <div className="alert alert-warning mb-4">
+              <strong>⚠️ Attention : Il vous reste seulement {remainingFiches} fiches ce mois</strong>
+              <br />
+              <small>Coût : 1 fiche par génération</small>
+            </div>
+          );
+        })()}
 
         {error && (
           <div className="alert alert-danger">
@@ -171,9 +176,9 @@ export default function GenerateMathPage() {
             </small>
           )}
           
-          {!canGenerate && (credits?.current_balance || 0) < CREDITS_COST_PER_EXERCISE && (
+          {!canGenerate && !canGenerateMore() && (
             <small className="text-danger d-block text-center">
-              {t('generate.validation.needMoreCredits', 'Not enough credits')}
+              Limite d'abonnement atteinte ce mois
             </small>
           )}
         </form>

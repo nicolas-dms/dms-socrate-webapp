@@ -10,6 +10,7 @@ interface CreditsContextType {
   loading: boolean;
   refreshCredits: () => Promise<void>;
   purchaseCredits: (packageId: string, paymentData: any) => Promise<boolean>;
+  useCredits: (amount: number) => Promise<void>;
   // Legacy support for existing code
   buyCredits?: (amount: number) => Promise<void>;
 }
@@ -88,6 +89,32 @@ export const CreditsProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  // Function to consume credits
+  const useCredits = async (amount: number): Promise<void> => {
+    if (!user?.user_id) {
+      throw new Error("User ID not available for credit usage");
+    }
+    
+    if (!credits || credits.current_balance < amount) {
+      throw new Error("Insufficient credits");
+    }
+    
+    try {
+      // For now, update locally - in real app this would call backend
+      setCredits({
+        ...credits,
+        current_balance: credits.current_balance - amount,
+        total_used: credits.total_used + amount,
+      });
+      
+      // TODO: Replace with actual API call
+      // await creditsService.useCredits(user.user_id, amount);
+    } catch (error) {
+      console.error("Failed to use credits:", error);
+      throw error;
+    }
+  };
+
   // Legacy support for existing buy credits function
   const buyCredits = async (amount: number): Promise<void> => {
     await new Promise(res => setTimeout(res, 1000));
@@ -99,7 +126,6 @@ export const CreditsProvider = ({ children }: { children: React.ReactNode }) => 
       });
     }
   };
-
   return (
     <CreditsContext.Provider value={{
       credits,
@@ -107,6 +133,7 @@ export const CreditsProvider = ({ children }: { children: React.ReactNode }) => 
       loading,
       refreshCredits,
       purchaseCredits,
+      useCredits,
       buyCredits,
     }}>
       {children}

@@ -2,6 +2,53 @@ import api from './api';
 import { debugLog } from '../utils/debug';
 import { config } from '../utils/mockConfig';
 
+// ===== INTERFACES SYNCHRONISÉES AVEC LE BACKEND =====
+
+export interface UserModel {
+  id?: string | null;
+  user_id: string; // Business-level user ID (email), also used as partition key
+  email: string;
+  username: string;
+}
+
+export interface UserCreate {
+  email: string;
+  username: string;
+}
+
+export interface UserUpdate {
+  username?: string | null;
+}
+
+export interface AppCredits {
+  current_balance?: number;
+  total_purchased?: number;
+  total_used?: number;
+}
+
+export interface AppPreferences {
+  default_level?: string;
+  default_study_time?: string;
+}
+
+export interface AppData {
+  user_id: string;
+  user_credits?: AppCredits;
+  user_preferences?: AppPreferences;
+}
+
+export interface AppDataCreate {
+  user_id: string;
+  user_credits?: AppCredits | null;
+  user_preferences?: AppPreferences | null;
+}
+
+export interface AppDataUpdate {
+  user_credits?: AppCredits | null;
+  user_preferences?: AppPreferences | null;
+}
+
+// ===== LEGACY INTERFACES (pour compatibilité) =====
 export interface User {
   user_id: string;
   email: string;
@@ -51,11 +98,11 @@ export interface UpdateEducationAppDataRequest {
 }
 
 export const userService = {
-  // Get user by ID
-  getUserById: async (userId: string): Promise<User> => {
+  // Get user by ID - Synchronisé avec backend
+  getUserById: async (userId: string): Promise<UserModel> => {
     try {
       debugLog.user('Getting user by ID', { userId });
-      const response = await api.get<User>(`/api/education/users/${userId}`);
+      const response = await api.get<UserModel>(`/api/users/${userId}`);
       debugLog.user('User data retrieved', response.data);
       return response.data;
     } catch (error) {
@@ -64,24 +111,24 @@ export const userService = {
     }
   },
 
-  // Get user by email
-  getUserByEmail: async (email: string): Promise<User> => {
+  // Get current user - Synchronisé avec backend
+  getCurrentUser: async (): Promise<UserModel> => {
     try {
-      debugLog.user('Getting user by email', { email });
-      const response = await api.get<User>(`/api/education/users?email=${encodeURIComponent(email)}`);
-      debugLog.user('User data retrieved by email', response.data);
+      debugLog.user('Getting current user');
+      const response = await api.get<UserModel>('/api/users/me');
+      debugLog.user('Current user data retrieved', response.data);
       return response.data;
     } catch (error) {
-      debugLog.error('Failed to get user by email', error);
+      debugLog.error('Failed to get current user', error);
       throw error;
     }
   },
 
-  // Create user
-  createUser: async (userData: CreateUserRequest): Promise<User> => {
+  // Create user - Synchronisé avec backend
+  createUser: async (userData: UserCreate): Promise<UserModel> => {
     try {
       debugLog.user('Creating user', userData);
-      const response = await api.post<User>('/api/education/users', userData);
+      const response = await api.post<UserModel>('/api/users', userData);
       debugLog.user('User created successfully', response.data);
       return response.data;
     } catch (error) {
@@ -90,11 +137,11 @@ export const userService = {
     }
   },
 
-  // Update user
-  updateUser: async (userId: string, userData: UpdateUserRequest): Promise<User> => {
+  // Update user - Synchronisé avec backend
+  updateUser: async (userId: string, userData: UserUpdate): Promise<UserModel> => {
     try {
       debugLog.user('Updating user', { userId, userData });
-      const response = await api.put<User>(`/api/education/users/${userId}`, userData);
+      const response = await api.put<UserModel>(`/api/users/${userId}`, userData);
       debugLog.user('User updated successfully', response.data);
       return response.data;
     } catch (error) {
@@ -103,28 +150,44 @@ export const userService = {
     }
   },
 
-  // Delete user
+  // Delete user - Synchronisé avec backend
   deleteUser: async (userId: string): Promise<{ message: string }> => {
     try {
       debugLog.user('Deleting user', { userId });
-      const response = await api.delete<{ message: string }>(`/api/education/users/${userId}`);
+      const response = await api.delete<{ message: string }>(`/api/users/${userId}`);
       debugLog.user('User deleted successfully', response.data);
       return response.data;
     } catch (error) {
       debugLog.error('Failed to delete user', error);
       throw error;
     }
+  },
+
+  // ===== LEGACY METHODS (pour compatibilité avec l'ancien code) =====
+  getUserByEmail: async (email: string): Promise<User> => {
+    try {
+      debugLog.user('Getting user by email (legacy)', { email });
+      // Note: Le backend n'expose pas directement cette méthode, 
+      // utiliser getCurrentUser() si c'est l'utilisateur connecté
+      const response = await api.get<User>(`/api/users/by-email?email=${encodeURIComponent(email)}`);
+      debugLog.user('User data retrieved by email', response.data);
+      return response.data;
+    } catch (error) {
+      debugLog.error('Failed to get user by email', error);
+      throw error;
+    }
   }
 };
 
-export const educationUserService = {  // Get education user app data
-  getEducationUserAppData: async (userId: string): Promise<EducationUserAppData> => {
+export const educationUserService = {
+  // Get education app data - Synchronisé avec backend
+  getAppData: async (userId: string): Promise<AppData> => {
     try {
-      debugLog.user('Getting education user app data', { userId });
+      debugLog.user('Getting education app data', { userId });
       
       if (config.MOCK_APIS) {
         // Mock response - return mock education app data
-        const mockAppData: EducationUserAppData = {
+        const mockAppData: AppData = {
           user_id: userId,
           user_credits: config.MOCK_CREDITS,
           user_preferences: config.MOCK_PREFERENCES
@@ -133,13 +196,13 @@ export const educationUserService = {  // Get education user app data
         return mockAppData;
       }
       
-      const response = await api.get<EducationUserAppData>(`/api/education/user-app-data/${userId}`);
+      const response = await api.get<AppData>(`/api/education/app-data/${userId}`);
       debugLog.user('Education app data retrieved', response.data);
       return response.data;
     } catch (error) {
       debugLog.warn('Education app data not found, using defaults', error);
       // Return default data if not found
-      const defaultData: EducationUserAppData = {
+      const defaultData: AppData = {
         user_id: userId,
         user_credits: config.MOCK_APIS ? config.MOCK_CREDITS : {
           current_balance: 0,
@@ -156,11 +219,11 @@ export const educationUserService = {  // Get education user app data
     }
   },
 
-  // Create education user app data
-  createEducationUserAppData: async (appData: CreateEducationAppDataRequest): Promise<EducationUserAppData> => {
+  // Create education app data - Synchronisé avec backend
+  createAppData: async (appData: AppDataCreate): Promise<AppData> => {
     try {
-      debugLog.user('Creating education user app data', appData);
-      const response = await api.post<EducationUserAppData>('/api/education/user-app-data', appData);
+      debugLog.user('Creating education app data', appData);
+      const response = await api.post<AppData>('/api/education/app-data', appData);
       debugLog.user('Education app data created successfully', response.data);
       return response.data;
     } catch (error) {
@@ -169,11 +232,11 @@ export const educationUserService = {  // Get education user app data
     }
   },
 
-  // Update education user app data
-  updateEducationUserAppData: async (userId: string, appData: UpdateEducationAppDataRequest): Promise<EducationUserAppData> => {
+  // Update education app data - Synchronisé avec backend
+  updateAppData: async (userId: string, appData: AppDataUpdate): Promise<AppData> => {
     try {
-      debugLog.user('Updating education user app data', { userId, appData });
-      const response = await api.put<EducationUserAppData>(`/api/education/user-app-data/${userId}`, appData);
+      debugLog.user('Updating education app data', { userId, appData });
+      const response = await api.put<AppData>(`/api/education/app-data/${userId}`, appData);
       debugLog.user('Education app data updated successfully', response.data);
       return response.data;
     } catch (error) {
@@ -182,20 +245,105 @@ export const educationUserService = {  // Get education user app data
     }
   },
 
-  // Ensure education user app data exists
-  ensureEducationUserAppData: async (userId: string): Promise<EducationUserAppData> => {
+  // Delete education app data - Synchronisé avec backend
+  deleteAppData: async (userId: string): Promise<{ message: string }> => {
     try {
-      debugLog.user('Ensuring education user app data exists', { userId });
-      const response = await api.post<EducationUserAppData>(`/api/education/user-app-data/${userId}/ensure`);
-      debugLog.user('Education app data ensured', response.data);
+      debugLog.user('Deleting education app data', { userId });
+      const response = await api.delete<{ message: string }>(`/api/education/app-data/${userId}`);
+      debugLog.user('Education app data deleted successfully', response.data);
       return response.data;
     } catch (error) {
-      debugLog.error('Failed to ensure education app data', error);
+      debugLog.error('Failed to delete education app data', error);
       throw error;
     }
   },
-  // Add credits
-  addCredits: async (userId: string, amount: number): Promise<EducationUserAppData> => {
+
+  // ===== LEGACY METHODS (pour compatibilité avec l'ancien code) =====
+  getEducationUserAppData: async (userId: string): Promise<EducationUserAppData> => {
+    try {
+      const appData = await educationUserService.getAppData(userId);
+      // Convertir vers l'ancien format
+      return {
+        user_id: appData.user_id,
+        user_credits: appData.user_credits as UserCredits,
+        user_preferences: appData.user_preferences as UserPreferences
+      };
+    } catch (error) {
+      debugLog.error('Failed to get legacy education app data', error);
+      throw error;
+    }
+  },
+
+  createEducationUserAppData: async (appData: CreateEducationAppDataRequest): Promise<EducationUserAppData> => {
+    try {
+      const newAppData = await educationUserService.createAppData({
+        user_id: appData.user_id,
+        user_credits: appData.user_credits,
+        user_preferences: appData.user_preferences
+      });
+      return {
+        user_id: newAppData.user_id,
+        user_credits: newAppData.user_credits as UserCredits,
+        user_preferences: newAppData.user_preferences as UserPreferences
+      };
+    } catch (error) {
+      debugLog.error('Failed to create legacy education app data', error);
+      throw error;
+    }
+  },
+
+  updateEducationUserAppData: async (userId: string, appData: UpdateEducationAppDataRequest): Promise<EducationUserAppData> => {
+    try {
+      const updatedAppData = await educationUserService.updateAppData(userId, {
+        user_credits: appData.user_credits,
+        user_preferences: appData.user_preferences
+      });
+      return {
+        user_id: updatedAppData.user_id,
+        user_credits: updatedAppData.user_credits as UserCredits,
+        user_preferences: updatedAppData.user_preferences as UserPreferences
+      };
+    } catch (error) {
+      debugLog.error('Failed to update legacy education app data', error);
+      throw error;
+    }
+  },
+
+  ensureEducationUserAppData: async (userId: string): Promise<EducationUserAppData> => {
+    try {
+      debugLog.user('Ensuring education user app data exists', { userId });
+      // Tenter de récupérer les données existantes
+      const existingData = await educationUserService.getAppData(userId);
+      return {
+        user_id: existingData.user_id,
+        user_credits: existingData.user_credits as UserCredits,
+        user_preferences: existingData.user_preferences as UserPreferences
+      };
+    } catch (error) {
+      // Si les données n'existent pas, les créer
+      debugLog.user('Creating default education app data', { userId });
+      const defaultData: AppDataCreate = {
+        user_id: userId,
+        user_credits: {
+          current_balance: 0,
+          total_purchased: 0,
+          total_used: 0
+        },
+        user_preferences: {
+          default_level: 'beginner',
+          default_study_time: '30min'
+        }
+      };
+      const newData = await educationUserService.createAppData(defaultData);
+      return {
+        user_id: newData.user_id,
+        user_credits: newData.user_credits as UserCredits,
+        user_preferences: newData.user_preferences as UserPreferences
+      };
+    }
+  },
+  // Add credits - Synchronisé avec backend
+  addCredits: async (userId: string, amount: number): Promise<AppData> => {
     try {
       debugLog.credits('Adding credits', { userId, amount });
       
@@ -210,7 +358,7 @@ export const educationUserService = {  // Get education user app data
         config.MOCK_CREDITS.current_balance = updatedCredits.current_balance;
         config.MOCK_CREDITS.total_purchased = updatedCredits.total_purchased;
         
-        const mockResponse: EducationUserAppData = {
+        const mockResponse: AppData = {
           user_id: userId,
           user_credits: updatedCredits,
           user_preferences: config.MOCK_PREFERENCES
@@ -219,7 +367,9 @@ export const educationUserService = {  // Get education user app data
         return mockResponse;
       }
       
-      const response = await api.post<EducationUserAppData>(`/api/education/user-app-data/${userId}/credits/add?amount=${amount}`);
+      const response = await api.post<AppData>(`/api/education/app-data/${userId}/credits/add`, null, {
+        params: { amount }
+      });
       debugLog.credits('Credits added successfully', response.data);
       return response.data;
     } catch (error) {
@@ -228,8 +378,8 @@ export const educationUserService = {  // Get education user app data
     }
   },
 
-  // Use credits
-  useCredits: async (userId: string, amount: number): Promise<EducationUserAppData> => {
+  // Use credits - Synchronisé avec backend
+  useCredits: async (userId: string, amount: number): Promise<AppData> => {
     try {
       debugLog.credits('Using credits', { userId, amount });
       
@@ -244,7 +394,7 @@ export const educationUserService = {  // Get education user app data
         config.MOCK_CREDITS.current_balance = updatedCredits.current_balance;
         config.MOCK_CREDITS.total_used = updatedCredits.total_used;
         
-        const mockResponse: EducationUserAppData = {
+        const mockResponse: AppData = {
           user_id: userId,
           user_credits: updatedCredits,
           user_preferences: config.MOCK_PREFERENCES
@@ -253,7 +403,9 @@ export const educationUserService = {  // Get education user app data
         return mockResponse;
       }
       
-      const response = await api.post<EducationUserAppData>(`/api/education/user-app-data/${userId}/credits/use?amount=${amount}`);
+      const response = await api.post<AppData>(`/api/education/app-data/${userId}/credits/use`, null, {
+        params: { amount }
+      });
       debugLog.credits('Credits used successfully', response.data);
       return response.data;
     } catch (error) {
@@ -262,11 +414,11 @@ export const educationUserService = {  // Get education user app data
     }
   },
 
-  // Update credits directly
-  updateCredits: async (userId: string, credits: UserCredits): Promise<EducationUserAppData> => {
+  // Update credits directly - Synchronisé avec backend
+  updateCredits: async (userId: string, credits: AppCredits): Promise<AppData> => {
     try {
       debugLog.credits('Updating credits directly', { userId, credits });
-      const response = await api.put<EducationUserAppData>(`/api/education/user-app-data/${userId}/credits`, credits);
+      const response = await api.put<AppData>(`/api/education/app-data/${userId}/credits`, credits);
       debugLog.credits('Credits updated successfully', response.data);
       return response.data;
     } catch (error) {
@@ -275,11 +427,11 @@ export const educationUserService = {  // Get education user app data
     }
   },
 
-  // Update preferences
-  updatePreferences: async (userId: string, preferences: UserPreferences): Promise<EducationUserAppData> => {
+  // Update preferences - Synchronisé avec backend
+  updatePreferences: async (userId: string, preferences: AppPreferences): Promise<AppData> => {
     try {
       debugLog.user('Updating user preferences', { userId, preferences });
-      const response = await api.put<EducationUserAppData>(`/api/education/user-app-data/${userId}/preferences`, preferences);
+      const response = await api.put<AppData>(`/api/education/app-data/${userId}/preferences`, preferences);
       debugLog.user('Preferences updated successfully', response.data);
       return response.data;
     } catch (error) {

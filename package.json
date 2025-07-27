@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync-api": "node scripts/sync-openapi.js",
+    "sync-api:watch": "node scripts/sync-openapi.js && npm run sync-api:watch-files",
+    "sync-api:watch-files": "echo 'Surveillance des changements... (Ctrl+C pour arrêter)' && (while true; do sleep 30; node scripts/sync-openapi.js --quiet 2>/dev/null || true; done)",
+    "prebuild": "npm run sync-api"
   },
   "dependencies": {
     "axios": "^1.10.0",

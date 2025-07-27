@@ -16,19 +16,23 @@ export default function GeneratePage() {
           {t('generate.title')}
         </h2>
         <div className="d-flex flex-column gap-3">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => router.push("/generate/math")}
-          >
-            {t('generate.math')}
-          </Button>
-          <Button
+            <Button
             variant="secondary"
             size="lg"
             onClick={() => router.push("/generate/french")}
           >
             {t('generate.french')}
+          </Button>          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => router.push("/generate/math")} 
+            disabled
+            className="position-relative"
+          >
+            {t('generate.math')}
+            <small className="d-block text-muted" style={{ fontSize: '0.8rem' }}>
+              Bientôt disponible
+            </small>
           </Button>
         </div>
       </div>

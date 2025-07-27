@@ -129,6 +129,7 @@ html {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
   border-radius: 10px;
   padding: 0.5rem 0;
+  z-index: 9999 !important; /* Ensure all Bootstrap dropdowns appear above content */
 }
 
 .dropdown-item {
@@ -152,6 +153,135 @@ html {
   .navbar-nav .nav-link {
     margin: 0.25rem 0;
   }
+}
+
+/* Account Navigation Tabs - matching main nav style */
+.account-nav-button {
+  font-weight: 500 !important;
+  color: #2c3e50 !important;
+  transition: all 0.3s ease !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 20px !important;
+  margin: 0 0.25rem !important;
+  border: 2px solid transparent !important;
+  background: transparent !important;
+  /* Override all Bootstrap button styles */
+  --bs-btn-padding-x: 1rem !important;
+  --bs-btn-padding-y: 0.5rem !important;
+  --bs-btn-font-size: inherit !important;
+  --bs-btn-border-width: 2px !important;
+  --bs-btn-border-radius: 20px !important;
+  --bs-btn-color: #2c3e50 !important;
+  --bs-btn-bg: transparent !important;
+  --bs-btn-border-color: transparent !important;
+  --bs-btn-hover-color: #5dade2 !important;
+  --bs-btn-hover-bg: rgba(93, 173, 226, 0.1) !important;
+  --bs-btn-hover-border-color: transparent !important;
+  --bs-btn-focus-shadow-rgb: 93, 173, 226 !important;
+  --bs-btn-active-color: white !important;
+  --bs-btn-active-bg: #5dade2 !important;
+  --bs-btn-active-border-color: #5dade2 !important;
+}
+
+.account-nav-button:hover {
+  color: #5dade2 !important;
+  background: rgba(93, 173, 226, 0.1) !important;
+  border-color: transparent !important;
+  transform: translateY(-1px);
+}
+
+.account-nav-button:focus,
+.account-nav-button:active,
+.account-nav-button.active {
+  color: white !important;
+  background: #5dade2 !important;
+  border-color: #5dade2 !important;
+  box-shadow: 0 0 0 0.2rem rgba(93, 173, 226, 0.25) !important;
+}
+
+/* More specific selectors to override Bootstrap */
+.btn.account-nav-button.active,
+.btn.account-nav-button:active,
+.btn.account-nav-button:focus {
+  color: white !important;
+  background-color: #5dade2 !important;
+  border-color: #5dade2 !important;
+  box-shadow: 0 0 0 0.2rem rgba(93, 173, 226, 0.25) !important;
+}
+
+/* Override Bootstrap focus styles */
+.account-nav-button:focus:not(:focus-visible) {
+  box-shadow: 0 0 0 0.2rem rgba(93, 173, 226, 0.25) !important;
+}
+
+/* Force immediate visual feedback on click */
+.account-nav-button:active:not(.admin-btn):not(.logout-btn) {
+  color: white !important;
+  background: #5dade2 !important;
+  border-color: #5dade2 !important;
+  transform: translateY(0px) !important;
+}
+
+.account-nav-button.admin-btn:active {
+  color: white !important;
+  background: #f39c12 !important;
+  border-color: #f39c12 !important;
+  transform: translateY(0px) !important;
+}
+
+.account-nav-button.logout-btn:active {
+  color: white !important;
+  background: #e74c3c !important;
+  border-color: #e74c3c !important;
+  transform: translateY(0px) !important;
+}
+
+.account-nav-button.admin-btn {
+  color: #f39c12 !important;
+}
+
+.account-nav-button.admin-btn:hover,
+.account-nav-button.admin-btn:focus,
+.account-nav-button.admin-btn:active,
+.account-nav-button.admin-btn.active {
+  color: white !important;
+  background: #f39c12 !important;
+  border-color: #f39c12 !important;
+  box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25) !important;
+}
+
+/* More specific selectors for admin button */
+.btn.account-nav-button.admin-btn.active,
+.btn.account-nav-button.admin-btn:active,
+.btn.account-nav-button.admin-btn:focus {
+  color: white !important;
+  background-color: #f39c12 !important;
+  border-color: #f39c12 !important;
+  box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25) !important;
+}
+
+.account-nav-button.logout-btn {
+  color: #e74c3c !important;
+}
+
+.account-nav-button.logout-btn:hover,
+.account-nav-button.logout-btn:focus,
+.account-nav-button.logout-btn:active,
+.account-nav-button.logout-btn.active {
+  color: white !important;
+  background: #e74c3c !important;
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25) !important;
+}
+
+/* More specific selectors for logout button */
+.btn.account-nav-button.logout-btn.active,
+.btn.account-nav-button.logout-btn:active,
+.btn.account-nav-button.logout-btn:focus {
+  color: white !important;
+  background-color: #e74c3c !important;
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25) !important;
 }
 
 /* Existing sidebar styles */
@@ -258,4 +388,199 @@ div[style*="position: fixed"][style*="bottom"][style*="right"] button {
 /* Ensure our language switcher has proper z-index */
 .language-switcher {
   z-index: 9999 !important;
+}
+
+/* Ensure all Bootstrap dropdowns appear above content */
+.dropdown-menu {
+  z-index: 99999 !important;
+  position: absolute !important;
+}
+
+/* Ensure navbar dropdowns specifically have high z-index */
+.navbar .dropdown-menu {
+  z-index: 99999 !important;
+  position: absolute !important;
+}
+
+/* Additional safety for profile dropdown */
+.navbar .dropdown {
+  z-index: 99998 !important;
+  position: relative !important;
+}
+
+/* Force dropdown to be above any card or container */
+.dropdown-menu.show {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
+/* Ensure cards don't create stacking context issues */
+.card {
+  z-index: auto !important;
+  position: relative !important;
+}
+
+/* Override any Bootstrap card z-index */
+.card, .card-body {
+  z-index: 1 !important;
+}
+
+/* Top Navigation Bar User Account Section */
+.navbar .nav-link.account-link {
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.navbar .nav-link.account-link:hover {
+  background-color: var(--secondary-hover);
+  text-decoration: none;
+}
+
+.navbar .nav-link.account-link:hover .text-muted {
+  color: var(--text-dark) !important;
+}
+
+/* Responsive design for account section */
+@media (max-width: 991px) {
+  .navbar .nav-link.account-link .d-flex.flex-column {
+    align-items: flex-start !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar .nav-link.account-link small {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Modal Styles for PDF Generation Flow */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Preview Modal Specific Styles */
+.preview-content ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.preview-content ul li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+}
+
+.preview-content ul li:last-child {
+  border-bottom: none;
+}
+
+.preview-content ul li:before {
+  content: "📋 ";
+  margin-right: 0.5rem;
+}
+
+/* Generation Loading Modal */
+.generation-loading .spinner-border {
+  border-width: 0.25em;
+}
+
+/* Success Modal */
+.success-modal .alert-success {
+  border-left: 4px solid #28a745;
+}
+
+/* Error Modal */
+.error-modal .alert-danger {
+  border-left: 4px solid #dc3545;
+}
+
+/* Modal Animations */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Responsive Modal */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 1rem;
+  }
+  
+  .modal-content {
+    border-radius: 8px;
+  }
+}
+
+/* Custom Badge Styles */
+.badge-light-custom {
+  background-color: #ffffff !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef !important;
+  font-weight: 500 !important;
+  padding: 0.375rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.badge-level {
+  background-color: #ffffff !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef !important;
+  font-weight: 500 !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+
+.badge-duration {
+  background-color: #ffffff !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef !important;
+  font-weight: 500 !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+
+.badge-exercise-type {
+  background-color: #ffffff !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef !important;
+  font-weight: 500 !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.7rem !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  margin: 1px !important;
+}
+
+.badge-exercise-type-count {
+  background-color: #ffffff !important;
+  color: #6c757d !important;
+  border: 1px solid #dee2e6 !important;
+  font-weight: 500 !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.7rem !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  margin: 1px !important;
 }

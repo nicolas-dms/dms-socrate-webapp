@@ -1,0 +1,21 @@
+{
+  "backendUrl": "http://localhost:8000/openapi.json",
+  "outputDir": "./api-schema",
+  "outputFile": "openapi.json",
+  "typesFile": "api-types.ts",
+  "timeout": 10000,
+  "autoSync": {
+    "enabled": false,
+    "interval": 30000,
+    "onBuild": true
+  },
+  "typescript": {
+    "generateTypes": true,
+    "generateEndpoints": true,
+    "generateInterfaces": true
+  },
+  "validation": {
+    "checkCompatibility": true,
+    "warnOnChanges": true
+  }
+}
