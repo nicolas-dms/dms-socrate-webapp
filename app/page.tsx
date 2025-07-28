@@ -82,6 +82,9 @@ export default function Home() {
           <Row className="justify-content-center">
             <Col lg={10}>
               <h3 className="text-center mb-4">Configurez votre fiche en quelques clics</h3>
+              <p className="text-center text-muted mb-4">
+                Créez une fiche individuelle ou planifiez un parcours complet sur plusieurs semaines
+              </p>
               
               {/* Subject Selection */}
               <div className="mb-4">
@@ -133,8 +136,108 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+              
+              {/* Action Buttons */}
+              <div className="text-center mt-4">
+                <Link href={`/generate/${selectedSubject}`}>
+                  <Button variant="warning" size="lg" className="me-3 mb-2">
+                    Générer une fiche maintenant
+                  </Button>
+                </Link>
+                <Link href="/generate/parcours">
+                  <Button variant="outline-primary" size="lg" className="mb-2">
+                    Créer un parcours personnalisé
+                  </Button>
+                </Link>
+              </div>
             </Col>
           </Row>
+        </Container>
+      </section>
+
+      {/* Parcours Section */}
+      <section className={styles.parcours}>
+        <Container>
+          <div className={styles.parcoursContent}>
+            <Row className="justify-content-center text-center mb-5">
+              <Col lg={8}>
+                <h3 className={styles.parcoursMainTitle}>
+                  Créez des parcours d'apprentissage personnalisés
+                </h3>
+                <p className={styles.parcoursSubtitle}>
+                  Planifiez des semaines d'exercices thématiques pour un apprentissage progressif et structuré
+                </p>
+              </Col>
+            </Row>
+            
+            <Row>
+              <Col md={6} className="mb-4">
+                <Card className={styles.parcoursCard}>
+                  <Card.Body className="text-center p-4">
+                    <div className={styles.parcoursIcon}>
+                      🎯
+                    </div>
+                    <h5 className={styles.parcoursTitle}>Parcours Ciblés</h5>
+                    <p className={styles.parcoursDescription}>
+                      Créez des séries d'exercices sur mesure pour travailler des compétences spécifiques : 
+                      préparation aux évaluations, remise à niveau, ou approfondissement.
+                    </p>
+                    <Link href="/generate/parcours" className={styles.parcoursBtn}>
+                      Créer un parcours
+                    </Link>
+                  </Card.Body>
+                </Card>
+              </Col>
+              
+              <Col md={6} className="mb-4">
+                <Card className={styles.parcoursCard}>
+                  <Card.Body className="text-center p-4">
+                    <div className={styles.parcoursIcon}>
+                      📅
+                    </div>
+                    <h5 className={styles.parcoursTitle}>Planification Intelligente</h5>
+                    <p className={styles.parcoursDescription}>
+                      Organisez l'apprentissage sur plusieurs semaines avec une progression logique. 
+                      Parfait pour les vacances scolaires ou un entraînement régulier.
+                    </p>
+                    <Link href="/generate/parcours" className={styles.parcoursBtn}>
+                      Découvrir les modèles
+                    </Link>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+            
+            <Row className="justify-content-center mt-4">
+              <Col md={8} className="text-center">
+                <Card className={`${styles.parcoursCard} py-3`}>
+                  <Card.Body>
+                    <Row className="align-items-center">
+                      <Col md={2} className="text-center">
+                        <div className={styles.parcoursIcon} style={{ margin: '0 auto', width: '60px', height: '60px', fontSize: '1.5rem' }}>
+                          ✨
+                        </div>
+                      </Col>
+                      <Col md={8}>
+                        <h6 className="mb-2" style={{ color: '#1f2937', fontWeight: '600' }}>
+                          💡 <strong>Astuce :</strong> Utilisez nos modèles pré-conçus
+                        </h6>
+                        <p className="mb-0" style={{ color: '#6b7280', fontSize: '0.95rem' }}>
+                          "Révisions de rentrée", "Préparation aux évaluations", "Remise à niveau CM1"... 
+                          Démarrez avec nos parcours testés par des enseignants !
+                        </p>
+                      </Col>
+                      <Col md={2} className="text-center">
+                        <Link href="/generate/parcours?template=true" className="btn btn-sm btn-outline-warning">
+                          Voir les modèles
+                        </Link>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </div>
         </Container>
       </section>
 

@@ -158,16 +158,17 @@ export default function AccountPage() {
 
   return (
     <ProtectedPage>
-      <Container className="mt-4">
+      <Container className="mt-3">
         <Row>
           <Col lg={10} className="mx-auto">
-            <h2 className="mb-4 d-flex align-items-center">
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="me-2">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 21v-2a4 4 0 014-4h8a4 4 0 714 4v2"/>
-              </svg>
-              Mon compte
-            </h2>
+            {/* Enhanced Main Title */}
+            <div className="text-center mb-4">
+              <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
+                <i className="bi bi-person-circle me-2"></i>
+                Mon compte
+              </h2>
+              <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
+            </div>
 
             {/* Navigation Tabs */}
             <div className="mb-4">

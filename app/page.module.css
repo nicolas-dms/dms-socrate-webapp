@@ -1,14 +1,14 @@
 /* Landing Page Styles */
 .landingPage {
   min-height: calc(100vh - 70px); /* Account for top navigation */
-  background: linear-gradient(135deg, #f8f6f1 0%, #e6e2d8 100%);
+  background: linear-gradient(135deg, #fefce8 0%, #fbbf24 100%); /* Soft yellow gradient */
   overflow-x: hidden;
 }
 
 /* Hero Section - adjusted since no header */
 .hero {
   padding: 3rem 0;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f6f1 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); /* Soft yellow/white gradient */
 }
 
 .heroTitle {
@@ -51,13 +51,13 @@
 }
 
 .ctaPrimary {
-  background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  background: linear-gradient(135deg, #87ceeb, #70b8d6) !important; /* Lighter blue gradient */
   border: none !important;
   padding: 1rem 2.5rem;
   font-size: 1.2rem;
   font-weight: 600;
   border-radius: 50px;
-  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 8px 25px rgba(135, 206, 235, 0.3); /* Lighter blue shadow */
   transition: all 0.3s ease;
   color: white !important;
   text-decoration: none;
@@ -65,8 +65,8 @@
 
 .ctaPrimary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(52, 152, 219, 0.4);
-  background: linear-gradient(135deg, #2980b9, #3498db) !important;
+  box-shadow: 0 12px 35px rgba(135, 206, 235, 0.4); /* Lighter blue shadow */
+  background: linear-gradient(135deg, #70b8d6, #87ceeb) !important; /* Lighter blue gradient */
   color: white !important;
 }
 
@@ -171,7 +171,7 @@
 /* Exercise Preview */
 .preview {
   padding: 4rem 0;
-  background: linear-gradient(135deg, #f8f6f1 0%, #ecf0f1 100%);
+  background: linear-gradient(135deg, #fef3c7 0%, #ecf0f1 100%); /* Soft yellow to light gray */
 }
 
 .exerciseCard {
@@ -562,4 +562,129 @@ a.secondary {
 
 .settingsBtn i {
   font-size: 12px;
+}
+
+/* Parcours Section */
+.parcours {
+  padding: 4rem 0;
+  background: linear-gradient(135deg, #87ceeb 0%, #e0f6ff 100%); /* Light blue gradient */
+  position: relative;
+  overflow: hidden;
+}
+
+.parcours::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="70" cy="40" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="70" r="1" fill="%23ffffff" opacity="0.1"/></svg>');
+  background-size: 50px 50px;
+}
+
+.parcoursContent {
+  position: relative;
+  z-index: 1;
+}
+
+.parcoursCard {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(135, 206, 235, 0.2);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  height: 100%;
+}
+
+.parcoursCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(135, 206, 235, 0.3);
+}
+
+.parcoursIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b); /* Soft yellow gradient */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 2rem;
+  color: white;
+  box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3);
+  transition: all 0.3s ease;
+}
+
+.parcoursCard:hover .parcoursIcon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 35px rgba(251, 191, 36, 0.4);
+}
+
+.parcoursTitle {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.parcoursDescription {
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.parcoursBtn {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b); /* Soft yellow */
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}
+
+.parcoursBtn:hover {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+  color: white;
+}
+
+.parcoursMainTitle {
+  color: white;
+  font-weight: 800;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.parcoursSubtitle {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.3rem;
+  margin-bottom: 3rem;
+  font-weight: 400;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .parcoursMainTitle {
+    font-size: 2rem;
+  }
+  
+  .parcoursSubtitle {
+    font-size: 1.1rem;
+  }
+  
+  .parcoursIcon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
 }

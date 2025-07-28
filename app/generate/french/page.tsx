@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Button, Container, Row, Col, Card, Modal, Alert, Badge } from "react-bootstrap";
 import ProtectedPage from "../../../components/ProtectedPage";
@@ -36,6 +37,7 @@ interface ExercisePreview {
 export default function GenerateFrenchPage() {
   const { t } = useTranslation();
   const { subscription, canGenerateMore, getRemainingFiches, useCredit } = useSubscription();
+  const router = useRouter();
   
   // Form state
   const [level, setLevel] = useState("CE1");
@@ -333,8 +335,19 @@ export default function GenerateFrenchPage() {
     setCanRegenerate(false);
     setErrorMessage("");
     setCurrentGenerationId(null);
-  };return (
+  };
+
+  return (
     <ProtectedPage>
+      <style jsx>{`
+        .parcours-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        }
+        .parcours-card {
+          transition: all 0.2s ease;
+        }
+      `}</style>
       <Container className="mt-3">
         <Row className="justify-content-center">
           <Col lg={10}>
@@ -623,6 +636,224 @@ export default function GenerateFrenchPage() {
                     })()}
                   </div>
                 </form>
+              </Card.Body>
+            </Card>
+
+            {/* Parcours Section */}
+            <Card className="shadow-sm border-0 mt-4">
+              <Card.Body className="p-3">
+                <div className="text-center mb-4">
+                  <h3 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
+                    <i className="bi bi-collection me-2"></i>
+                    Générer des Parcours
+                  </h3>
+                  <p className="text-muted">
+                    Créez des programmes d'exercices sur plusieurs semaines avec des thématiques structurées
+                  </p>
+                </div>
+
+                <div className="row g-3">
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-primary"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours?template=conjugaison-ce1');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-primary mb-2">
+                          <i className="bi bi-alphabet"></i>
+                        </div>
+                        <h5 className="fw-bold">Conjugaison CE1</h5>
+                        <p className="small text-muted mb-2">
+                          Apprentissage progressif de la conjugaison
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="primary">CE1</Badge>
+                          <Badge bg="secondary">4 semaines</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          ~8 fiches
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-success"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours?template=grammaire-ce2');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-success mb-2">
+                          <i className="bi bi-book"></i>
+                        </div>
+                        <h5 className="fw-bold">Grammaire CE2</h5>
+                        <p className="small text-muted mb-2">
+                          Révision complète de la grammaire
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="success">CE2</Badge>
+                          <Badge bg="secondary">6 semaines</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          ~12 fiches
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-warning"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours?template=revision-ete-ce1');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-warning mb-2">
+                          <i className="bi bi-sun"></i>
+                        </div>
+                        <h5 className="fw-bold">Révision été CE1</h5>
+                        <p className="small text-muted mb-2">
+                          Programme de révision vacances
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="warning">CE1</Badge>
+                          <Badge bg="secondary">8 semaines</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          ~8 fiches
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+                </div>
+
+                <div className="row g-3 mt-2">
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-info"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours?template=lecture-cp');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-info mb-2">
+                          <i className="bi bi-eye"></i>
+                        </div>
+                        <h5 className="fw-bold">Lecture CP</h5>
+                        <p className="small text-muted mb-2">
+                          Apprentissage de la lecture progressive
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="info">CP</Badge>
+                          <Badge bg="secondary">12 semaines</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          ~36 fiches
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-danger"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours?template=orthographe-cm1');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-danger mb-2">
+                          <i className="bi bi-pencil"></i>
+                        </div>
+                        <h5 className="fw-bold">Orthographe CM1</h5>
+                        <p className="small text-muted mb-2">
+                          Maîtrise de l'orthographe lexicale
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="danger">CM1</Badge>
+                          <Badge bg="secondary">10 semaines</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          ~20 fiches
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-dark"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours?template=preparation-6eme');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-dark mb-2">
+                          <i className="bi bi-mortarboard"></i>
+                        </div>
+                        <h5 className="fw-bold">Préparation 6ème</h5>
+                        <p className="small text-muted mb-2">
+                          Révision complète pour le collège
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="dark">CM2</Badge>
+                          <Badge bg="secondary">6 semaines</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          ~18 fiches
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+                </div>
+
+                <div className="row g-3 mt-2 justify-content-center">
+                  <div className="col-md-4">
+                    <Card 
+                      className="h-100 parcours-card border-secondary"
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => {
+                        router.push('/generate/parcours');
+                      }}
+                    >
+                      <Card.Body className="text-center p-3">
+                        <div className="display-6 text-secondary mb-2">
+                          <i className="bi bi-plus-circle"></i>
+                        </div>
+                        <h5 className="fw-bold">Autres...</h5>
+                        <p className="small text-muted mb-2">
+                          Créer un parcours personnalisé
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-2">
+                          <Badge bg="secondary">Personnalisé</Badge>
+                        </div>
+                        <div className="text-muted small">
+                          Configurez votre parcours
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </div>
+                </div>
+
+                <div className="text-center mt-4">
+                  <Alert variant="light" className="border">
+                    <i className="bi bi-info-circle me-2"></i>
+                    <strong>Nouveau !</strong> Les parcours vous permettent de générer automatiquement 
+                    une série de fiches d'exercices sur plusieurs semaines, parfaitement structurées 
+                    selon une progression pédagogique.
+                  </Alert>
+                </div>
               </Card.Body>
             </Card>
           </Col>

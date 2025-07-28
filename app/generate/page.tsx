@@ -10,11 +10,16 @@ export default function GeneratePage() {
 
   return (
     <ProtectedPage>
-      <div className="container mt-5" style={{ maxWidth: 500 }}>
-        <h2 className="mb-4 d-flex align-items-center gap-2">
-          <i className="bi bi-pen"></i>
-          {t('generate.title')}
-        </h2>
+      <div className="container mt-3" style={{ maxWidth: 600 }}>
+        {/* Enhanced Main Title */}
+        <div className="text-center mb-4">
+          <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
+            <i className="bi bi-pen me-2"></i>
+            {t('generate.title')}
+          </h2>
+          <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
+        </div>
+        
         <div className="d-flex flex-column gap-3">
             <Button
             variant="secondary"
