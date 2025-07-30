@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [showTempError, setShowTempError] = useState(false);
   // Email validation function
   const isValidEmail = (email: string): boolean => {
     return validators.isValidEmail(email);
@@ -68,6 +69,7 @@ export default function LoginPage() {
   const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setShowTempError(false);
     
     // Validate verification code
     const codeValidation = validators.validateVerificationCode(code);
@@ -88,10 +90,40 @@ export default function LoginPage() {
         }
         router.push("/generate"); // Redirect to exercise generation page
       } else {
-        setError(result.message || "Invalid code. Please try again.");
+        // Authentication failed - show temp error and clear input
+        setShowTempError(true);
+        setCode(""); // Clear the input boxes
+        setError(result.message || t('auth.authenticationFailed'));
+        
+        // Focus on first input box after clearing
+        setTimeout(() => {
+          const firstBox = document.getElementById('code-box-0');
+          if (firstBox) (firstBox as HTMLInputElement).focus();
+        }, 100);
+        
+        // Clear the error after 3 seconds
+        setTimeout(() => {
+          setShowTempError(false);
+          setError("");
+        }, 3000);
       }
     } catch (err) {
-      setError("Login failed. Please check your code.");
+      // Authentication failed - show temp error and clear input
+      setShowTempError(true);
+      setCode(""); // Clear the input boxes
+      setError(t('auth.authenticationFailed'));
+      
+      // Focus on first input box after clearing
+      setTimeout(() => {
+        const firstBox = document.getElementById('code-box-0');
+        if (firstBox) (firstBox as HTMLInputElement).focus();
+      }, 100);
+      
+      // Clear the error after 3 seconds
+      setTimeout(() => {
+        setShowTempError(false);
+        setError("");
+      }, 3000);
     }
   };
 
@@ -133,62 +165,96 @@ export default function LoginPage() {
       <div className="mb-3 d-flex justify-content-center">{boxes}</div>
     );
   };return (
-    <div className="container mt-5" style={{ maxWidth: 400 }}>
-      <h2 className="mb-4">{t('login')}</h2>
-      
-      {/* Show success message */}
-      {success && <Alert variant="success">{success}</Alert>}
-        <form onSubmit={handleEmailSubmit}>
-        <div className="mb-3">
-          <label className="form-label">{t('auth.email')}</label>
-          <input
-            type="email"
-            className={`form-control ${emailError ? 'is-invalid' : email && isValidEmail(email) ? 'is-valid' : ''}`}
-            value={email}
-            onChange={handleEmailChange}
-            placeholder="example@domain.com"
-            required
-            disabled={loading}
-          />
-          {emailError && (
-            <div className="invalid-feedback">
-              {emailError}
+    <div className="container-fluid min-vh-100 d-flex align-items-start justify-content-center py-4" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #fef3c7 100%)' }}>
+      <div className="row justify-content-center w-100" style={{ marginTop: '10vh' }}>
+        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+          <div className="card shadow-lg border-0" style={{ borderRadius: '15px' }}>
+            <div className="card-body p-4 p-sm-5">
+              {/* Centered title */}
+              <div className="text-center mb-4">
+                <h2 className="fw-bold text-dark mb-2">{t('login')}</h2>
+                <p className="text-muted">Entrez votre email pour recevoir un code de connexion</p>
+              </div>
+              
+              {/* Show success message */}
+              {success && <Alert variant="success">{success}</Alert>}
+              
+              <form onSubmit={handleEmailSubmit}>
+                <div className="mb-3">
+                  <label className="form-label fw-medium">{t('auth.email')}</label>
+                  <input
+                    type="email"
+                    className={`form-control form-control-lg ${emailError ? 'is-invalid' : email && isValidEmail(email) ? 'is-valid' : ''}`}
+                    value={email}
+                    onChange={handleEmailChange}
+                    placeholder="example@domain.com"
+                    required
+                    disabled={loading}
+                    style={{ borderRadius: '10px' }}
+                  />
+                  {emailError && (
+                    <div className="invalid-feedback">
+                      {emailError}
+                    </div>
+                  )}
+                  {email && isValidEmail(email) && (
+                    <div className="valid-feedback">
+                      {t('auth.validEmail')}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Show error message */}
+                {error && <Alert variant="danger">{error}</Alert>}
+                
+                <Button 
+                  type="submit" 
+                  disabled={loading || !email || !isValidEmail(email) || !!emailError} 
+                  className="w-100 py-3"
+                  variant={email && isValidEmail(email) ? "primary" : "secondary"}
+                  size="lg"
+                  style={{ borderRadius: '10px', fontWeight: '600' }}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      {t('auth.sending')}
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-envelope me-2"></i>
+                      {t('auth.sendMagicLink')}
+                    </>
+                  )}
+                </Button>
+                
+                {/* Helper text */}
+                <div className="text-center mt-3">
+                  <small className="text-muted">
+                    {t('auth.emailHelperText')}
+                  </small>
+                </div>
+              </form>
             </div>
-          )}
-          {email && isValidEmail(email) && (
-            <div className="valid-feedback">
-              {t('auth.validEmail')}
-            </div>
-          )}
+          </div>
         </div>
-          {/* Show error message */}
-        {error && <Alert variant="danger">{error}</Alert>}
-        
-        <Button 
-          type="submit" 
-          disabled={loading || !email || !isValidEmail(email) || !!emailError} 
-          className="w-100"
-          variant={email && isValidEmail(email) ? "primary" : "secondary"}
-        >
-          {loading ? t('auth.sending') : t('auth.sendMagicLink')}
-        </Button>
-        
-        {/* Helper text */}
-        <small className="text-muted mt-2 d-block">
-          {t('auth.emailHelperText')}
-        </small>
-      </form>
+      </div>
       
       <Modal show={showCodeModal} onHide={() => setShowCodeModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>{t('auth.enterMagicCode')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <form onSubmit={handleCodeSubmit}>            <label className="form-label">{t('auth.code')}</label>
+          <form onSubmit={handleCodeSubmit}>            
             {renderCodeBoxes()}
             {/* Hide the old input */}
             <input type="hidden" value={code} required minLength={6} maxLength={6} readOnly />
-            {error && <div className="alert alert-danger mt-3">{error}</div>}
+            {error && (
+              <div className={`alert mt-3 ${showTempError ? 'alert-warning' : 'alert-danger'}`}>
+                {showTempError && <i className="bi bi-exclamation-triangle me-2"></i>}
+                {error}
+              </div>
+            )}
             <Button 
               type="submit" 
               disabled={loading || !validators.isValidVerificationCode(code)} 
@@ -204,7 +270,8 @@ export default function LoginPage() {
                 {t('auth.codeProgress', { current: code.length, total: 6 })}
               </small>
             )}
-          </form>        </Modal.Body>
+          </form>        
+        </Modal.Body>
       </Modal>
     </div>
   );

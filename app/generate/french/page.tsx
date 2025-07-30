@@ -71,7 +71,20 @@ export default function GenerateFrenchPage() {
     { key: "conjugaison", label: "Conjugaison" },
     { key: "vocabulaire", label: "Vocabulaire" },
     { key: "orthographe", label: "Orthographe" },
-  ];  
+  ];
+
+  // Helper function to get icons for exercise types
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case "lecture": return "bi-book";
+      case "comprehension": return "bi-lightbulb";
+      case "grammaire": return "bi-pencil-square";
+      case "conjugaison": return "bi-gear";
+      case "vocabulaire": return "bi-chat-dots";
+      case "orthographe": return "bi-check2-square";
+      default: return "bi-circle";
+    }
+  };  
   const toggleType = (type: string) => {
     const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"];
     
@@ -360,84 +373,94 @@ export default function GenerateFrenchPage() {
             </div>
             
               <Card className="shadow-sm border-0">
-              <Card.Body className="p-3">                <form onSubmit={handlePreview}>
-                  {/* Level and Duration Selection - Side by Side */}
-                  <Row className="mb-3">
-                    <Col md={6}>
-                      <h5 className="mb-2 fw-semibold text-dark">
-                        <i className="fas fa-graduation-cap me-2 text-primary"></i>
-                        Niveau
-                      </h5>
-                      <div className="d-flex gap-2 flex-wrap">
-                        {levels.map((lvl) => (
-                          <Button
-                            key={lvl}
-                            variant={level === lvl ? "warning" : "outline-secondary"}
-                            className={styles.selectorBtn}
-                            onClick={() => setLevel(lvl)}
-                            type="button"
-                          >
-                            {lvl}
-                          </Button>
-                        ))}
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <h5 className="mb-2 fw-semibold text-dark">
-                        <i className="fas fa-clock me-2 text-primary"></i>
-                        Durée de la séance
-                      </h5>
-                      <div className="d-flex gap-2 flex-wrap">
-                        {durations.map((dur) => (
-                          <Button
-                            key={dur}
-                            variant={duration === dur ? "warning" : "outline-secondary"}
-                            className={styles.selectorBtn}
-                            onClick={() => setDuration(dur)}
-                            type="button"
-                          >
-                            {dur}
-                          </Button>
-                        ))}
-                      </div>
-                    </Col>
-                  </Row>                  {/* Exercise Types Selection */}
-                  <div className="mb-3">
-                    <h5 className="mb-2">Types d'exercices</h5>
-                    <div className="d-flex gap-2 flex-wrap">
-                      {frenchTypes.map(type => {
-                        const hasSettings = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"].includes(type.key);
-                        const isComprehensionDisabled = type.key === "comprehension" && !selectedTypes.includes("lecture");
-                        
-                        return (
-                          <div key={type.key} className="position-relative">
-                            <Button
-                              variant={selectedTypes.includes(type.key) ? "warning" : "outline-secondary"}
-                              className={styles.selectorBtn}
-                              onClick={() => toggleType(type.key)}
-                              type="button"
-                              disabled={isComprehensionDisabled}
-                              title={isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : ""}
+                <Card.Body className="p-4">
+                  <form onSubmit={handlePreview}>
+                    <div className="row g-3">
+                      {/* Level Selection */}
+                      <div className="col-12">
+                        <h6 className="mb-3">Niveau</h6>
+                        <div className="d-flex gap-2 flex-wrap">
+                          {levels.map((lvl) => (
+                            <Card 
+                              key={lvl}
+                              className={`${styles.selectorCard} border border-2 ${level === lvl ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                              onClick={() => setLevel(lvl)}
+                              style={{ cursor: 'pointer', minWidth: '60px' }}
                             >
-                              {type.label}
-                              {isComprehensionDisabled && (
-                                <span className="ms-1 text-muted">
-                                  <i className="fas fa-lock" style={{ fontSize: '0.8em' }}></i>
+                              <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
+                                <span className={`fw-bold ${level === lvl ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                  {lvl}
                                 </span>
-                              )}
-                            </Button>
-                          </div>
-                        );
-                      })}
+                              </Card.Body>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Duration Selection */}
+                      <div className="col-12">
+                        <h6 className="mb-3">Durée de la séance</h6>
+                        <div className="d-flex gap-2">
+                          {durations.map((dur) => (
+                            <div key={dur} className="flex-fill">
+                              <Card 
+                                className={`${styles.selectorCard} border border-2 ${duration === dur ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
+                                onClick={() => setDuration(dur)}
+                                style={{ cursor: 'pointer' }}
+                              >
+                                <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
+                                  <span className={`fw-bold ${duration === dur ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                    {dur}
+                                  </span>
+                                </Card.Body>
+                              </Card>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Exercise Types Selection */}
+                      <div className="col-12">
+                        <h6 className="mb-3">Types d'exercices</h6>
+                        <div className="d-flex gap-2 flex-wrap">
+                          {frenchTypes.map(type => {
+                            const hasSettings = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"].includes(type.key);
+                            const isComprehensionDisabled = type.key === "comprehension" && !selectedTypes.includes("lecture");
+                            const isSelected = selectedTypes.includes(type.key);
+                            
+                            return (
+                              <Card 
+                                key={type.key}
+                                className={`${styles.selectorCard} border border-2 ${isSelected ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                                onClick={() => !isComprehensionDisabled && toggleType(type.key)}
+                                style={{ 
+                                  cursor: isComprehensionDisabled ? 'not-allowed' : 'pointer',
+                                  opacity: isComprehensionDisabled ? 0.6 : 1,
+                                  minWidth: '120px'
+                                }}
+                                title={isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : ""}
+                              >
+                                <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center" style={{ position: 'relative' }}>
+                                  <span className={`fw-bold ${isSelected ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                    {type.label}
+                                  </span>
+                                  {isComprehensionDisabled && (
+                                    <i className="bi bi-lock position-absolute" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
+                                  )}
+                                </Card.Body>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                        <small className="text-muted">Sélectionnez un ou plusieurs types d'exercices</small>
+                      </div>
                     </div>
-                    <small className="text-muted">Sélectionnez un ou plusieurs types d'exercices</small>
-                  </div>
 
                   {/* Exercise Parameters Section */}
                   <div className="mb-3">
                     {(selectedTypes.some(type => exerciceTypeParams[type])) && (
                       <div>
-                        <h6 className="mb-2 text-muted">Paramètres des exercices</h6>
+                        <h6 className="mb-3 text-muted">Paramètres des exercices</h6>
                         
                         <div className="d-flex gap-2 flex-wrap">
                           {/* Lecture parameters */}
@@ -463,14 +486,14 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="fas fa-book-open me-1"></i>
+                                  <i className="bi bi-book-open me-1"></i>
                                   Lecture
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.lecture.theme || "Thème général"}
                                 </div>
                               </div>
-                              <i className="fas fa-edit text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
                             </div>
                           )}
                           
@@ -497,14 +520,14 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="fas fa-cog me-1"></i>
+                                  <i className="bi bi-gear me-1"></i>
                                   Conjugaison
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.conjugaison.verbs} • {exerciceTypeParams.conjugaison.tenses}
                                 </div>
                               </div>
-                              <i className="fas fa-edit text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
                             </div>
                           )}
 
@@ -531,14 +554,14 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="fas fa-book me-1"></i>
+                                  <i className="bi bi-book me-1"></i>
                                   Grammaire
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.grammaire.types}
                                 </div>
                               </div>
-                              <i className="fas fa-edit text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
                             </div>
                           )}
 
@@ -565,14 +588,14 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="fas fa-spell-check me-1"></i>
+                                  <i className="bi bi-chat-text me-1"></i>
                                   Vocabulaire
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.vocabulaire.words || exerciceTypeParams.vocabulaire.theme}
                                 </div>
                               </div>
-                              <i className="fas fa-edit text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
                             </div>
                           )}
 
@@ -599,14 +622,14 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="fas fa-pen me-1"></i>
+                                  <i className="bi bi-pen me-1"></i>
                                   Orthographe
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.orthographe.words || exerciceTypeParams.orthographe.rules}
                                 </div>
                               </div>
-                              <i className="fas fa-edit text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
                             </div>
                           )}
                         </div>

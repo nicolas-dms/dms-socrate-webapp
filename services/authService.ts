@@ -49,7 +49,6 @@ export interface UserResponse {
   user_id: string;
   email: string;
   username: string;
-  profile_picture: string;
 }
 
 export const authService = {
@@ -57,7 +56,7 @@ export const authService = {
   sendMagicCode: async (email: string): Promise<SendCodeResponse> => {
     debugLog.auth('Sending magic code', { email });
     
-    if (config.MOCK_APIS) {
+    if (config.MOCK_AUTH) {
       // Mock response - always succeeds
       const mockResponse: SendCodeResponse = {
         message: "Verification code sent successfully!"
@@ -68,7 +67,7 @@ export const authService = {
     
     // CORRIGÉ: URL et paramètres conformes au backend
     const response = await api.post<SendCodeResponse>(
-      '/api/auth/send-code?app_name=socrate', 
+      '/api/auth/send-code', 
       { email }
     );
     debugLog.auth('Magic code response', response.data);
@@ -79,7 +78,7 @@ export const authService = {
   login: async (email: string, code: string): Promise<LoginResponse> => {
     debugLog.auth('Login attempt', { email, code: '***' });
     
-    if (config.MOCK_APIS) {
+    if (config.MOCK_AUTH) {
       // Mock response - always succeeds
       const mockToken = 'mock-jwt-token-' + Date.now();
       const mockResponse: LoginResponse = {
@@ -134,13 +133,12 @@ export const authService = {
 
   // Get current user info
   getCurrentUser: async (): Promise<UserResponse> => {
-    if (config.MOCK_APIS) {
+    if (config.MOCK_AUTH) {
       // Mock response - return mock user data
       const mockUser: UserResponse = {
         user_id: config.MOCK_USER.user_id,
         email: config.MOCK_USER.email,
-        username: config.MOCK_USER.username,
-        profile_picture: config.MOCK_USER.profile_picture || ''
+        username: config.MOCK_USER.username
       };
       debugLog.user('Mock current user data', mockUser);
       return mockUser;
@@ -160,7 +158,7 @@ export const authService = {
     try {
       debugLog.auth('Logout attempt');
       
-      if (config.MOCK_APIS) {
+      if (config.MOCK_AUTH) {
         // Mock response - always succeeds
         const mockResponse: LogoutResponse = {
           message: "Logout successful"
@@ -187,7 +185,7 @@ export const authService = {
   refreshToken: async (refreshToken: string): Promise<RefreshResponse> => {
     debugLog.auth('Refreshing token');
     
-    if (config.MOCK_APIS) {
+    if (config.MOCK_AUTH) {
       // Mock response - generate new mock token
       const newMockToken = 'mock-jwt-token-refreshed-' + Date.now();
       const mockResponse: RefreshResponse = {
@@ -224,8 +222,8 @@ export const authService = {
   // NOUVEAU: Health check de l'auth
   healthCheck: async (): Promise<any> => {
     debugLog.auth('Auth health check');
-    
-    if (config.MOCK_APIS) {
+
+    if (config.MOCK_AUTH) {
       return { status: 'healthy', service: 'auth', timestamp: new Date().toISOString() };
     }
     

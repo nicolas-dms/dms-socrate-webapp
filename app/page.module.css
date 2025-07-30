@@ -50,7 +50,8 @@
   }
 }
 
-.ctaPrimary {
+.ctaPrimary,
+.ctaButton {
   background: linear-gradient(135deg, #87ceeb, #70b8d6) !important; /* Lighter blue gradient */
   border: none !important;
   padding: 1rem 2.5rem;
@@ -63,7 +64,8 @@
   text-decoration: none;
 }
 
-.ctaPrimary:hover {
+.ctaPrimary:hover,
+.ctaButton:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 35px rgba(135, 206, 235, 0.4); /* Lighter blue shadow */
   background: linear-gradient(135deg, #70b8d6, #87ceeb) !important; /* Lighter blue gradient */
@@ -71,7 +73,8 @@
 }
 
 @media (max-width: 576px) {
-  .ctaPrimary {
+  .ctaPrimary,
+  .ctaButton {
     padding: 0.8rem 2rem;
     font-size: 1.1rem;
   }
@@ -128,6 +131,27 @@
   background: #ffffff;
 }
 
+/* Section Titles - similar to hero title but smaller */
+.sectionTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .sectionTitle {
+    font-size: 1.3rem;
+  }
+}
+
 .selectorBtn {
   padding: 0.7rem 1.5rem;
   border-radius: 25px;
@@ -140,6 +164,32 @@
 .selectorBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Parcours Template Cards */
+.parcoursTemplate {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.parcoursTemplate:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Selector Cards - matching parcours design */
+.selectorCard {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.selectorCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
 }
 
 @media (max-width: 576px) {
@@ -171,7 +221,7 @@
 /* Exercise Preview */
 .preview {
   padding: 4rem 0;
-  background: linear-gradient(135deg, #fef3c7 0%, #ecf0f1 100%); /* Soft yellow to light gray */
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); /* Soft yellow/white gradient */
 }
 
 .exerciseCard {
@@ -254,7 +304,7 @@
 /* Testimonials */
 .testimonials {
   padding: 4rem 0;
-  background: linear-gradient(135deg, #f8f6f1 0%, #e6e2d8 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); /* Soft yellow/white gradient */
 }
 
 .testimonialCard {
@@ -295,24 +345,24 @@
 /* Footer */
 .footer {
   padding: 3rem 0 2rem;
-  background: #2c3e50;
-  color: #ffffff;
+  background: #fef3c7;
+  color: #2c3e50;
   margin-top: auto;
 }
 
 .footerLogo {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #2c3e50;
 }
 
 .footer a {
-  color: #bdc3c7;
+  color: #6c757d;
   transition: color 0.3s ease;
 }
 
 .footer a:hover {
-  color: #ffffff;
+  color: #2c3e50;
 }
 
 /* Responsive adjustments */

@@ -80,164 +80,204 @@ export default function Home() {
       <section className={styles.selectors}>
         <Container>
           <Row className="justify-content-center">
-            <Col lg={10}>
-              <h3 className="text-center mb-4">Configurez votre fiche en quelques clics</h3>
-              <p className="text-center text-muted mb-4">
+            <Col lg={12}>
+              <h3 className="text-center mb-4">Configurez vos fiches en quelques clics</h3>
+              <p className="text-center text-muted mb-5">
                 Créez une fiche individuelle ou planifiez un parcours complet sur plusieurs semaines
               </p>
               
-              {/* Subject Selection */}
-              <div className="mb-4">
-                <h5 className="mb-3">Matière</h5>
-                <div className="d-flex gap-2 flex-wrap">
-                  {subjects.map((subject) => (
-                    <Button
-                      key={subject}
-                      variant={selectedSubject === subject.toLowerCase() ? "warning" : "outline-secondary"}
-                      className={styles.selectorBtn}
-                      onClick={() => setSelectedSubject(subject.toLowerCase())}
-                    >
-                      {subject}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <Row>
+                {/* Left Column - Individual Worksheet Selectors */}
+                <Col lg={6} className="mb-4">
+                  <Card className="h-100 border-0 shadow-sm d-flex flex-column">
+                    <Card.Body className="p-4 d-flex flex-column flex-grow-1">
+                      <div className="flex-grow-1">
+                        <h5 className={`mb-4 text-center ${styles.sectionTitle}`}>
+                          <i className="bi bi-file-earmark-text me-2 text-warning"></i>
+                          Fiche individuelle
+                        </h5>
+                        
+                        <div className="row g-3">
+                          {/* Subject Selection */}
+                          <div className="col-12">
+                            <h6 className="mb-3">Matière</h6>
+                            <div className="d-flex gap-2">
+                              {subjects.map((subject) => (
+                                <div key={subject} className="flex-fill">
+                                  <Card 
+                                    className={`${styles.selectorCard} border border-2 ${selectedSubject === subject.toLowerCase() ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
+                                    onClick={() => setSelectedSubject(subject.toLowerCase())}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
+                                      <span className={`fw-bold ${selectedSubject === subject.toLowerCase() ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                        {subject}
+                                      </span>
+                                    </Card.Body>
+                                  </Card>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-              {/* Level Selection */}
-              <div className="mb-4">
-                <h5 className="mb-3">Niveau</h5>
-                <div className="d-flex gap-2 flex-wrap">
-                  {levels.map((level) => (
-                    <Button
-                      key={level}
-                      variant={selectedLevel === level ? "warning" : "outline-secondary"}
-                      className={styles.selectorBtn}
-                      onClick={() => setSelectedLevel(level)}
-                    >
-                      {level}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+                          {/* Level Selection */}
+                          <div className="col-12">
+                            <h6 className="mb-3">Niveau</h6>
+                            <div className="d-flex gap-2 flex-wrap">
+                              {levels.map((level) => (
+                                <Card 
+                                  key={level}
+                                  className={`${styles.selectorCard} border border-2 ${selectedLevel === level ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                                  onClick={() => setSelectedLevel(level)}
+                                  style={{ cursor: 'pointer', minWidth: '60px' }}
+                                >
+                                  <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
+                                    <span className={`fw-bold ${selectedLevel === level ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                      {level}
+                                    </span>
+                                  </Card.Body>
+                                </Card>
+                              ))}
+                            </div>
+                          </div>
 
-              {/* Duration Selection */}
-              <div className="mb-4">
-                <h5 className="mb-3">Durée</h5>
-                <div className="d-flex gap-2 flex-wrap">
-                  {durations.map((duration) => (
-                    <Button
-                      key={duration}
-                      variant={selectedDuration === duration ? "warning" : "outline-secondary"}
-                      className={styles.selectorBtn}
-                      onClick={() => setSelectedDuration(duration)}
-                    >
-                      {duration}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="text-center mt-4">
-                <Link href={`/generate/${selectedSubject}`}>
-                  <Button variant="warning" size="lg" className="me-3 mb-2">
-                    Générer une fiche maintenant
-                  </Button>
-                </Link>
-                <Link href="/generate/parcours">
-                  <Button variant="outline-primary" size="lg" className="mb-2">
-                    Créer un parcours personnalisé
-                  </Button>
-                </Link>
-              </div>
+                          {/* Duration Selection */}
+                          <div className="col-12">
+                            <h6 className="mb-3">Durée</h6>
+                            <div className="d-flex gap-2">
+                              {durations.map((duration) => (
+                                <div key={duration} className="flex-fill">
+                                  <Card 
+                                    className={`${styles.selectorCard} border border-2 ${selectedDuration === duration ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
+                                    onClick={() => setSelectedDuration(duration)}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
+                                      <span className={`fw-bold ${selectedDuration === duration ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                        {duration}
+                                      </span>
+                                    </Card.Body>
+                                  </Card>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Action Button */}
+                      <div className="text-center mt-4">
+                        <Link href={`/generate/${selectedSubject}`}>
+                          <Button size="lg" className={`w-100 ${styles.ctaButton}`}>
+                            <i className="bi bi-lightning-fill me-2"></i>
+                            Générer une fiche maintenant
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Right Column - Parcours Templates */}
+                <Col lg={6} className="mb-4">
+                  <Card className="h-100 border-0 shadow-sm d-flex flex-column">
+                    <Card.Body className="p-4 d-flex flex-column flex-grow-1">
+                      <div className="flex-grow-1">
+                        <h5 className={`mb-4 text-center ${styles.sectionTitle}`}>
+                          <i className="bi bi-collection me-2 text-primary"></i>
+                          Parcours personnalisés
+                        </h5>
+                        
+                        <div className="row g-3">
+                          {/* Parcours Template 1 */}
+                          <div className="col-12">
+                            <Link href="/generate/parcours?template=conjugaison-ce1" className="text-decoration-none">
+                              <Card className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}>
+                                <Card.Body className="p-3">
+                                  <div className="d-flex align-items-center">
+                                    <div className="flex-shrink-0 me-3">
+                                      <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                                        <i className="bi bi-book"></i>
+                                      </div>
+                                    </div>
+                                    <div className="flex-grow-1">
+                                      <h6 className="mb-1 text-dark">Conjugaison CE1 en 4 semaines</h6>
+                                      <small className="text-muted">Présent, futur, passé composé</small>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <span className="badge bg-primary-subtle text-primary">CE1</span>
+                                    </div>
+                                  </div>
+                                </Card.Body>
+                              </Card>
+                            </Link>
+                          </div>
+
+                          {/* Parcours Template 2 */}
+                          <div className="col-12">
+                            <Link href="/generate/parcours?template=revision-cm2-francais" className="text-decoration-none">
+                              <Card className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}>
+                                <Card.Body className="p-3">
+                                  <div className="d-flex align-items-center">
+                                    <div className="flex-shrink-0 me-3">
+                                      <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                                        <i className="bi bi-mortarboard"></i>
+                                      </div>
+                                    </div>
+                                    <div className="flex-grow-1">
+                                      <h6 className="mb-1 text-dark">Révisions CM2 Français</h6>
+                                      <small className="text-muted">Préparation au collège</small>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <span className="badge bg-primary-subtle text-primary">CM2</span>
+                                    </div>
+                                  </div>
+                                </Card.Body>
+                              </Card>
+                            </Link>
+                          </div>
+
+                          {/* Parcours Template 3 */}
+                          <div className="col-12">
+                            <Link href="/generate/parcours?template=lecture-comprehension-ce2" className="text-decoration-none">
+                              <Card className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}>
+                                <Card.Body className="p-3">
+                                  <div className="d-flex align-items-center">
+                                    <div className="flex-shrink-0 me-3">
+                                      <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                                        <i className="bi bi-journal-text"></i>
+                                      </div>
+                                    </div>
+                                    <div className="flex-grow-1">
+                                      <h6 className="mb-1 text-dark">Lecture & Compréhension CE2</h6>
+                                      <small className="text-muted">Stratégies de lecture</small>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <span className="badge bg-primary-subtle text-primary">CE2</span>
+                                    </div>
+                                  </div>
+                                </Card.Body>
+                              </Card>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* See More Button */}
+                      <div className="text-center mt-4">
+                        <Link href="/generate/parcours">
+                          <Button className={`w-100 ${styles.ctaButton}`}>
+                            <i className="bi bi-plus-circle me-2"></i>
+                            Voir tous les parcours
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
             </Col>
           </Row>
-        </Container>
-      </section>
-
-      {/* Parcours Section */}
-      <section className={styles.parcours}>
-        <Container>
-          <div className={styles.parcoursContent}>
-            <Row className="justify-content-center text-center mb-5">
-              <Col lg={8}>
-                <h3 className={styles.parcoursMainTitle}>
-                  Créez des parcours d'apprentissage personnalisés
-                </h3>
-                <p className={styles.parcoursSubtitle}>
-                  Planifiez des semaines d'exercices thématiques pour un apprentissage progressif et structuré
-                </p>
-              </Col>
-            </Row>
-            
-            <Row>
-              <Col md={6} className="mb-4">
-                <Card className={styles.parcoursCard}>
-                  <Card.Body className="text-center p-4">
-                    <div className={styles.parcoursIcon}>
-                      🎯
-                    </div>
-                    <h5 className={styles.parcoursTitle}>Parcours Ciblés</h5>
-                    <p className={styles.parcoursDescription}>
-                      Créez des séries d'exercices sur mesure pour travailler des compétences spécifiques : 
-                      préparation aux évaluations, remise à niveau, ou approfondissement.
-                    </p>
-                    <Link href="/generate/parcours" className={styles.parcoursBtn}>
-                      Créer un parcours
-                    </Link>
-                  </Card.Body>
-                </Card>
-              </Col>
-              
-              <Col md={6} className="mb-4">
-                <Card className={styles.parcoursCard}>
-                  <Card.Body className="text-center p-4">
-                    <div className={styles.parcoursIcon}>
-                      📅
-                    </div>
-                    <h5 className={styles.parcoursTitle}>Planification Intelligente</h5>
-                    <p className={styles.parcoursDescription}>
-                      Organisez l'apprentissage sur plusieurs semaines avec une progression logique. 
-                      Parfait pour les vacances scolaires ou un entraînement régulier.
-                    </p>
-                    <Link href="/generate/parcours" className={styles.parcoursBtn}>
-                      Découvrir les modèles
-                    </Link>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-            
-            <Row className="justify-content-center mt-4">
-              <Col md={8} className="text-center">
-                <Card className={`${styles.parcoursCard} py-3`}>
-                  <Card.Body>
-                    <Row className="align-items-center">
-                      <Col md={2} className="text-center">
-                        <div className={styles.parcoursIcon} style={{ margin: '0 auto', width: '60px', height: '60px', fontSize: '1.5rem' }}>
-                          ✨
-                        </div>
-                      </Col>
-                      <Col md={8}>
-                        <h6 className="mb-2" style={{ color: '#1f2937', fontWeight: '600' }}>
-                          💡 <strong>Astuce :</strong> Utilisez nos modèles pré-conçus
-                        </h6>
-                        <p className="mb-0" style={{ color: '#6b7280', fontSize: '0.95rem' }}>
-                          "Révisions de rentrée", "Préparation aux évaluations", "Remise à niveau CM1"... 
-                          Démarrez avec nos parcours testés par des enseignants !
-                        </p>
-                      </Col>
-                      <Col md={2} className="text-center">
-                        <Link href="/generate/parcours?template=true" className="btn btn-sm btn-outline-warning">
-                          Voir les modèles
-                        </Link>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </div>
         </Container>
       </section>
 
@@ -267,7 +307,7 @@ export default function Home() {
             ))}
           </Row>
           <div className="text-center">
-            <Button variant="outline-primary">Voir un aperçu PDF</Button>
+            <Button className={styles.ctaButton}>Voir un aperçu PDF</Button>
           </div>
         </Container>
       </section>

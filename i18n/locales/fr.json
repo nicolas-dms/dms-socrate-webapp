@@ -12,8 +12,8 @@
   "logout": "Se déconnecter",  "auth": {
     "email": "Email",
     "sending": "Envoi en cours...",
-    "sendMagicLink": "Envoyer le lien magique",
-    "enterMagicCode": "Entrer le code magique",
+    "sendMagicLink": "Envoyer le code",
+    "enterMagicCode": "Entrer le code",
     "code": "Code",
     "verifying": "Vérification...",
     "verifyCodeLogin": "Vérifier le code et se connecter",
@@ -25,7 +25,8 @@
     "emailHelperText": "Saisissez une adresse email valide pour recevoir votre code de vérification",
     "emailRequired": "L'adresse email est obligatoire",
     "invalidCodeFormat": "Le code de vérification doit contenir exactement 6 chiffres",
-    "codeProgress": "Saisissez {{current}} sur {{total}} chiffres"
+    "codeProgress": "Saisissez {{current}} sur {{total}} chiffres",
+    "authenticationFailed": "L'authentification a échoué, veuillez réessayer"
   },
   
   "generate": {

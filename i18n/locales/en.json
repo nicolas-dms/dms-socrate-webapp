@@ -25,7 +25,8 @@
     "emailHelperText": "Enter a valid email address to receive your verification code",
     "emailRequired": "Email address is required",
     "invalidCodeFormat": "Verification code must be exactly 6 digits",
-    "codeProgress": "Enter {{current}} of {{total}} digits"
+    "codeProgress": "Enter {{current}} of {{total}} digits",
+    "authenticationFailed": "Authentication failed, please try again"
   },
   
   "generate": {
