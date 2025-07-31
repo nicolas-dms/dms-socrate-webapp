@@ -25,6 +25,33 @@ export interface ParcoursConfig {
   exerciceTypeParams?: ExerciceTypeParam;
 }
 
+// Interface for parcours session/fiche within a parcours
+export interface ParcoursSession {
+  id: string;
+  title: string; // Title/name of the fiche
+  theme: string; // Theme of the fiche
+  status: 'pending' | 'generating' | 'completed' | 'failed';
+  pdf_url?: string;
+  created_at: string;
+}
+
+// Interface for active/running parcours instances
+export interface ActiveParcours extends ParcoursTemplate {
+  status: 'pending' | 'generating' | 'completed' | 'failed';
+  progress: {
+    completed: number;
+    total: number;
+    percentage: number;
+  };
+  created_at: string;
+  estimated_completion?: string;
+  sessions?: ParcoursSession[]; // Generated sessions/fiches
+  totalWeeks: number;
+  fichesPerWeek: number;
+  totalFiches: number;
+  zip_url?: string; // URL for downloading all fiches as ZIP
+}
+
 // Predefined parcours templates
 export const PARCOURS_TEMPLATES: ParcoursTemplate[] = [
   {

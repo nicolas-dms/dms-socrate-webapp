@@ -1,0 +1,1566 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DMSAPP Backend",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/auth/send-code": {
+      "post": {
+        "summary": "Send Code",
+        "description": "Request a magic link code for authentication.\nThe code will be sent to the provided email address.",
+        "operationId": "send_code_api_auth_send_code_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendCodeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Verify magic link code and return authentication token with user data.\nCreates a new user if they don't exist.",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Get Current User Info",
+        "description": "Get current authenticated user information.\nRequires valid JWT token in Authorization header.",
+        "operationId": "get_current_user_info_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Logout User",
+        "description": "Logout user by invalidating their session token.",
+        "operationId": "logout_user_api_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "Refresh Token",
+        "description": "Refresh JWT token using refresh token.",
+        "operationId": "refresh_token_api_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/health": {
+      "get": {
+        "summary": "Auth Health Check",
+        "description": "Health check endpoint for authentication service.",
+        "operationId": "auth_health_check_api_auth_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health/cosmos": {
+      "get": {
+        "summary": "Cosmos Health Check",
+        "operationId": "cosmos_health_check_api_health_cosmos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/infra/create-databases-containers": {
+      "post": {
+        "summary": "Create Databases And Containers",
+        "operationId": "create_databases_and_containers_api_infra_create_databases_containers_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{user_id}": {
+      "get": {
+        "summary": "Get User",
+        "description": "Get user by ID",
+        "operationId": "get_user_api_users__user_id__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "User ID (email)",
+              "title": "User Id"
+            },
+            "description": "User ID (email)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update User",
+        "description": "Update user",
+        "operationId": "update_user_api_users__user_id__put",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "User ID (email)",
+              "title": "User Id"
+            },
+            "description": "User ID (email)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User",
+        "description": "Delete user",
+        "operationId": "delete_user_api_users__user_id__delete",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "User ID (email)",
+              "title": "User Id"
+            },
+            "description": "User ID (email)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "Get User By Email",
+        "description": "Get user by email",
+        "operationId": "get_user_by_email_api_users_get",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Email"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UserModel"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get User By Email Api Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create User",
+        "description": "Create new user",
+        "operationId": "create_user_api_users_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/generate/{userId}": {
+      "post": {
+        "summary": "Generate Exercises",
+        "operationId": "generate_exercises_api_education_exercises_generate__userId__post",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Userid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExerciceGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExerciceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference": {
+      "get": {
+        "summary": "Get All Reference Exercises",
+        "description": "Get all reference exercises organized by type and level",
+        "operationId": "get_all_reference_exercises_api_education_exercises_reference_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExerciceModels"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/type/{exercise_type}": {
+      "get": {
+        "summary": "Get Reference Exercises By Type",
+        "description": "Get reference exercises for a specific type",
+        "operationId": "get_reference_exercises_by_type_api_education_exercises_reference_type__exercise_type__get",
+        "parameters": [
+          {
+            "name": "exercise_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ExerciceModel"
+                    }
+                  },
+                  "propertyNames": {
+                    "$ref": "#/components/schemas/ExerciceLevel"
+                  },
+                  "title": "Response Get Reference Exercises By Type Api Education Exercises Reference Type  Exercise Type  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/level/{level}": {
+      "get": {
+        "summary": "Get Reference Exercises By Level",
+        "description": "Get reference exercises for a specific level",
+        "operationId": "get_reference_exercises_by_level_api_education_exercises_reference_level__level__get",
+        "parameters": [
+          {
+            "name": "level",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceLevel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ExerciceModel"
+                    }
+                  },
+                  "propertyNames": {
+                    "$ref": "#/components/schemas/ExerciceType"
+                  },
+                  "title": "Response Get Reference Exercises By Level Api Education Exercises Reference Level  Level  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/{exercise_type}/{level}": {
+      "get": {
+        "summary": "Get Reference Exercises By Type And Level",
+        "description": "Get reference exercises for a specific type and level",
+        "operationId": "get_reference_exercises_by_type_and_level_api_education_exercises_reference__exercise_type___level__get",
+        "parameters": [
+          {
+            "name": "exercise_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceType"
+            }
+          },
+          {
+            "name": "level",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceLevel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceModel"
+                  },
+                  "title": "Response Get Reference Exercises By Type And Level Api Education Exercises Reference  Exercise Type   Level  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/reload": {
+      "post": {
+        "summary": "Reload Reference Data",
+        "description": "Reload reference data from files (useful for development/updates)",
+        "operationId": "reload_reference_data_api_education_exercises_reference_reload_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object",
+                  "title": "Response Reload Reference Data Api Education Exercises Reference Reload Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/types": {
+      "get": {
+        "summary": "Get Available Exercise Types",
+        "description": "Get list of available exercise types",
+        "operationId": "get_available_exercise_types_api_education_exercises_reference_types_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceType"
+                  },
+                  "type": "array",
+                  "title": "Response Get Available Exercise Types Api Education Exercises Reference Types Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/types/{exercise_type}/levels": {
+      "get": {
+        "summary": "Get Available Levels For Type",
+        "description": "Get list of available levels for a specific exercise type",
+        "operationId": "get_available_levels_for_type_api_education_exercises_reference_types__exercise_type__levels_get",
+        "parameters": [
+          {
+            "name": "exercise_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceLevel"
+                  },
+                  "title": "Response Get Available Levels For Type Api Education Exercises Reference Types  Exercise Type  Levels Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/stats": {
+      "get": {
+        "summary": "Get Exercise Statistics",
+        "description": "Get statistics about available exercises",
+        "operationId": "get_exercise_statistics_api_education_exercises_reference_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Exercise Statistics Api Education Exercises Reference Stats Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/reference/{exercise_type}/{level}/count": {
+      "get": {
+        "summary": "Get Exercise Count",
+        "description": "Get the count of exercises for a specific type and level",
+        "operationId": "get_exercise_count_api_education_exercises_reference__exercise_type___level__count_get",
+        "parameters": [
+          {
+            "name": "exercise_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceType"
+            }
+          },
+          {
+            "name": "level",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceLevel"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Get Exercise Count Api Education Exercises Reference  Exercise Type   Level  Count Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ExerciceDomain": {
+        "type": "string",
+        "enum": [
+          "mathematiques",
+          "francais"
+        ],
+        "title": "ExerciceDomain"
+      },
+      "ExerciceGenerationRequest": {
+        "properties": {
+          "theme": {
+            "type": "string",
+            "title": "Theme",
+            "description": "Thème des exercices à générer"
+          },
+          "class_level": {
+            "type": "string",
+            "title": "Class Level",
+            "description": "Niveau de classe",
+            "default": "CE1"
+          },
+          "exercice_domain": {
+            "$ref": "#/components/schemas/ExerciceDomain",
+            "description": "Domaine des exercices"
+          },
+          "exercice_time": {
+            "$ref": "#/components/schemas/ExerciceTime",
+            "description": "Temps estimé pour la feuille d'exercice"
+          },
+          "exercice_types": {
+            "items": {
+              "$ref": "#/components/schemas/ExerciceType"
+            },
+            "type": "array",
+            "title": "Exercice Types",
+            "default": [
+              "lecture",
+              "comprehension"
+            ]
+          },
+          "exercice_type_params": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "propertyNames": {
+                  "$ref": "#/components/schemas/ExerciceType"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercice Type Params",
+            "description": "Paramètres spécifiques à chaque type d'exercice. Exemple : {'conjugaison': {'verbes': ['être', 'avoir'], 'temps': ['présent']}}"
+          },
+          "specific_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specific Requirements",
+            "description": "Exigences spécifiques"
+          }
+        },
+        "type": "object",
+        "required": [
+          "theme",
+          "exercice_domain",
+          "exercice_time"
+        ],
+        "title": "ExerciceGenerationRequest"
+      },
+      "ExerciceLevel": {
+        "type": "string",
+        "enum": [
+          "cp",
+          "ce1",
+          "ce2",
+          "cm1",
+          "cm2"
+        ],
+        "title": "ExerciceLevel"
+      },
+      "ExerciceModel": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ExerciceType",
+            "description": "Type d'exercice"
+          },
+          "level": {
+            "$ref": "#/components/schemas/ExerciceLevel",
+            "description": "Niveau de l'exercice"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Nom de l'exercice"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description de l'exercice"
+          },
+          "instructions": {
+            "type": "string",
+            "title": "Instructions",
+            "description": "Instructions pour l'exercice"
+          },
+          "exemple": {
+            "type": "string",
+            "title": "Exemple",
+            "description": "Exemple de question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "level",
+          "name",
+          "description",
+          "instructions",
+          "exemple"
+        ],
+        "title": "ExerciceModel"
+      },
+      "ExerciceModels": {
+        "properties": {
+          "exercices": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "items": {
+                  "$ref": "#/components/schemas/ExerciceModel"
+                },
+                "type": "array"
+              },
+              "propertyNames": {
+                "$ref": "#/components/schemas/ExerciceLevel"
+              },
+              "type": "object"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ExerciceType"
+            },
+            "type": "object",
+            "title": "Exercices",
+            "description": "Liste des exercices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exercices"
+        ],
+        "title": "ExerciceModels"
+      },
+      "ExerciceResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Indique si la génération a réussi"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "Message d'erreur en cas d'échec"
+          },
+          "pdf_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Path",
+            "description": "Chemin du PDF généré"
+          },
+          "pdf_base64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Base64",
+            "description": "Contenu du PDF encodé en base64 pour affichage direct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "ExerciceResponse"
+      },
+      "ExerciceTime": {
+        "type": "string",
+        "enum": [
+          "20 minutes",
+          "30 minutes",
+          "40 minutes"
+        ],
+        "title": "ExerciceTime"
+      },
+      "ExerciceType": {
+        "type": "string",
+        "enum": [
+          "lecture",
+          "comprehension",
+          "ecriture",
+          "grammaire",
+          "conjugaison",
+          "orthographe",
+          "vocabulaire",
+          "calcul"
+        ],
+        "title": "ExerciceType",
+        "description": "Types of exercises"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "code"
+        ],
+        "title": "LoginRequest"
+      },
+      "LoginResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          },
+          "is_new_user": {
+            "type": "boolean",
+            "title": "Is New User"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "user_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "User Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type",
+          "is_new_user",
+          "message",
+          "user_data"
+        ],
+        "title": "LoginResponse"
+      },
+      "LogoutResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "LogoutResponse"
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshRequest"
+      },
+      "RefreshResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type"
+        ],
+        "title": "RefreshResponse"
+      },
+      "SendCodeRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "SendCodeRequest"
+      },
+      "SendCodeResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "SendCodeResponse"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "app_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Settings"
+          },
+          "user_preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Preferences"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "username"
+        ],
+        "title": "UserCreate"
+      },
+      "UserModel": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Cosmos document unique id"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Business-level user ID (email), also used as partition key"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User's unique email address"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "Username or display name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": false
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "Bearer"
+          },
+          "app_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Settings",
+            "description": "Application-specific settings"
+          },
+          "user_preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Preferences",
+            "description": "User preferences and configurations"
+          },
+          "feature_flags": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Flags",
+            "description": "Feature flags for A/B testing or gradual rollouts"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Additional metadata for future use"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "last_login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "username",
+          "access_token"
+        ],
+        "title": "UserModel",
+        "description": "Unified User Model - Simple CRUD for both education and medication apps"
+      },
+      "UserResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "profile_picture": {
+            "type": "string",
+            "title": "Profile Picture"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "username"
+        ],
+        "title": "UserResponse"
+      },
+      "UserUpdate": {
+        "properties": {
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "app_settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Settings"
+          },
+          "user_preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Preferences"
+          },
+          "feature_flags": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Flags"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "last_login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "JWT access token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "JWT refresh token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "UserUpdate"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

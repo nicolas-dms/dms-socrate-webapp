@@ -1,10 +1,10 @@
 "use client";
 import { useState } from 'react';
 import { Card, Badge, ProgressBar, Button, Modal, ListGroup, Alert } from 'react-bootstrap';
-import { Parcours, ParcoursSession } from '../services/parcoursService';
+import { ActiveParcours, ParcoursSession } from '../services/parcoursService';
 
 interface ParcoursStatusCardProps {
-  parcours: Parcours;
+  parcours: ActiveParcours;
   onDownloadZip?: (parcoursId: string) => void;
   onViewDetails?: (parcoursId: string) => void;
   onCancel?: (parcoursId: string) => void;
@@ -218,7 +218,7 @@ export default function ParcoursStatusCard({
             </div>
           </div>
 
-          {parcours.sessions.length > 0 && (
+          {parcours.sessions && parcours.sessions.length > 0 && (
             <div>
               <h6>Détail des fiches</h6>
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>

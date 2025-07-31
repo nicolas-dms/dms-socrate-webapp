@@ -10,7 +10,8 @@ import GrammarModal, { GrammarParams } from "../../../components/GrammarModal";
 import VocabularyModal, { VocabularyParams } from "../../../components/VocabularyModal";
 import OrthographyModal, { OrthographyParams } from "../../../components/OrthographyModal";
 import { useSubscription } from "../../../context/SubscriptionContext";
-import { pdfGenerationService, GenerationResponse } from "../../../services/pdfGenerationService";
+import { useAuth } from "../../../context/AuthContext";
+import { exerciseService, ExerciseGenerationResponse } from "../../../services/exerciseService";
 import { ExerciceDomain, ExerciceTypeParam } from "../../../types/exerciceTypes";
 import { EXERCISE_CONTENT_CALCULATOR } from "../../../utils/pdfGenerationConfig";
 import { previewBackendRequest } from "../../../utils/requestPreview";
@@ -37,6 +38,7 @@ interface ExercisePreview {
 export default function GenerateFrenchPage() {
   const { t } = useTranslation();
   const { subscription, canGenerateMore, getRemainingFiches, useCredit } = useSubscription();
+  const { user } = useAuth();
   const router = useRouter();
   
   // Form state
@@ -58,11 +60,11 @@ export default function GenerateFrenchPage() {
   const [showGeneratingModal, setShowGeneratingModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [canRegenerate, setCanRegenerate] = useState(false);
+  const [showPDFViewerModal, setShowPDFViewerModal] = useState(false);
   const [preview, setPreview] = useState<ExercisePreview | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [generatedExercise, setGeneratedExercise] = useState<ExerciseGenerationResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [currentGenerationId, setCurrentGenerationId] = useState<string | null>(null);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
 
   const frenchTypes = [
     { key: "lecture", label: "Lecture" },
@@ -274,11 +276,17 @@ export default function GenerateFrenchPage() {
       // Get lecture theme from parameters
       const lectureTheme = exerciceTypeParams.lecture?.theme || "";
       
+      // Validate user authentication
+      if (!user?.user_id) {
+        throw new Error("Utilisateur non authentifié");
+      }
+
       // Preview the backend request (for debugging)
       previewBackendRequest(level, duration, selectedTypes, lectureTheme || "Exercices généraux");
       
-      // Call the PDF generation service
-      const response = await pdfGenerationService.generatePDF(
+      // Call the unified exercise service
+      const response = await exerciseService.generateExercise(
+        user.user_id,
         level,
         duration,
         selectedTypes,
@@ -288,20 +296,15 @@ export default function GenerateFrenchPage() {
         undefined // specific requirements
       );
       
-      setCurrentGenerationId(response.id);
-      
-      // For mock API, we simulate immediate completion
-      // In real implementation, you would poll for status
-      setTimeout(() => {
-        if (response.status === 'completed' && response.pdf_url) {
-          setPdfUrl(response.pdf_url);
-          setShowGeneratingModal(false);
-          setShowSuccessModal(true);
-          setCanRegenerate(true);
-        } else {
-          throw new Error(response.error_message || "Erreur lors de la génération du PDF");
-        }
-      }, 2000);
+      // Check if generation was successful
+      if (response.success && response.pdf_path) {
+        // Store the full response for download handling
+        setGeneratedExercise(response);
+        setShowGeneratingModal(false);
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(response.error_message || "Erreur lors de la génération du PDF");
+      }
       
     } catch (error: any) {
       console.error("Generation failed:", error);
@@ -310,44 +313,89 @@ export default function GenerateFrenchPage() {
       setShowErrorModal(true);
     }
   };
-  const handleRegenerate = async () => {
-    if (!canRegenerate || !currentGenerationId) return;
-    
-    setShowErrorModal(false);
-    setShowGeneratingModal(true);
-    setCanRegenerate(false); // Only one free regeneration
+
+  const handleDownload = async () => {
+    if (!generatedExercise?.pdf_path && !generatedExercise?.pdf_base64) return;
     
     try {
-      // Call the regeneration service
-      const response = await pdfGenerationService.regeneratePDF(currentGenerationId);
+      let blob: Blob;
       
-      // For mock API, we simulate immediate completion
-      setTimeout(() => {
-        if (response.status === 'completed' && response.pdf_url) {
-          setPdfUrl(response.pdf_url);
-          setShowGeneratingModal(false);
-          setShowSuccessModal(true);
-        } else {
-          throw new Error(response.error_message || "Erreur lors de la régénération du PDF");
-        }
-      }, 1500);
+      // Prefer base64 data if available (faster, no additional request)
+      if (generatedExercise.pdf_base64) {
+        blob = exerciseService.base64ToBlob(generatedExercise.pdf_base64);
+      } else if (generatedExercise.pdf_path) {
+        blob = await exerciseService.downloadExercisePDF(generatedExercise.pdf_path);
+      } else {
+        throw new Error('No PDF data available');
+      }
       
-    } catch (error: any) {
-      console.error("Regeneration failed:", error);
-      setErrorMessage(error.message || "Une erreur inattendue s'est produite lors de la régénération");
-      setShowGeneratingModal(false);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `french-exercises-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download PDF:', err);
+      setErrorMessage("Erreur lors du téléchargement du PDF");
       setShowErrorModal(true);
     }
   };
+
+  const handleViewPDF = async () => {
+    if (!generatedExercise) return;
+    
+    try {
+      let blob: Blob;
+      
+      // Try base64 first (faster), fallback to URL download
+      if (generatedExercise.pdf_base64) {
+        blob = exerciseService.base64ToBlob(generatedExercise.pdf_base64);
+      } else if (generatedExercise.pdf_path) {
+        blob = await exerciseService.downloadExercisePDF(generatedExercise.pdf_path);
+      } else {
+        throw new Error("Aucune donnée PDF disponible");
+      }
+      
+      const url = URL.createObjectURL(blob);
+      setPdfViewerUrl(url);
+      setShowPDFViewerModal(true);
+    } catch (err) {
+      console.error('Failed to view PDF:', err);
+      setErrorMessage("Erreur lors de l'affichage du PDF");
+      setShowErrorModal(true);
+    }
+  };
+
+  const handlePrintPDF = () => {
+    if (pdfViewerUrl) {
+      const printWindow = window.open(pdfViewerUrl, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+    }
+  };
+
+  const closePDFViewer = () => {
+    setShowPDFViewerModal(false);
+    if (pdfViewerUrl) {
+      URL.revokeObjectURL(pdfViewerUrl);
+      setPdfViewerUrl(null);
+    }
+  };
+
   const resetFlow = () => {
     setShowSuccessModal(false);
     setShowErrorModal(false);
     setShowPreviewModal(false);
     setShowGeneratingModal(false);
-    setPdfUrl(null);
-    setCanRegenerate(false);
+    setGeneratedExercise(null);
     setErrorMessage("");
-    setCurrentGenerationId(null);
+    closePDFViewer();
   };
 
   return (
@@ -676,82 +724,82 @@ export default function GenerateFrenchPage() {
                 </div>
 
                 <div className="row g-3">
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-primary"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours?template=conjugaison-ce1');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-primary mb-2">
-                          <i className="bi bi-alphabet"></i>
-                        </div>
-                        <h5 className="fw-bold">Conjugaison CE1</h5>
-                        <p className="small text-muted mb-2">
-                          Apprentissage progressif de la conjugaison
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="primary">CE1</Badge>
-                          <Badge bg="secondary">4 semaines</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          ~8 fiches
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-alphabet"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Conjugaison CE1</h6>
+                            <small className="text-muted">Apprentissage progressif de la conjugaison • 4 semaines • ~8 fiches</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">CE1</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
                   </div>
 
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-success"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours?template=grammaire-ce2');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-success mb-2">
-                          <i className="bi bi-book"></i>
-                        </div>
-                        <h5 className="fw-bold">Grammaire CE2</h5>
-                        <p className="small text-muted mb-2">
-                          Révision complète de la grammaire
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="success">CE2</Badge>
-                          <Badge bg="secondary">6 semaines</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          ~12 fiches
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-book"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Grammaire CE2</h6>
+                            <small className="text-muted">Révision complète de la grammaire • 6 semaines • ~12 fiches</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">CE2</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
                   </div>
 
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-warning"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours?template=revision-ete-ce1');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-warning mb-2">
-                          <i className="bi bi-sun"></i>
-                        </div>
-                        <h5 className="fw-bold">Révision été CE1</h5>
-                        <p className="small text-muted mb-2">
-                          Programme de révision vacances
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="warning">CE1</Badge>
-                          <Badge bg="secondary">8 semaines</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          ~8 fiches
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-sun"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Révision été CE1</h6>
+                            <small className="text-muted">Programme de révision vacances • 8 semaines • ~8 fiches</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">CE1</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
@@ -759,82 +807,82 @@ export default function GenerateFrenchPage() {
                 </div>
 
                 <div className="row g-3 mt-2">
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-info"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours?template=lecture-cp');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-info mb-2">
-                          <i className="bi bi-eye"></i>
-                        </div>
-                        <h5 className="fw-bold">Lecture CP</h5>
-                        <p className="small text-muted mb-2">
-                          Apprentissage de la lecture progressive
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="info">CP</Badge>
-                          <Badge bg="secondary">12 semaines</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          ~36 fiches
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-eye"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Lecture CP</h6>
+                            <small className="text-muted">Apprentissage de la lecture progressive • 12 semaines • ~36 fiches</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">CP</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
                   </div>
 
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-danger"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours?template=orthographe-cm1');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-danger mb-2">
-                          <i className="bi bi-pencil"></i>
-                        </div>
-                        <h5 className="fw-bold">Orthographe CM1</h5>
-                        <p className="small text-muted mb-2">
-                          Maîtrise de l'orthographe lexicale
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="danger">CM1</Badge>
-                          <Badge bg="secondary">10 semaines</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          ~20 fiches
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-pencil"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Orthographe CM1</h6>
+                            <small className="text-muted">Maîtrise de l'orthographe lexicale • 10 semaines • ~20 fiches</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">CM1</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
                   </div>
 
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-dark"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours?template=preparation-6eme');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-dark mb-2">
-                          <i className="bi bi-mortarboard"></i>
-                        </div>
-                        <h5 className="fw-bold">Préparation 6ème</h5>
-                        <p className="small text-muted mb-2">
-                          Révision complète pour le collège
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="dark">CM2</Badge>
-                          <Badge bg="secondary">6 semaines</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          ~18 fiches
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-mortarboard"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Préparation 6ème</h6>
+                            <small className="text-muted">Révision complète pour le collège • 6 semaines • ~18 fiches</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">CM2</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
@@ -842,27 +890,28 @@ export default function GenerateFrenchPage() {
                 </div>
 
                 <div className="row g-3 mt-2 justify-content-center">
-                  <div className="col-md-4">
+                  <div className="col-12">
                     <Card 
-                      className="h-100 parcours-card border-secondary"
+                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
                       onClick={() => {
                         router.push('/generate/parcours');
                       }}
                     >
-                      <Card.Body className="text-center p-3">
-                        <div className="display-6 text-secondary mb-2">
-                          <i className="bi bi-plus-circle"></i>
-                        </div>
-                        <h5 className="fw-bold">Autres...</h5>
-                        <p className="small text-muted mb-2">
-                          Créer un parcours personnalisé
-                        </p>
-                        <div className="d-flex justify-content-center gap-1 mb-2">
-                          <Badge bg="secondary">Personnalisé</Badge>
-                        </div>
-                        <div className="text-muted small">
-                          Configurez votre parcours
+                      <Card.Body className="p-3">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-shrink-0 me-3">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
+                              <i className="bi bi-plus-circle"></i>
+                            </div>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1 text-dark">Autres...</h6>
+                            <small className="text-muted">Créer un parcours personnalisé • Configurez votre parcours</small>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="badge bg-primary-subtle text-primary">Personnalisé</span>
+                          </div>
                         </div>
                       </Card.Body>
                     </Card>
@@ -1059,7 +1108,6 @@ export default function GenerateFrenchPage() {
                 <Alert variant="warning" className="mb-0">
                   <small>
                     <strong>⚠️ Important :</strong> En confirmant, 1 crédit sera consommé pour générer cette fiche.
-                    {canRegenerate && " Vous pourrez la regénérer gratuitement une fois en cas de problème."}
                   </small>
                 </Alert>
               </div>
@@ -1083,7 +1131,7 @@ export default function GenerateFrenchPage() {
               <span className="visually-hidden">Génération en cours...</span>
             </div>
             <h5>Génération de votre fiche en cours...</h5>
-            <p className="text-muted mb-0">Veuillez patienter quelques instants</p>
+            <p className="text-muted mb-0">Veuillez patienter, cela peut prendre jusqu'à 2 minutes</p>
           </Modal.Body>
         </Modal>
 
@@ -1123,14 +1171,21 @@ export default function GenerateFrenchPage() {
               )}
             </Alert>
             
-            <div className="d-grid">
-              <a 
-                href={pdfUrl || '#'} 
-                download 
+            <div className="d-grid gap-2">
+              <button 
+                onClick={handleDownload}
                 className="btn btn-success btn-lg"
+                disabled={!generatedExercise?.pdf_path && !generatedExercise?.pdf_base64}
               >
                 📥 Télécharger la fiche PDF
-              </a>
+              </button>
+              <button 
+                onClick={handleViewPDF}
+                className="btn btn-outline-primary btn-lg"
+                disabled={!generatedExercise?.pdf_path && !generatedExercise?.pdf_base64}
+              >
+                👁️ Visualiser et imprimer
+              </button>
             </div>
           </Modal.Body>
           <Modal.Footer>
@@ -1146,22 +1201,12 @@ export default function GenerateFrenchPage() {
           <Modal.Body>
             <Alert variant="danger">
               <p className="mb-2">{errorMessage}</p>
-              {canRegenerate && (
-                <p className="mb-0">
-                  <strong>Bonne nouvelle :</strong> Vous pouvez regénérer cette fiche gratuitement une fois.
-                </p>
-              )}
             </Alert>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowErrorModal(false)}>
               Fermer
             </Button>
-            {canRegenerate && (
-              <Button variant="warning" onClick={handleRegenerate}>
-                🔄 Regénérer gratuitement
-              </Button>
-            )}
           </Modal.Footer>
         </Modal>
 
@@ -1207,6 +1252,38 @@ export default function GenerateFrenchPage() {
             theme: exerciceTypeParams.vocabulaire.theme
           } : undefined}
         />
+
+        {/* PDF Viewer Modal */}
+        <Modal 
+          show={showPDFViewerModal} 
+          onHide={closePDFViewer} 
+          size="xl" 
+          centered
+          className="pdf-viewer-modal"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>📄 Visualisation de la fiche PDF</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-0" style={{ height: '80vh' }}>
+            {pdfViewerUrl && (
+              <iframe
+                src={pdfViewerUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 'none' }}
+                title="PDF Viewer"
+              />
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="outline-primary" onClick={handlePrintPDF}>
+              🖨️ Imprimer
+            </Button>
+            <Button variant="outline-secondary" onClick={closePDFViewer}>
+              Fermer
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
         <OrthographyModal
           show={showOrthographyModal}

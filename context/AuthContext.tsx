@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       const loginResponse = await authService.login(email, code);
-      setUser(loginResponse.user_data);
+      setUser(loginResponse.user_data as User);
       setIsNewUser(loginResponse.is_new_user);
       return { 
         success: true, 

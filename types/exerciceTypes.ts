@@ -21,10 +21,12 @@ export enum ExerciceDomain {
 
 export enum ExerciceType {
   LECTURE = "lecture",
+  COMPREHENSION = "comprehension",
   ECRITURE = "ecriture", 
   GRAMMAIRE = "grammaire",
   CONJUGAISON = "conjugaison",
   ORTHOGRAPHE = "orthographe",
+  VOCABULAIRE = "vocabulaire",
   CALCUL = "calcul",
   PROBLEME = "probleme"
 }
@@ -67,7 +69,7 @@ export const convertTimeToBackend = (uiTime: string): ExerciceTime => {
 export const convertTypesToBackend = (uiTypes: string[]): ExerciceType[] => {
   const mapping: Record<string, ExerciceType> = {
     "lecture": ExerciceType.LECTURE,
-    "comprehension": ExerciceType.LECTURE, // Map comprehension to lecture
+    "comprehension": ExerciceType.COMPREHENSION, // Map comprehension to lecture
     "ecriture": ExerciceType.ECRITURE,
     "grammaire": ExerciceType.GRAMMAIRE,
     "conjugaison": ExerciceType.CONJUGAISON,

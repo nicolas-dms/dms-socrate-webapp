@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
 import ProtectedPage from "../../../components/ProtectedPage";
-import { exerciseService, ExerciseRequest, ExerciseSession } from "../../../services/exerciseService";
+import { exerciseService, ExerciseGenerationResponse } from "../../../services/exerciseService";
+import { ExerciceDomain } from "../../../types/exerciceTypes";
 import { useSubscription } from "../../../context/SubscriptionContext";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -17,8 +19,10 @@ export default function GenerateMathPage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [numQuestions, setNumQuestions] = useState(10);
   const [generating, setGenerating] = useState(false);
-  const [session, setSession] = useState<ExerciseSession | null>(null);
+  const [exercise, setExercise] = useState<ExerciseGenerationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPDFViewerModal, setShowPDFViewerModal] = useState(false);
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
 
   const mathTypes = [
     { key: "add", label: t('generate.mathTypes.add') },
@@ -58,40 +62,54 @@ export default function GenerateMathPage() {
     setGenerating(true);
     
     try {
-      // Prepare the exercise request
-      const request: ExerciseRequest = {
-        theme: 'Exercices mathématiques',
-        class_level: level,
-        exercice_domain: 'mathematiques' as any, // TODO: Fix this with proper enum
-        exercice_time: '30 min' as any, // TODO: Fix this with proper enum
-        exercice_types: selectedTypes as any[], // TODO: Fix this with proper enum
-        exercice_type_params: {} // TODO: Add proper params
-      };
-
-      // Generate the exercises
-      const newSession = await exerciseService.generateExercises(request);
+      // Generate the exercises using the unified service
+      const newExercise = await exerciseService.generateExercise(
+        user.user_id,
+        level,
+        "30 min",
+        selectedTypes,
+        "Exercices mathématiques",
+        ExerciceDomain.MATHEMATIQUES,
+        {}, // exercise type parameters
+        undefined // specific requirements
+      );
       
-      // Use a fiche from subscription allowance
-      await useCredit();
-      
-      setSession(newSession);
+      // Check if generation was successful
+      if (newExercise.success) {
+        // Use a fiche from subscription allowance
+        await useCredit();
+        setExercise(newExercise);
+      } else {
+        throw new Error(newExercise.error_message || 'Erreur lors de la génération du PDF');
+      }
     } catch (err) {
       console.error('Failed to generate exercises:', err);
-      setError(t('generate.validation.generationFailed', 'Failed to generate exercises. Please try again.'));
+      const errorMessage = err instanceof Error ? err.message : t('generate.validation.generationFailed', 'Failed to generate exercises. Please try again.');
+      setError(errorMessage);
     } finally {
       setGenerating(false);
     }
   };
 
   const handleDownload = async () => {
-    if (!session?.id) return;
+    if (!exercise?.pdf_path && !exercise?.pdf_base64) return;
     
     try {
-      const blob = await exerciseService.downloadSessionPDF(session.id);
+      let blob: Blob;
+      
+      // Prefer base64 data if available (faster, no additional request)
+      if (exercise.pdf_base64) {
+        blob = exerciseService.base64ToBlob(exercise.pdf_base64);
+      } else if (exercise.pdf_path) {
+        blob = await exerciseService.downloadExercisePDF(exercise.pdf_path);
+      } else {
+        throw new Error('No PDF data available');
+      }
+      
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `math-exercises-${session.id}.pdf`;
+      a.download = `math-exercises-${Date.now()}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -99,6 +117,49 @@ export default function GenerateMathPage() {
     } catch (err) {
       console.error('Failed to download PDF:', err);
       setError(t('generate.validation.downloadFailed', 'Failed to download PDF'));
+    }
+  };
+
+  const handleViewPDF = async () => {
+    if (!exercise) return;
+    
+    try {
+      let blob: Blob;
+      
+      // Try base64 first (faster), fallback to URL download
+      if (exercise.pdf_base64) {
+        blob = exerciseService.base64ToBlob(exercise.pdf_base64);
+      } else if (exercise.pdf_path) {
+        blob = await exerciseService.downloadExercisePDF(exercise.pdf_path);
+      } else {
+        throw new Error('No PDF data available');
+      }
+      
+      const url = URL.createObjectURL(blob);
+      setPdfViewerUrl(url);
+      setShowPDFViewerModal(true);
+    } catch (err) {
+      console.error('Failed to view PDF:', err);
+      setError(t('generate.validation.viewFailed', 'Failed to view PDF'));
+    }
+  };
+
+  const handlePrintPDF = () => {
+    if (pdfViewerUrl) {
+      const printWindow = window.open(pdfViewerUrl, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+    }
+  };
+
+  const closePDFViewer = () => {
+    setShowPDFViewerModal(false);
+    if (pdfViewerUrl) {
+      URL.revokeObjectURL(pdfViewerUrl);
+      setPdfViewerUrl(null);
     }
   };
 
@@ -190,21 +251,58 @@ export default function GenerateMathPage() {
           )}
         </form>
         
-        {session && (
+        {exercise && exercise.success && (
           <div className="alert alert-success mt-3">
-            <h5>{t('generate.sessionCreated', 'Exercise session created!')}</h5>
+            <h5>{t('generate.sessionCreated', 'Exercise fiche created!')}</h5>
             <p>
               <strong>{t('sessions.subject')}:</strong> {t('generate.math')} <br />
-              <strong>{t('sessions.level')}:</strong> {session.level} <br />
-              <strong>{t('sessions.status')}:</strong> {t(`sessions.statuses.${session.status}`, session.status)}
+              <strong>{t('sessions.level')}:</strong> {level} <br />
+              <strong>{t('sessions.status')}:</strong> {t('sessions.statuses.completed', 'Completed')}
             </p>
-            {session.status === 'completed' && session.pdf_url && (
-              <Button onClick={handleDownload} variant="outline-primary">
-                {t('sessions.downloadPDF')}
-              </Button>
+            {(exercise.pdf_path || exercise.pdf_base64) && (
+              <div className="d-grid gap-2">
+                <Button onClick={handleDownload} variant="outline-primary">
+                  📥 {t('sessions.downloadPDF')}
+                </Button>
+                <Button onClick={handleViewPDF} variant="outline-secondary">
+                  👁️ {t('generate.viewAndPrint', 'Visualiser et imprimer')}
+                </Button>
+              </div>
             )}
           </div>
         )}
+
+        {/* PDF Viewer Modal */}
+        <Modal 
+          show={showPDFViewerModal} 
+          onHide={closePDFViewer} 
+          size="xl" 
+          centered
+          className="pdf-viewer-modal"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>📄 {t('generate.pdfViewer', 'Visualisation de la fiche PDF')}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-0" style={{ height: '80vh' }}>
+            {pdfViewerUrl && (
+              <iframe
+                src={pdfViewerUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 'none' }}
+                title="PDF Viewer"
+              />
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="outline-primary" onClick={handlePrintPDF}>
+              🖨️ {t('generate.print', 'Imprimer')}
+            </Button>
+            <Button variant="outline-secondary" onClick={closePDFViewer}>
+              {t('common.close', 'Fermer')}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </ProtectedPage>
   );
