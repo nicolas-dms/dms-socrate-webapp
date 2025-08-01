@@ -23,13 +23,15 @@ const GRAMMAR_TYPES = {
   ],
   CE1: [
     { key: "sujet_verbe", label: "Sujet-Verbe" },
-    { key: "singulier_pluriel", label: "Singulier-Pluriel" },
+    { key: "actif_passif", label: "Actif/Passif" },
+    { key: "nombre", label: "Singulier-Pluriel" },
     { key: "genre", label: "Masculin/Féminin" },
+    { key: "noms_propre_commun", label: "Noms Propres/Communs" },
     { key: "determinants", label: "Les déterminants" }
   ],
   CE2: [
     { key: "sujet_verbe", label: "Sujet-Verbe" },
-    { key: "singulier_pluriel", label: "Singulier-Pluriel" },
+    { key: "nombre", label: "Singulier-Pluriel" },
     { key: "accord_adjectif", label: "Accord des adjectifs" },
     { key: "complement", label: "Compléments" }
   ],
@@ -97,10 +99,19 @@ export default function GrammarModal({
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
+      <style jsx>{`
+        .selector-card {
+          transition: all 0.3s ease;
+        }
+        .selector-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+        }
+      `}</style>
       <Modal.Header closeButton>
         <Modal.Title>
           <i className="fas fa-book me-2"></i>
-          Paramètres de grammaire - {level}
+          Configuration de l'exercice de grammaire - {level}
         </Modal.Title>
       </Modal.Header>
       
@@ -117,13 +128,17 @@ export default function GrammarModal({
               {currentTypes.map(type => (
                 <Col md={6} key={type.key} className="mb-2">
                   <div 
-                    className={`p-2 border rounded text-center cursor-pointer ${
+                    className={`selector-card p-2 border rounded text-center ${
                       selectedTypes.includes(type.key) 
-                        ? 'border-warning bg-warning text-dark' 
-                        : 'border-secondary'
+                        ? 'border-warning-subtle bg-warning-subtle text-dark' 
+                        : 'border-secondary bg-light'
                     }`}
                     onClick={() => toggleType(type.key)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ 
+                      cursor: 'pointer',
+                      border: selectedTypes.includes(type.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                    }}
                   >
                     {type.label}
                   </div>

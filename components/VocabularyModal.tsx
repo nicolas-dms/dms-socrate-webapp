@@ -130,10 +130,19 @@ export default function VocabularyModal({
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
+      <style jsx>{`
+        .selector-card {
+          transition: all 0.3s ease;
+        }
+        .selector-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+        }
+      `}</style>
       <Modal.Header closeButton>
         <Modal.Title>
           <i className="fas fa-spell-check me-2"></i>
-          Paramètres de vocabulaire - {level}
+          Configuration de l'exercice de vocabulaire - {level}
         </Modal.Title>
       </Modal.Header>
       
@@ -161,13 +170,17 @@ export default function VocabularyModal({
                 {currentThemes.map(theme => (
                   <Col md={6} key={theme.key} className="mb-2">
                     <div 
-                      className={`p-2 border rounded text-center cursor-pointer ${
+                      className={`selector-card p-2 border rounded text-center ${
                         selectedTheme === theme.key 
-                          ? 'border-warning bg-warning text-dark' 
-                          : 'border-secondary'
+                          ? 'border-warning-subtle bg-warning-subtle text-dark' 
+                          : 'border-secondary bg-light'
                       }`}
                       onClick={() => toggleTheme(theme.key)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ 
+                        cursor: 'pointer',
+                        border: selectedTheme === theme.key ? '2px solid #ffc107' : '1px solid #dee2e6',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                      }}
                     >
                       {theme.label}
                     </div>

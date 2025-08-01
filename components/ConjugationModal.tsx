@@ -48,6 +48,7 @@ const TENSES = {
   CE1: [
     { key: "present", label: "Présent" },
     { key: "futur", label: "Futur simple" },
+    { key: "imparfait", label: "Imparfait" },
   ],
   CE2: [
     { key: "present", label: "Présent" },
@@ -180,10 +181,19 @@ export default function ConjugationModal({
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
+      <style jsx>{`
+        .selector-card {
+          transition: all 0.3s ease;
+        }
+        .selector-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+        }
+      `}</style>
       <Modal.Header closeButton>
         <Modal.Title>
-          <i className="fas fa-cog me-2"></i>
-          Paramètres de conjugaison - {level}
+          <i className="fas fa-cog me-2 text-primary"></i>
+          Configuration de l'exercice de conjugaison - {level}
         </Modal.Title>
       </Modal.Header>
       
@@ -211,13 +221,17 @@ export default function ConjugationModal({
                 {currentVerbGroups.map(group => (
                   <Col md={12} key={group.key} className="mb-2">
                     <div 
-                      className={`p-3 border rounded cursor-pointer ${
+                      className={`selector-card p-3 border rounded ${
                         selectedVerbGroups.includes(group.key) 
-                          ? 'border-warning bg-warning' 
-                          : 'border-secondary'
+                          ? 'border-warning-subtle bg-warning-subtle' 
+                          : 'border-secondary bg-light'
                       }`}
                       onClick={() => toggleVerbGroup(group.key)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ 
+                        cursor: 'pointer',
+                        border: selectedVerbGroups.includes(group.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                      }}
                     >
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
@@ -269,13 +283,17 @@ export default function ConjugationModal({
               {currentTenses.map(tense => (
                 <Col md={6} key={tense.key} className="mb-2">
                   <div 
-                    className={`p-2 border rounded text-center cursor-pointer ${
+                    className={`selector-card p-2 border rounded text-center ${
                       selectedTenses.includes(tense.key) 
-                        ? 'border-warning bg-warning text-dark' 
-                        : 'border-secondary'
+                        ? 'border-warning-subtle bg-warning-subtle text-dark' 
+                        : 'border-secondary bg-light'
                     }`}
                     onClick={() => toggleTense(tense.key)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ 
+                      cursor: 'pointer',
+                      border: selectedTenses.includes(tense.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                    }}
                   >
                     {tense.label}
                   </div>

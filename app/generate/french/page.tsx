@@ -55,6 +55,11 @@ export default function GenerateFrenchPage() {
   const [showGrammarModal, setShowGrammarModal] = useState(false);
   const [showVocabularyModal, setShowVocabularyModal] = useState(false);
   const [showOrthographyModal, setShowOrthographyModal] = useState(false);
+  
+  // Level change confirmation modal
+  const [showLevelChangeModal, setShowLevelChangeModal] = useState(false);
+  const [pendingLevel, setPendingLevel] = useState<string>("");
+  
     // Modal and generation state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showGeneratingModal, setShowGeneratingModal] = useState(false);
@@ -86,15 +91,121 @@ export default function GenerateFrenchPage() {
       case "orthographe": return "bi-check2-square";
       default: return "bi-circle";
     }
+  };
+
+  // Helper function to format style labels
+  const formatStyleLabel = (style: string) => {
+    const styleLabels: Record<string, string> = {
+      "histoire": "Histoire",
+      "dialogue": "Dialogue", 
+      "culture": "Culture",
+      "poeme": "Poème"
+    };
+    return styleLabels[style] || style;
+  };
+
+  // Helper function to format length labels
+  const formatLengthLabel = (length: string) => {
+    const lengthLabels: Record<string, string> = {
+      "court": "Court (10 lignes)",
+      "moyen": "Moyen (20 lignes)",
+      "long": "Long (30 lignes)"
+    };
+    return lengthLabels[length] || length;
+  };  
+
+  // Exercise limits based on duration
+  const getExerciseLimits = (duration: string): number => {
+    switch (duration) {
+      case "20 min": return 3;
+      case "30 min": return 4;
+      case "40 min": return 5;
+      default: return 4;
+    }
+  };
+
+  // Check if user can add more exercises
+  const canAddMoreExercises = (): boolean => {
+    const limit = getExerciseLimits(duration);
+    return selectedTypes.length < limit;
+  };
+
+  // Get limit message
+  const getLimitMessage = (): string => {
+    const limit = getExerciseLimits(duration);
+    return `Vous avez atteint la limite de ${limit} exercices pour la durée sélectionnée`;
+  };
+
+  // Handle duration change with exercise limit adjustment
+  const handleDurationChange = (newDuration: string) => {
+    const newLimit = getExerciseLimits(newDuration);
+    
+    // If current selection exceeds new limit, trim to fit
+    if (selectedTypes.length > newLimit) {
+      const trimmedTypes = selectedTypes.slice(0, newLimit);
+      setSelectedTypes(trimmedTypes);
+      
+      // Also clean up exercise params for removed types
+      const newParams = { ...exerciceTypeParams };
+      Object.keys(newParams).forEach(key => {
+        if (!trimmedTypes.includes(key)) {
+          delete newParams[key];
+        }
+      });
+      setExerciceTypeParams(newParams);
+    }
+    
+    setDuration(newDuration);
+  };
+
+  // Handle level change with intelligent validation
+  const handleLevelChange = (newLevel: string) => {
+    const hasSelectedExercises = selectedTypes.length > 0;
+    const hasConfiguredParams = Object.keys(exerciceTypeParams).length > 0;
+    
+    if (hasSelectedExercises || hasConfiguredParams) {
+      // Show confirmation modal
+      setPendingLevel(newLevel);
+      setShowLevelChangeModal(true);
+    } else {
+      // Direct change if nothing is selected
+      setLevel(newLevel);
+    }
+  };
+
+  // Confirm level change and reset selections
+  const confirmLevelChange = () => {
+    setLevel(pendingLevel);
+    setSelectedTypes([]);
+    setExerciceTypeParams({});
+    setShowLevelChangeModal(false);
+    setPendingLevel("");
+  };
+
+  // Cancel level change
+  const cancelLevelChange = () => {
+    setShowLevelChangeModal(false);
+    setPendingLevel("");
   };  
   const toggleType = (type: string) => {
     const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"];
+    
+    // Check if trying to add a new exercise when at limit
+    if (!selectedTypes.includes(type) && !canAddMoreExercises()) {
+      alert(getLimitMessage());
+      return;
+    }
     
     // Special handling for comprehension - cannot be selected without lecture
     if (type === "comprehension") {
       if (!selectedTypes.includes("lecture")) {
         // Cannot select comprehension without lecture
         alert("Vous devez d'abord sélectionner 'Lecture' pour pouvoir choisir 'Compréhension'");
+        return;
+      }
+      // Check limit only if adding comprehension
+      if (!selectedTypes.includes(type) && !canAddMoreExercises()) {
+        alert(getLimitMessage());
         return;
       }
       // Simple toggle for comprehension when lecture is selected
@@ -155,7 +266,9 @@ export default function GenerateFrenchPage() {
     setExerciceTypeParams({
       ...exerciceTypeParams,
       lecture: {
-        theme: params.theme
+        theme: params.theme,
+        style: params.style,
+        length: params.length
       }
     });
   };
@@ -432,7 +545,7 @@ export default function GenerateFrenchPage() {
                             <Card 
                               key={lvl}
                               className={`${styles.selectorCard} border border-2 ${level === lvl ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
-                              onClick={() => setLevel(lvl)}
+                              onClick={() => handleLevelChange(lvl)}
                               style={{ cursor: 'pointer', minWidth: '60px' }}
                             >
                               <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
@@ -453,7 +566,7 @@ export default function GenerateFrenchPage() {
                             <div key={dur} className="flex-fill">
                               <Card 
                                 className={`${styles.selectorCard} border border-2 ${duration === dur ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
-                                onClick={() => setDuration(dur)}
+                                onClick={() => handleDurationChange(dur)}
                                 style={{ cursor: 'pointer' }}
                               >
                                 <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
@@ -469,24 +582,50 @@ export default function GenerateFrenchPage() {
 
                       {/* Exercise Types Selection */}
                       <div className="col-12">
-                        <h6 className="mb-3">Types d'exercices</h6>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <h6 className="mb-0">Types d'exercices</h6>
+                          <div className="d-flex align-items-center gap-2">
+                            <Badge 
+                              bg={selectedTypes.length >= getExerciseLimits(duration) ? 'warning' : 'secondary'} 
+                              className="d-flex align-items-center gap-1"
+                            >
+                              <i className="bi bi-list-ol"></i>
+                              {selectedTypes.length}/{getExerciseLimits(duration)}
+                            </Badge>
+                            <small className="text-muted">
+                              {selectedTypes.length >= getExerciseLimits(duration) ? (
+                                <>
+                                  <i className="bi bi-info-circle me-1"></i>
+                                  Limite atteinte
+                                </>
+                              ) : (
+                                <>Limite: {getExerciseLimits(duration)} exercices pour {duration}</>
+                              )}
+                            </small>
+                          </div>
+                        </div>
                         <div className="d-flex gap-2 flex-wrap">
                           {frenchTypes.map(type => {
                             const hasSettings = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"].includes(type.key);
                             const isComprehensionDisabled = type.key === "comprehension" && !selectedTypes.includes("lecture");
                             const isSelected = selectedTypes.includes(type.key);
+                            const isLimitReached = !isSelected && !canAddMoreExercises();
+                            const isDisabled = isComprehensionDisabled || isLimitReached;
                             
                             return (
                               <Card 
                                 key={type.key}
                                 className={`${styles.selectorCard} border border-2 ${isSelected ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
-                                onClick={() => !isComprehensionDisabled && toggleType(type.key)}
+                                onClick={() => !isDisabled && toggleType(type.key)}
                                 style={{ 
-                                  cursor: isComprehensionDisabled ? 'not-allowed' : 'pointer',
-                                  opacity: isComprehensionDisabled ? 0.6 : 1,
+                                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                  opacity: isDisabled ? 0.6 : 1,
                                   minWidth: '120px'
                                 }}
-                                title={isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : ""}
+                                title={
+                                  isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : 
+                                  isLimitReached ? getLimitMessage() : ""
+                                }
                               >
                                 <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center" style={{ position: 'relative' }}>
                                   <span className={`fw-bold ${isSelected ? 'text-dark-emphasis' : 'text-dark'}`}>
@@ -495,12 +634,14 @@ export default function GenerateFrenchPage() {
                                   {isComprehensionDisabled && (
                                     <i className="bi bi-lock position-absolute" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
                                   )}
+                                  {isLimitReached && (
+                                    <i className="bi bi-info-circle-fill text-warning position-absolute" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
+                                  )}
                                 </Card.Body>
                               </Card>
                             );
                           })}
                         </div>
-                        <small className="text-muted">Sélectionnez un ou plusieurs types d'exercices</small>
                       </div>
                     </div>
 
@@ -540,6 +681,20 @@ export default function GenerateFrenchPage() {
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.lecture.theme || "Thème général"}
                                 </div>
+                                {(exerciceTypeParams.lecture.style || exerciceTypeParams.lecture.length) && (
+                                  <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                    {exerciceTypeParams.lecture.style && (
+                                      <span className="me-2">
+                                        Style: {formatStyleLabel(exerciceTypeParams.lecture.style)}
+                                      </span>
+                                    )}
+                                    {exerciceTypeParams.lecture.length && (
+                                      <span>
+                                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
                             </div>
@@ -930,198 +1085,92 @@ export default function GenerateFrenchPage() {
             </Card>
           </Col>
         </Row>        {/* Preview Modal */}
-        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="lg" centered className="preview-modal">
+        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="md" centered className="preview-modal">
           <Modal.Header closeButton>
             <Modal.Title>Aperçu de votre fiche</Modal.Title>
           </Modal.Header>
-          <Modal.Body className="preview-content">
+          <Modal.Body className="p-4">
             {preview && (
               <div>
-                <Alert variant="info" className="mb-3">
-                  <h6 className="mb-2">Cette fiche contiendra :</h6>
-                  <ul className="mb-0">
-                    {preview.content.readingTexts > 0 && (
-                      <li>{preview.content.readingTexts} texte{preview.content.readingTexts > 1 ? 's' : ''} de lecture
-                        {preview.theme && <span> sur le thème "{preview.theme}"</span>}
-                      </li>
-                    )}
-                    {preview.content.comprehensionQuestions > 0 && (
-                      <li>{preview.content.comprehensionQuestions} questions de compréhension</li>
-                    )}
-                    {preview.content.grammarExercises > 0 && (
-                      <li>{preview.content.grammarExercises} exercices de grammaire</li>
-                    )}
-                    {preview.content.conjugationExercises > 0 && (
-                      <li>{preview.content.conjugationExercises} exercices de conjugaison</li>
-                    )}
-                    {preview.content.vocabularyExercises > 0 && (
-                      <li>{preview.content.vocabularyExercises} exercices de vocabulaire</li>
-                    )}
-                    {preview.content.spellingExercises > 0 && (
-                      <li>{preview.content.spellingExercises} exercices d'orthographe</li>
-                    )}
-                  </ul>
-                </Alert>
-
-                <div className="mb-3">
-                  <div className="d-flex align-items-center gap-2 mb-2">
-                    <strong>Niveau :</strong>
-                    <Badge bg="light" text="dark" className="border">
-                      {preview.level}
-                    </Badge>
+                {/* Basic Information */}
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="fw-semibold">Niveau :</span>
+                    <Badge bg="primary" className="fs-6">{preview.level}</Badge>
                   </div>
-                  <div className="d-flex align-items-center gap-2 mb-2">
-                    <strong>Durée :</strong>
-                    <Badge bg="light" text="dark" className="border">
-                      {preview.duration}
-                    </Badge>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="fw-semibold">Durée :</span>
+                    <Badge bg="secondary" className="fs-6">{preview.duration}</Badge>
                   </div>
-                  <div className="mb-2">
-                    <strong>Types d'exercices :</strong>
-                    <div className="d-flex flex-wrap gap-1 mt-1">
-                      {preview.types.map(t => (
-                        <Badge key={t} bg="light" text="dark" className="border">
-                          {frenchTypes.find(ft => ft.key === t)?.label}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  {preview.theme && (
-                    <div className="text-start">
-                      <strong>Thème de lecture :</strong> {preview.theme}
-                    </div>
-                  )}
                 </div>
 
-                {/* Exercise Parameters Display */}
-                {preview.types.length > 0 && (
-                  <div className="mb-3">
-                    <h6 className="mb-2">📋 Paramètres des exercices :</h6>
-                    <div className="row g-2">
-                      {preview.types.includes('lecture') && (
-                        <div className="col-md-6">
-                          <div className="card border-primary">
-                            <div className="card-body p-2">
-                              <h6 className="card-title text-primary mb-1">📖 Lecture</h6>
-                              {exerciceTypeParams.lecture && Object.keys(exerciceTypeParams.lecture).length > 0 ? (
-                                <small className="text-muted">
-                                  {exerciceTypeParams.lecture.theme && (
-                                    <div>Thème : {exerciceTypeParams.lecture.theme}</div>
-                                  )}
-                                </small>
-                              ) : (
-                                <small className="text-muted">Paramètres par défaut</small>
-                              )}
-                            </div>
-                          </div>
+                {/* Selected Exercises */}
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">Exercices sélectionnés :</h6>
+                  {preview.types.map(type => {
+                    const exerciseInfo = frenchTypes.find(ft => ft.key === type);
+                    const params = exerciceTypeParams[type];
+                    
+                    return (
+                      <div key={type} className="border rounded p-3 mb-2 bg-light">
+                        <div className="fw-semibold text-primary mb-1">
+                          {exerciseInfo?.label}
                         </div>
-                      )}
-                      
-                      {preview.types.includes('conjugation') && (
-                        <div className="col-md-6">
-                          <div className="card border-warning">
-                            <div className="card-body p-2">
-                              <h6 className="card-title text-warning mb-1">🔄 Conjugaison</h6>
-                              {exerciceTypeParams.conjugaison && Object.keys(exerciceTypeParams.conjugaison).length > 0 ? (
-                                <small className="text-muted">
-                                  {exerciceTypeParams.conjugaison.verbs && (
-                                    <div>Verbes : {exerciceTypeParams.conjugaison.verbs}</div>
-                                  )}
-                                  {exerciceTypeParams.conjugaison.tenses && (
-                                    <div>Temps : {exerciceTypeParams.conjugaison.tenses}</div>
-                                  )}
-                                </small>
-                              ) : (
-                                <small className="text-muted">Paramètres par défaut</small>
-                              )}
-                            </div>
+                        
+                        {/* Exercise Parameters */}
+                        {params && Object.keys(params).length > 0 ? (
+                          <div className="small text-muted">
+                            {type === 'lecture' && (
+                              <>
+                                {params.theme && <div>• Thème : {params.theme}</div>}
+                                {params.style && <div>• Style : {formatStyleLabel(params.style)}</div>}
+                                {params.length && <div>• Longueur : {formatLengthLabel(params.length)}</div>}
+                              </>
+                            )}
+                            {type === 'conjugaison' && (
+                              <>
+                                {params.verbs && <div>• Verbes : {params.verbs}</div>}
+                                {params.tenses && <div>• Temps : {params.tenses}</div>}
+                              </>
+                            )}
+                            {type === 'grammaire' && (
+                              <>
+                                {params.types && <div>• Types : {params.types}</div>}
+                              </>
+                            )}
+                            {type === 'vocabulaire' && (
+                              <>
+                                {params.theme && <div>• Thème : {params.theme}</div>}
+                                {params.words && <div>• Mots : {params.words}</div>}
+                              </>
+                            )}
+                            {type === 'orthographe' && (
+                              <>
+                                {params.rules && <div>• Règles : {params.rules}</div>}
+                                {params.words && <div>• Mots : {params.words}</div>}
+                              </>
+                            )}
                           </div>
-                        </div>
-                      )}
-                      
-                      {preview.types.includes('grammar') && (
-                        <div className="col-md-6">
-                          <div className="card border-info">
-                            <div className="card-body p-2">
-                              <h6 className="card-title text-info mb-1">📚 Grammaire</h6>
-                              {exerciceTypeParams.grammaire && Object.keys(exerciceTypeParams.grammaire).length > 0 ? (
-                                <small className="text-muted">
-                                  {exerciceTypeParams.grammaire.types && (
-                                    <div>Types : {exerciceTypeParams.grammaire.types}</div>
-                                  )}
-                                </small>
-                              ) : (
-                                <small className="text-muted">Paramètres par défaut</small>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {preview.types.includes('vocabulary') && (
-                        <div className="col-md-6">
-                          <div className="card border-success">
-                            <div className="card-body p-2">
-                              <h6 className="card-title text-success mb-1">📖 Vocabulaire</h6>
-                              {exerciceTypeParams.vocabulaire && Object.keys(exerciceTypeParams.vocabulaire).length > 0 ? (
-                                <small className="text-muted">
-                                  {exerciceTypeParams.vocabulaire.theme && (
-                                    <div>Thème : {exerciceTypeParams.vocabulaire.theme}</div>
-                                  )}
-                                  {exerciceTypeParams.vocabulaire.words && (
-                                    <div>Mots : {exerciceTypeParams.vocabulaire.words}</div>
-                                  )}
-                                </small>
-                              ) : (
-                                <small className="text-muted">Paramètres par défaut</small>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {preview.types.includes('orthography') && (
-                        <div className="col-md-6">
-                          <div className="card border-danger">
-                            <div className="card-body p-2">
-                              <h6 className="card-title text-danger mb-1">✏️ Orthographe</h6>
-                              {exerciceTypeParams.orthographe && Object.keys(exerciceTypeParams.orthographe).length > 0 ? (
-                                <small className="text-muted">
-                                  {exerciceTypeParams.orthographe.rules && (
-                                    <div>Règles : {exerciceTypeParams.orthographe.rules}</div>
-                                  )}
-                                  {exerciceTypeParams.orthographe.words && (
-                                    <div>Mots : {exerciceTypeParams.orthographe.words}</div>
-                                  )}
-                                </small>
-                              ) : (
-                                <small className="text-muted">Paramètres par défaut</small>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <Alert variant="warning" className="mb-0">
-                  <small>
-                    <strong>⚠️ Important :</strong> En confirmant, 1 crédit sera consommé pour générer cette fiche.
-                  </small>
-                </Alert>
+                        ) : (
+                          <div className="small text-muted">• Paramètres par défaut</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowPreviewModal(false)}>
               Modifier les paramètres
-            </Button>            <Button 
+            </Button>
+            <Button 
               variant="success" 
               onClick={handleConfirmGeneration}
               disabled={!canGenerateMore()}
             >
-              {!canGenerateMore() ? 'Limite d\'abonnement atteinte' : 'Confirmer et générer (1 fiche)'}
+              {!canGenerateMore() ? 'Limite d\'abonnement atteinte' : 'Confirmer et générer'}
             </Button>
           </Modal.Footer>
         </Modal>        {/* Generating Modal */}
@@ -1164,10 +1213,30 @@ export default function GenerateFrenchPage() {
                   ))}
                 </div>
               </p>
-              {exerciceTypeParams.lecture?.theme && (
-                <p className="mb-0">
-                  <strong>Thème de lecture :</strong> {exerciceTypeParams.lecture.theme}
-                </p>
+              {exerciceTypeParams.lecture && (exerciceTypeParams.lecture.theme || exerciceTypeParams.lecture.style || exerciceTypeParams.lecture.length) && (
+                <div className="mb-0">
+                  <strong>Paramètres de lecture :</strong>
+                  <div className="mt-1">
+                    {exerciceTypeParams.lecture.theme && (
+                      <div className="small text-muted">
+                        <i className="bi bi-palette me-1"></i>
+                        Thème: {exerciceTypeParams.lecture.theme}
+                      </div>
+                    )}
+                    {exerciceTypeParams.lecture.style && (
+                      <div className="small text-muted">
+                        <i className="bi bi-book-reader me-1"></i>
+                        Style: {formatStyleLabel(exerciceTypeParams.lecture.style)}
+                      </div>
+                    )}
+                    {exerciceTypeParams.lecture.length && (
+                      <div className="small text-muted">
+                        <i className="bi bi-ruler me-1"></i>
+                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length)}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </Alert>
             
@@ -1217,7 +1286,9 @@ export default function GenerateFrenchPage() {
           onSave={handleLectureSave}
           level={level}
           initialParams={exerciceTypeParams.lecture ? {
-            theme: exerciceTypeParams.lecture.theme
+            theme: exerciceTypeParams.lecture.theme || "",
+            style: exerciceTypeParams.lecture.style || "histoire",
+            length: exerciceTypeParams.lecture.length || "moyen"
           } : undefined}
         />
 
@@ -1295,6 +1366,38 @@ export default function GenerateFrenchPage() {
             rules: exerciceTypeParams.orthographe.rules
           } : undefined}
         />
+
+        {/* Level Change Confirmation Modal */}
+        <Modal show={showLevelChangeModal} onHide={cancelLevelChange} centered size="sm">
+          <Modal.Header closeButton>
+            <Modal.Title className="fs-6">
+              <i className="bi bi-exclamation-triangle text-warning me-2"></i>
+              Changer de niveau
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p className="mb-2">
+              En passant de <strong>{level}</strong> à <strong>{pendingLevel}</strong>, vous allez perdre :
+            </p>
+            <ul className="small text-muted mb-3">
+              {selectedTypes.length > 0 && (
+                <li>{selectedTypes.length} exercice{selectedTypes.length > 1 ? 's' : ''} sélectionné{selectedTypes.length > 1 ? 's' : ''}</li>
+              )}
+              {Object.keys(exerciceTypeParams).length > 0 && (
+                <li>Les paramètres configurés</li>
+              )}
+            </ul>
+            <p className="small mb-0">Voulez-vous continuer ?</p>
+          </Modal.Body>
+          <Modal.Footer className="p-2">
+            <Button variant="outline-secondary" size="sm" onClick={cancelLevelChange}>
+              Annuler
+            </Button>
+            <Button variant="warning" size="sm" onClick={confirmLevelChange}>
+              Confirmer
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </ProtectedPage>
   );
