@@ -3,7 +3,8 @@ import axios from 'axios';
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-  timeout: 10000,
+  // Increase default timeout to 60s to accommodate slower endpoints (e.g., auth email send)
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Badge, Dropdown } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import { ExerciceModalite, getDefaultModalityForType, getAvailableModalitiesForType, formatModalityLabel } from '../types/exerciceTypes';
 
 export interface ConjugationParams {
   verbs: string;
   tenses: string;
+  modalities?: Record<string, ExerciceModalite>; // New: store modality for each tense
 }
 
 interface ConjugationModalProps {
@@ -88,9 +90,23 @@ export default function ConjugationModal({
   // State for tense selection
   const [selectedTenses, setSelectedTenses] = useState<string[]>(["present"]);
   
+  // State for modalities
+  const [exerciseModalities, setExerciseModalities] = useState<Record<string, ExerciceModalite>>({});
+  
   // Get level-specific options
   const currentVerbGroups = VERB_GROUPS[level as keyof typeof VERB_GROUPS] || VERB_GROUPS.CE1;
   const currentTenses = TENSES[level as keyof typeof TENSES] || TENSES.CE1;
+  
+  const handleModalityChange = (tenseKey: string, modality: ExerciceModalite) => {
+    setExerciseModalities(prev => ({
+      ...prev,
+      [tenseKey]: modality
+    }));
+  };
+
+  const getCurrentModality = (tenseKey: string): ExerciceModalite => {
+    return exerciseModalities[tenseKey] || getDefaultModalityForType('conjugaison', level);
+  };
   
   useEffect(() => {
     if (initialParams) {
@@ -99,6 +115,7 @@ export default function ConjugationModal({
       const tenses = initialParams.tenses.split(",");
       
       setSelectedTenses(tenses);
+      // setExerciseModalities(initialParams.modalities || {}); // DISABLED FOR NOW
       
       // Check if it's custom verbs or groups
       if (verbs.includes(",") && !currentVerbGroups.some(g => verbs.includes(g.key))) {
@@ -118,6 +135,7 @@ export default function ConjugationModal({
       
       setSelectedVerbGroups(defaultGroups);
       setSelectedTenses(defaultTenses);
+      // setExerciseModalities({}); // DISABLED FOR NOW
     }
   }, [initialParams, level, currentVerbGroups]);
 
@@ -163,6 +181,7 @@ export default function ConjugationModal({
     const params: ConjugationParams = {
       verbs: verbsValue,
       tenses: selectedTenses.join(",")
+      // modalities: exerciseModalities // DISABLED FOR NOW - always use default
     };
 
     onSave(params);
@@ -281,21 +300,67 @@ export default function ConjugationModal({
             
             <Row>
               {currentTenses.map(tense => (
-                <Col md={6} key={tense.key} className="mb-2">
+                <Col md={6} key={tense.key} className="mb-3">
                   <div 
-                    className={`selector-card p-2 border rounded text-center ${
+                    className={`selector-card p-3 border rounded ${
                       selectedTenses.includes(tense.key) 
                         ? 'border-warning-subtle bg-warning-subtle text-dark' 
                         : 'border-secondary bg-light'
                     }`}
-                    onClick={() => toggleTense(tense.key)}
                     style={{ 
-                      cursor: 'pointer',
                       border: selectedTenses.includes(tense.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                     }}
                   >
-                    {tense.label}
+                    <div 
+                      className="d-flex align-items-center justify-content-between mb-2"
+                      onClick={() => toggleTense(tense.key)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <span className="fw-medium">{tense.label}</span>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTenses.includes(tense.key)}
+                        onChange={() => toggleTense(tense.key)}
+                        className="ms-2"
+                      />
+                    </div>
+                    
+                    {/* Modality selector - HIDDEN FOR NOW but structure kept for future use */}
+                    {false && selectedTenses.includes(tense.key) && (
+                      <div className="mt-2 pt-2 border-top">
+                        <small className="text-muted mb-1 d-block">Format :</small>
+                        <Dropdown className="w-100">
+                          <Dropdown.Toggle 
+                            variant="outline-secondary"
+                            size="sm"
+                            className="w-100 text-start d-flex justify-content-between align-items-center"
+                          >
+                            <span>{formatModalityLabel(getCurrentModality(tense.key))}</span>
+                            {getCurrentModality(tense.key) === getDefaultModalityForType('conjugaison', level) && (
+                              <small className="text-primary ms-1">(recommandé)</small>
+                            )}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu className="w-100">
+                            {getAvailableModalitiesForType('conjugaison').map((modality) => (
+                              <Dropdown.Item
+                                key={modality}
+                                onClick={() => handleModalityChange(tense.key, modality)}
+                                active={modality === getCurrentModality(tense.key)}
+                                className="d-flex justify-content-between align-items-center"
+                              >
+                                <span>{formatModalityLabel(modality)}</span>
+                                {modality === getDefaultModalityForType('conjugaison', level) && (
+                                  <small className="text-primary">
+                                    <i className="bi bi-star-fill"></i>
+                                  </small>
+                                )}
+                              </Dropdown.Item>
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </div>
+                    )}
                   </div>
                 </Col>
               ))}

@@ -122,7 +122,7 @@ export default function LectureModal({
       // Set defaults based on level
       setTheme("");
       setStyle(availableStyles[0]?.value || "histoire");
-      setLength(availableLengths[0]?.value || "moyen");
+      setLength("moyen"); // Always default to "moyen" for all levels
     }
   }, [initialParams, level]);
 
@@ -139,11 +139,10 @@ export default function LectureModal({
 
   const handleReset = () => {
     const availableStyles = getStyleOptionsByLevel(level);
-    const availableLengths = getLengthOptionsByLevel(level);
     
     setTheme("");
     setStyle(availableStyles[0]?.value || "histoire");
-    setLength(availableLengths[0]?.value || "moyen");
+    setLength("moyen"); // Always default to "moyen" for all levels
   };
 
   return (

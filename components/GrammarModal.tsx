@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Modal, Button, Form, Row, Col } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Dropdown } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import { ExerciceModalite, getDefaultModalityForType, getAvailableModalitiesForType, formatModalityLabel } from '../types/exerciceTypes';
 
 export interface GrammarParams {
   types: string;
+  modalities?: Record<string, ExerciceModalite>; // New: store modality for each grammar exercise
 }
 
 interface GrammarModalProps {
@@ -59,13 +61,16 @@ export default function GrammarModal({
   const { t } = useTranslation();
   
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [exerciseModalities, setExerciseModalities] = useState<Record<string, ExerciceModalite>>({});
   
   useEffect(() => {
     if (initialParams) {
       setSelectedTypes(initialParams.types.split(","));
+      // setExerciseModalities(initialParams.modalities || {}); // DISABLED FOR NOW
     } else {
       // Set defaults based on level
       setSelectedTypes(["sujet_verbe"]);
+      // setExerciseModalities({}); // DISABLED FOR NOW
     }
   }, [initialParams, level]);
 
@@ -77,6 +82,17 @@ export default function GrammarModal({
     );
   };
 
+  const handleModalityChange = (exerciseKey: string, modality: ExerciceModalite) => {
+    setExerciseModalities(prev => ({
+      ...prev,
+      [exerciseKey]: modality
+    }));
+  };
+
+  const getCurrentModality = (exerciseKey: string): ExerciceModalite => {
+    return exerciseModalities[exerciseKey] || getDefaultModalityForType('grammaire', level);
+  };
+
   const handleSave = () => {
     if (selectedTypes.length === 0) {
       alert("Veuillez sélectionner au moins un type d'exercice de grammaire");
@@ -85,6 +101,7 @@ export default function GrammarModal({
 
     const params: GrammarParams = {
       types: selectedTypes.join(",")
+      // modalities: exerciseModalities // DISABLED FOR NOW - always use default
     };
 
     onSave(params);
@@ -126,21 +143,67 @@ export default function GrammarModal({
             
             <Row>
               {currentTypes.map(type => (
-                <Col md={6} key={type.key} className="mb-2">
+                <Col md={6} key={type.key} className="mb-3">
                   <div 
-                    className={`selector-card p-2 border rounded text-center ${
+                    className={`selector-card p-3 border rounded ${
                       selectedTypes.includes(type.key) 
                         ? 'border-warning-subtle bg-warning-subtle text-dark' 
                         : 'border-secondary bg-light'
                     }`}
-                    onClick={() => toggleType(type.key)}
                     style={{ 
-                      cursor: 'pointer',
                       border: selectedTypes.includes(type.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                     }}
                   >
-                    {type.label}
+                    <div 
+                      className="d-flex align-items-center justify-content-between mb-2"
+                      onClick={() => toggleType(type.key)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <span className="fw-medium">{type.label}</span>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTypes.includes(type.key)}
+                        onChange={() => toggleType(type.key)}
+                        className="ms-2"
+                      />
+                    </div>
+                    
+                    {/* Modality selector - HIDDEN FOR NOW but structure kept for future use */}
+                    {false && selectedTypes.includes(type.key) && (
+                      <div className="mt-2 pt-2 border-top">
+                        <small className="text-muted mb-1 d-block">Format :</small>
+                        <Dropdown className="w-100">
+                          <Dropdown.Toggle 
+                            variant="outline-secondary"
+                            size="sm"
+                            className="w-100 text-start d-flex justify-content-between align-items-center"
+                          >
+                            <span>{formatModalityLabel(getCurrentModality(type.key))}</span>
+                            {getCurrentModality(type.key) === getDefaultModalityForType('grammaire', level) && (
+                              <small className="text-primary ms-1">(recommandé)</small>
+                            )}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu className="w-100">
+                            {getAvailableModalitiesForType('grammaire').map((modality) => (
+                              <Dropdown.Item
+                                key={modality}
+                                onClick={() => handleModalityChange(type.key, modality)}
+                                active={modality === getCurrentModality(type.key)}
+                                className="d-flex justify-content-between align-items-center"
+                              >
+                                <span>{formatModalityLabel(modality)}</span>
+                                {modality === getDefaultModalityForType('grammaire', level) && (
+                                  <small className="text-primary">
+                                    <i className="bi bi-star-fill"></i>
+                                  </small>
+                                )}
+                              </Dropdown.Item>
+                            ))}
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </div>
+                    )}
                   </div>
                 </Col>
               ))}

@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Modal, Button, Form, Row, Col } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Dropdown } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import { ExerciceModalite, getDefaultModalityForType, getAvailableModalitiesForType, formatModalityLabel } from '../types/exerciceTypes';
 
 export interface VocabularyParams {
   words: string;
   theme: string;
+  modalities?: Record<string, ExerciceModalite>; // New: store modality for each theme
 }
 
 interface VocabularyModalProps {
@@ -65,6 +67,18 @@ export default function VocabularyModal({
   const [customWords, setCustomWords] = useState("");
   const [selectedTheme, setSelectedTheme] = useState("");
   const [useCustomWords, setUseCustomWords] = useState(false);
+  const [exerciseModalities, setExerciseModalities] = useState<Record<string, ExerciceModalite>>({});
+  
+  const handleModalityChange = (themeKey: string, modality: ExerciceModalite) => {
+    setExerciseModalities(prev => ({
+      ...prev,
+      [themeKey]: modality
+    }));
+  };
+
+  const getCurrentModality = (themeKey: string): ExerciceModalite => {
+    return exerciseModalities[themeKey] || getDefaultModalityForType('vocabulaire', level);
+  };
   
   useEffect(() => {
     if (initialParams) {
@@ -78,11 +92,13 @@ export default function VocabularyModal({
         setCustomWords("");
         setSelectedTheme(initialParams.theme || "");
       }
+      // setExerciseModalities(initialParams.modalities || {}); // DISABLED FOR NOW
     } else {
       // Set defaults
       setUseCustomWords(false);
       setCustomWords("");
       setSelectedTheme("animaux");
+      // setExerciseModalities({}); // DISABLED FOR NOW
     }
   }, [initialParams, level]);
 
@@ -114,6 +130,7 @@ export default function VocabularyModal({
     const params: VocabularyParams = {
       words: wordsValue,
       theme: themeValue
+      // modalities: exerciseModalities // DISABLED FOR NOW - always use default
     };
 
     onSave(params);
@@ -168,21 +185,68 @@ export default function VocabularyModal({
             {!useCustomWords && (
               <Row className="mb-3">
                 {currentThemes.map(theme => (
-                  <Col md={6} key={theme.key} className="mb-2">
+                  <Col md={6} key={theme.key} className="mb-3">
                     <div 
-                      className={`selector-card p-2 border rounded text-center ${
+                      className={`selector-card p-3 border rounded ${
                         selectedTheme === theme.key 
                           ? 'border-warning-subtle bg-warning-subtle text-dark' 
                           : 'border-secondary bg-light'
                       }`}
-                      onClick={() => toggleTheme(theme.key)}
                       style={{ 
-                        cursor: 'pointer',
                         border: selectedTheme === theme.key ? '2px solid #ffc107' : '1px solid #dee2e6',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                       }}
                     >
-                      {theme.label}
+                      <div 
+                        className="d-flex align-items-center justify-content-between mb-2"
+                        onClick={() => toggleTheme(theme.key)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <span className="fw-medium">{theme.label}</span>
+                        <input 
+                          type="radio" 
+                          name="themeSelection"
+                          checked={selectedTheme === theme.key}
+                          onChange={() => toggleTheme(theme.key)}
+                          className="ms-2"
+                        />
+                      </div>
+                      
+                      {/* Modality selector - HIDDEN FOR NOW but structure kept for future use */}
+                      {false && selectedTheme === theme.key && (
+                        <div className="mt-2 pt-2 border-top">
+                          <small className="text-muted mb-1 d-block">Format :</small>
+                          <Dropdown className="w-100">
+                            <Dropdown.Toggle 
+                              variant="outline-secondary"
+                              size="sm"
+                              className="w-100 text-start d-flex justify-content-between align-items-center"
+                            >
+                              <span>{formatModalityLabel(getCurrentModality(theme.key))}</span>
+                              {getCurrentModality(theme.key) === getDefaultModalityForType('vocabulaire', level) && (
+                                <small className="text-primary ms-1">(recommandé)</small>
+                              )}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu className="w-100">
+                              {getAvailableModalitiesForType('vocabulaire').map((modality) => (
+                                <Dropdown.Item
+                                  key={modality}
+                                  onClick={() => handleModalityChange(theme.key, modality)}
+                                  active={modality === getCurrentModality(theme.key)}
+                                  className="d-flex justify-content-between align-items-center"
+                                >
+                                  <span>{formatModalityLabel(modality)}</span>
+                                  {modality === getDefaultModalityForType('vocabulaire', level) && (
+                                    <small className="text-primary">
+                                      <i className="bi bi-star-fill"></i>
+                                    </small>
+                                  )}
+                                </Dropdown.Item>
+                              ))}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </div>
+                      )}
                     </div>
                   </Col>
                 ))}

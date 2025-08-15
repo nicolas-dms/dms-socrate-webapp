@@ -9,10 +9,13 @@ import ConjugationModal, { ConjugationParams } from "../../../components/Conjuga
 import GrammarModal, { GrammarParams } from "../../../components/GrammarModal";
 import VocabularyModal, { VocabularyParams } from "../../../components/VocabularyModal";
 import OrthographyModal, { OrthographyParams } from "../../../components/OrthographyModal";
+import ComprehensionModal, { ComprehensionParams } from "../../../components/ComprehensionModal";
 import { useSubscription } from "../../../context/SubscriptionContext";
 import { useAuth } from "../../../context/AuthContext";
-import { exerciseService, ExerciseGenerationResponse } from "../../../services/exerciseService";
-import { ExerciceDomain, ExerciceTypeParam } from "../../../types/exerciceTypes";
+// Import top-level functions to avoid Turbopack interop issues with object properties
+import type { ExerciseSession } from "../../../services/exerciseService";
+import { generateExercises as generateExercisesApi, downloadSessionPDF as downloadSessionPDFApi } from "../../../services/exerciseService";
+import { ExerciceDomain, ExerciceTypeParam, ExerciceTime, ExerciceModalite, buildExerciceGenerationRequest, encodeExerciseTypeWithModality, ExercicesByType, ExerciseWithParams } from "../../../types/exerciceTypes";
 import { EXERCISE_CONTENT_CALCULATOR } from "../../../utils/pdfGenerationConfig";
 import { previewBackendRequest } from "../../../utils/requestPreview";
 import styles from "../../page.module.css";
@@ -55,6 +58,7 @@ export default function GenerateFrenchPage() {
   const [showGrammarModal, setShowGrammarModal] = useState(false);
   const [showVocabularyModal, setShowVocabularyModal] = useState(false);
   const [showOrthographyModal, setShowOrthographyModal] = useState(false);
+  const [showComprehensionModal, setShowComprehensionModal] = useState(false);
   
   // Level change confirmation modal
   const [showLevelChangeModal, setShowLevelChangeModal] = useState(false);
@@ -67,9 +71,17 @@ export default function GenerateFrenchPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showPDFViewerModal, setShowPDFViewerModal] = useState(false);
   const [preview, setPreview] = useState<ExercisePreview | null>(null);
-  const [generatedExercise, setGeneratedExercise] = useState<ExerciseGenerationResponse | null>(null);
+  const [generatedExercise, setGeneratedExercise] = useState<ExerciseSession | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
+
+  // Last generated parameters for regeneration
+  const [lastGeneratedParams, setLastGeneratedParams] = useState<{
+    level: string;
+    duration: string;
+    selectedTypes: string[];
+    exerciceTypeParams: ExerciceTypeParam;
+  } | null>(null);
 
   const frenchTypes = [
     { key: "lecture", label: "Lecture" },
@@ -104,58 +116,162 @@ export default function GenerateFrenchPage() {
     return styleLabels[style] || style;
   };
 
-  // Helper function to format length labels
-  const formatLengthLabel = (length: string) => {
-    const lengthLabels: Record<string, string> = {
-      "court": "Court (10 lignes)",
-      "moyen": "Moyen (20 lignes)",
-      "long": "Long (30 lignes)"
+  // Helper function to format length labels based on level
+  const formatLengthLabel = (length: string, levelToUse?: string) => {
+    // Use the provided level or fall back to the current form level
+    const currentLevel = levelToUse || level;
+    
+    // Debug log to see what values we're working with
+    console.log('formatLengthLabel debug:', { length, levelToUse, currentLevel, formLevel: level });
+    
+    // Use the same logic as LectureModal for consistency
+    const getLengthLabelByLevel = (level: string, length: string) => {
+      switch (level) {
+        case "CP":
+          switch (length) {
+            case "court": return "Court (3 lignes)";
+            case "moyen": return "Moyen (5 lignes)";
+            case "long": return "Long (10 lignes)";
+            default: return length;
+          }
+        case "CE1":
+          switch (length) {
+            case "court": return "Court (5 lignes)";
+            case "moyen": return "Moyen (10 lignes)";
+            case "long": return "Long (15 lignes)";
+            default: return length;
+          }
+        case "CE2":
+          switch (length) {
+            case "court": return "Court (8 lignes)";
+            case "moyen": return "Moyen (15 lignes)";
+            case "long": return "Long (20 lignes)";
+            default: return length;
+          }
+        case "CM1":
+          switch (length) {
+            case "court": return "Court (10 lignes)";
+            case "moyen": return "Moyen (20 lignes)";
+            case "long": return "Long (30 lignes)";
+            default: return length;
+          }
+        case "CM2":
+          switch (length) {
+            case "court": return "Court (15 lignes)";
+            case "moyen": return "Moyen (25 lignes)";
+            case "long": return "Long (40 lignes)";
+            default: return length;
+          }
+        default:
+          switch (length) {
+            case "court": return "Court (10 lignes)";
+            case "moyen": return "Moyen (20 lignes)";
+            case "long": return "Long (30 lignes)";
+            default: return length;
+          }
+      }
     };
-    return lengthLabels[length] || length;
+    
+    const result = getLengthLabelByLevel(currentLevel, length);
+    console.log('formatLengthLabel result:', result);
+    return result;
   };  
 
-  // Exercise limits based on duration
+  // Count total selected exercises across all domains
+  const getTotalSelectedExercises = (): number => {
+    let totalExercises = 0;
+    
+    selectedTypes.forEach(type => {
+      const params = exerciceTypeParams[type];
+      if (params) {
+        switch (type) {
+          case 'lecture':
+            // Count lecture exercises (always 1 per selection)
+            totalExercises += 1;
+            break;
+          case 'comprehension':
+            // Count comprehension exercises (always 1 per selection)
+            totalExercises += 1;
+            break;
+          case 'grammaire':
+            // Count grammar exercises based on selected types
+            if (params.types) {
+              const grammarTypes = params.types.split(',').map((t: string) => t.trim()).filter(Boolean);
+              totalExercises += grammarTypes.length;
+            } else {
+              totalExercises += 1; // Default if no specific types
+            }
+            break;
+          case 'conjugaison':
+            // Count conjugation exercises - each tense is a separate exercise
+            if (params.tenses) {
+              const tensesList = params.tenses.split(',').map((t: string) => t.trim()).filter(Boolean);
+              totalExercises += tensesList.length;
+            } else {
+              totalExercises += 1; // Default if no specific tenses
+            }
+            break;
+          case 'vocabulaire':
+            // Count vocabulary exercises (always 1 per selection)
+            totalExercises += 1;
+            break;
+          case 'orthographe':
+            // Count orthography exercises (always 1 per selection)
+            totalExercises += 1;
+            break;
+          default:
+            totalExercises += 1;
+        }
+      } else {
+        // If no params yet (just selected but not configured), count as 1
+        totalExercises += 1;
+      }
+    });
+    
+    return totalExercises;
+  };
+
+  // Exercise limits based on duration (4 minutes per exercise)
   const getExerciseLimits = (duration: string): number => {
     switch (duration) {
-      case "20 min": return 3;
-      case "30 min": return 4;
-      case "40 min": return 5;
-      default: return 4;
+      case "20 min": return 2;  // 2 exercices pour 20 minutes
+      case "30 min": return 3;  // 3 exercices pour 30 minutes  
+      case "40 min": return 4; // 4 exercices pour 40 minutes
+      default: return 3;
     }
   };
 
   // Check if user can add more exercises
   const canAddMoreExercises = (): boolean => {
     const limit = getExerciseLimits(duration);
-    return selectedTypes.length < limit;
+    const currentTotal = getTotalSelectedExercises();
+    return currentTotal < limit;
   };
 
   // Get limit message
   const getLimitMessage = (): string => {
     const limit = getExerciseLimits(duration);
-    return `Vous avez atteint la limite de ${limit} exercices pour la durée sélectionnée`;
+    const currentTotal = getTotalSelectedExercises();
+    return `Vous avez atteint la limite de ${limit} exercices pour la durée sélectionnée (actuellement: ${currentTotal})`;
   };
 
   // Handle duration change with exercise limit adjustment
   const handleDurationChange = (newDuration: string) => {
     const newLimit = getExerciseLimits(newDuration);
+    const currentTotal = getTotalSelectedExercises();
     
-    // If current selection exceeds new limit, trim to fit
-    if (selectedTypes.length > newLimit) {
-      const trimmedTypes = selectedTypes.slice(0, newLimit);
-      setSelectedTypes(trimmedTypes);
+    if (currentTotal > newLimit) {
+      // Show warning and ask for confirmation
+      const confirmChange = window.confirm(
+        `La nouvelle durée (${newDuration}) limite à ${newLimit} exercices, mais vous en avez actuellement ${currentTotal} sélectionnés. Voulez-vous continuer ? Les paramètres existants seront conservés mais certains exercices pourraient être exclus lors de la génération.`
+      );
       
-      // Also clean up exercise params for removed types
-      const newParams = { ...exerciceTypeParams };
-      Object.keys(newParams).forEach(key => {
-        if (!trimmedTypes.includes(key)) {
-          delete newParams[key];
-        }
-      });
-      setExerciceTypeParams(newParams);
+      if (confirmChange) {
+        setDuration(newDuration);
+      }
+    } else {
+      setDuration(newDuration);
     }
-    
-    setDuration(newDuration);
   };
 
   // Handle level change with intelligent validation
@@ -186,32 +302,35 @@ export default function GenerateFrenchPage() {
   const cancelLevelChange = () => {
     setShowLevelChangeModal(false);
     setPendingLevel("");
-  };  
+  };
+
   const toggleType = (type: string) => {
-    const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"];
+    const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe", "comprehension"];
     
     // Check if trying to add a new exercise when at limit
     if (!selectedTypes.includes(type) && !canAddMoreExercises()) {
-      alert(getLimitMessage());
+      // Silently prevent adding - button should be disabled but this is a fallback
       return;
     }
     
     // Special handling for comprehension - cannot be selected without lecture
     if (type === "comprehension") {
       if (!selectedTypes.includes("lecture")) {
-        // Cannot select comprehension without lecture
-        alert("Vous devez d'abord sélectionner 'Lecture' pour pouvoir choisir 'Compréhension'");
+        // Cannot select comprehension without lecture - this should be prevented by UI
         return;
       }
-      // Check limit only if adding comprehension
-      if (!selectedTypes.includes(type) && !canAddMoreExercises()) {
-        alert(getLimitMessage());
-        return;
+      
+      if (selectedTypes.includes(type)) {
+        // Remove comprehension
+        setSelectedTypes(selectedTypes.filter(t => t !== type));
+        // Remove exercise type params
+        const newParams = { ...exerciceTypeParams };
+        delete newParams[type];
+        setExerciceTypeParams(newParams);
+      } else {
+        // Show comprehension modal to configure parameters
+        setShowComprehensionModal(true);
       }
-      // Simple toggle for comprehension when lecture is selected
-      setSelectedTypes(selectedTypes.includes(type)
-        ? selectedTypes.filter(t => t !== type)
-        : [...selectedTypes, type]);
       return;
     }
     
@@ -246,6 +365,9 @@ export default function GenerateFrenchPage() {
           case "orthographe":
             setShowOrthographyModal(true);
             break;
+          case "comprehension":
+            setShowComprehensionModal(true);
+            break;
         }
       }
     } else {
@@ -257,6 +379,17 @@ export default function GenerateFrenchPage() {
   };
 
   const handleLectureSave = (params: LectureParams) => {
+    // Calculate how the total would change with this new lecture configuration
+    const currentTotalWithoutLecture = getTotalSelectedExercises() - (selectedTypes.includes("lecture") ? 1 : 0);
+    const lectureExerciseCount = 1; // Lecture always counts as 1 exercise
+    const newTotal = currentTotalWithoutLecture + lectureExerciseCount;
+    const limit = getExerciseLimits(duration);
+    
+    // Only prevent save if this would exceed the session limit AND lecture is not already selected
+    if (newTotal > limit && !selectedTypes.includes("lecture")) {
+      return; // This should not happen due to UI controls, but safety check
+    }
+    
     // Add lecture to selected types
     if (!selectedTypes.includes("lecture")) {
       setSelectedTypes([...selectedTypes, "lecture"]);
@@ -274,6 +407,21 @@ export default function GenerateFrenchPage() {
   };
 
   const handleConjugationSave = (params: ConjugationParams) => {
+    // Check if adding this exercise would exceed the limit
+    const currentTotal = getTotalSelectedExercises();
+    const limit = getExerciseLimits(duration);
+    
+    // Calculate how many exercises this conjugation would add
+    const tensesList = params.tenses.split(',').filter((t: string) => t.trim());
+    const newExerciseCount = !selectedTypes.includes("conjugaison") ? tensesList.length : 
+      tensesList.length - (exerciceTypeParams.conjugaison?.tenses?.split(',').filter((t: string) => t.trim()).length || 0);
+    
+    const wouldExceedLimit = (currentTotal + newExerciseCount) > limit;
+    
+    if (wouldExceedLimit) {
+      return; // Silently prevent save - UI should have prevented this
+    }
+    
     // Add conjugaison to selected types
     if (!selectedTypes.includes("conjugaison")) {
       setSelectedTypes([...selectedTypes, "conjugaison"]);
@@ -290,6 +438,17 @@ export default function GenerateFrenchPage() {
   };
 
   const handleGrammarSave = (params: GrammarParams) => {
+    // Check if adding this exercise would exceed the limit
+    const currentTotal = getTotalSelectedExercises();
+    const limit = getExerciseLimits(duration);
+    
+    // If grammar is not already selected, adding it would count as +1 exercise
+    const wouldExceedLimit = !selectedTypes.includes("grammaire") && (currentTotal >= limit);
+    
+    if (wouldExceedLimit) {
+      return; // Silently prevent save - UI should have prevented this
+    }
+    
     if (!selectedTypes.includes("grammaire")) {
       setSelectedTypes([...selectedTypes, "grammaire"]);
     }
@@ -303,6 +462,17 @@ export default function GenerateFrenchPage() {
   };
 
   const handleVocabularySave = (params: VocabularyParams) => {
+    // Check if adding this exercise would exceed the limit
+    const currentTotal = getTotalSelectedExercises();
+    const limit = getExerciseLimits(duration);
+    
+    // If vocabulary is not already selected, adding it would count as +1 exercise
+    const wouldExceedLimit = !selectedTypes.includes("vocabulaire") && (currentTotal >= limit);
+    
+    if (wouldExceedLimit) {
+      return; // Silently prevent save - UI should have prevented this
+    }
+    
     if (!selectedTypes.includes("vocabulaire")) {
       setSelectedTypes([...selectedTypes, "vocabulaire"]);
     }
@@ -317,6 +487,17 @@ export default function GenerateFrenchPage() {
   };
 
   const handleOrthographySave = (params: OrthographyParams) => {
+    // Check if adding this exercise would exceed the limit
+    const currentTotal = getTotalSelectedExercises();
+    const limit = getExerciseLimits(duration);
+    
+    // If orthography is not already selected, adding it would count as +1 exercise
+    const wouldExceedLimit = !selectedTypes.includes("orthographe") && (currentTotal >= limit);
+    
+    if (wouldExceedLimit) {
+      return; // Silently prevent save - UI should have prevented this
+    }
+    
     if (!selectedTypes.includes("orthographe")) {
       setSelectedTypes([...selectedTypes, "orthographe"]);
     }
@@ -326,6 +507,31 @@ export default function GenerateFrenchPage() {
       orthographe: {
         words: params.words,
         rules: params.rules
+      }
+    });
+  };
+
+  const handleComprehensionSave = (params: ComprehensionParams) => {
+    // Calculate how the total would change with this new comprehension configuration
+    const currentTotalWithoutComprehension = getTotalSelectedExercises() - (selectedTypes.includes("comprehension") ? 1 : 0);
+    const comprehensionExerciseCount = 1; // Comprehension always counts as 1 exercise in our total
+    const newTotal = currentTotalWithoutComprehension + comprehensionExerciseCount;
+    const limit = getExerciseLimits(duration);
+    
+    // Only prevent save if this would exceed the session limit AND comprehension is not already selected
+    if (newTotal > limit && !selectedTypes.includes("comprehension")) {
+      // This should not happen due to UI controls, but safety check
+      return;
+    }
+    
+    if (!selectedTypes.includes("comprehension")) {
+      setSelectedTypes([...selectedTypes, "comprehension"]);
+    }
+    
+    setExerciceTypeParams({
+      ...exerciceTypeParams,
+      comprehension: {
+        types: params.types
       }
     });
   };
@@ -348,6 +554,10 @@ export default function GenerateFrenchPage() {
 
   const handleEditOrthographyParams = () => {
     setShowOrthographyModal(true);
+  };
+
+  const handleEditComprehensionParams = () => {
+    setShowComprehensionModal(true);
   };
   // Generate preview based on selections
   const generatePreview = (): ExercisePreview => {
@@ -376,6 +586,14 @@ export default function GenerateFrenchPage() {
     setShowPreviewModal(true);
   };
   const handleConfirmGeneration = async () => {
+    // Save current parameters for potential regeneration
+    setLastGeneratedParams({
+      level,
+      duration, 
+      selectedTypes: [...selectedTypes],
+      exerciceTypeParams: JSON.parse(JSON.stringify(exerciceTypeParams))
+    });
+
     setShowPreviewModal(false);
     setShowGeneratingModal(true);
     
@@ -383,7 +601,8 @@ export default function GenerateFrenchPage() {
       // Check subscription limits before generation
       if (!canGenerateMore()) {
         throw new Error("Limite d'abonnement atteinte pour ce mois");
-      }      // Use 1 fiche from subscription allowance
+      }
+      // Use 1 fiche from subscription allowance
       await useCredit();
       
       // Get lecture theme from parameters
@@ -397,26 +616,177 @@ export default function GenerateFrenchPage() {
       // Preview the backend request (for debugging)
       previewBackendRequest(level, duration, selectedTypes, lectureTheme || "Exercices généraux");
       
-      // Call the unified exercise service
-      const response = await exerciseService.generateExercise(
-        user.user_id,
+      // Build exercices_by_type structure for backend
+      const exercicesByType: ExercicesByType = {};
+      
+      selectedTypes.forEach(type => {
+        if (type === 'grammaire' && exerciceTypeParams.grammaire) {
+          const grammarTypes = exerciceTypeParams.grammaire.types.split(',').map((t: string) => t.trim());
+          exercicesByType['grammaire'] = grammarTypes.map((grammarType: string) => ({
+            exercice_id: grammarType,
+            params: {
+              verbs: exerciceTypeParams.grammaire?.verbs || undefined,
+              tenses: exerciceTypeParams.grammaire?.tenses || undefined
+            }
+          }));
+        } else if (type === 'grammaire') {
+          exercicesByType['grammaire'] = [{
+            exercice_id: 'grammaire_generale',
+            params: {}
+          }];
+        }
+        
+        if (type === 'conjugaison' && exerciceTypeParams.conjugaison) {
+          const tenses = exerciceTypeParams.conjugaison.tenses.split(',').map((t: string) => t.trim());
+          exercicesByType['conjugaison'] = tenses.map((tense: string) => ({
+            exercice_id: tense,
+            params: {
+              verbs: exerciceTypeParams.conjugaison?.verbs || undefined
+            }
+          }));
+        } else if (type === 'conjugaison') {
+          exercicesByType['conjugaison'] = [{
+            exercice_id: 'present',
+            params: {}
+          }];
+        }
+        
+        if (type === 'vocabulaire' && exerciceTypeParams.vocabulaire) {
+          const theme = exerciceTypeParams.vocabulaire.theme;
+          exercicesByType['vocabulaire'] = [{
+            exercice_id: theme,
+            params: {
+              words: exerciceTypeParams.vocabulaire.words || undefined
+            }
+          }];
+        } else if (type === 'vocabulaire') {
+          exercicesByType['vocabulaire'] = [{
+            exercice_id: 'vocabulaire_general',
+            params: {}
+          }];
+        }
+        
+        if (type === 'lecture') {
+          if (exerciceTypeParams.lecture) {
+            const style = exerciceTypeParams.lecture.style || 'histoire';
+            exercicesByType['lecture'] = [{
+              exercice_id: style,
+              params: {
+                theme: exerciceTypeParams.lecture.theme || undefined,
+                text_size: exerciceTypeParams.lecture.length || 'moyen'
+              }
+            }];
+          } else {
+            exercicesByType['lecture'] = [{
+              exercice_id: 'histoire',
+              params: {
+                text_size: 'moyen'
+              }
+            }];
+          }
+        }
+        
+        if (type === 'orthographe') {
+          if (exerciceTypeParams.orthographe) {
+            exercicesByType['orthographe'] = [{
+              exercice_id: 'orthographe_generale',
+              params: {
+                words: exerciceTypeParams.orthographe.words || undefined,
+                rules: exerciceTypeParams.orthographe.rules || undefined
+              }
+            }];
+          } else {
+            exercicesByType['orthographe'] = [{
+              exercice_id: 'orthographe_generale',
+              params: {}
+            }];
+          }
+        }
+        
+        if (type === 'comprehension') {
+          if (exerciceTypeParams.comprehension) {
+            const comprehensionTypes = exerciceTypeParams.comprehension.types.split(',').map((t: string) => t.trim());
+            exercicesByType['comprehension'] = comprehensionTypes.map((comprType: string) => ({
+              exercice_id: comprType,
+              params: {}
+            }));
+          } else {
+            exercicesByType['comprehension'] = [{
+              exercice_id: 'comprehension_texte',
+              params: {}
+            }];
+          }
+        }
+      });
+      
+      console.log('Exercices types with exercices list:', exercicesByType);
+      
+      // Encode exercise types with their modalities from configured parameters
+      // FOR NOW: Always use DEFAUT modality, but structure is kept for future reactivation
+      const typesWithModalities = selectedTypes.flatMap(type => {
+        if (type === 'grammaire' && exerciceTypeParams.grammaire) {
+          const grammarTypes = exerciceTypeParams.grammaire.types.split(',');
+          return grammarTypes.map((grammarType: string) => {
+            // Always use DEFAUT for now: const modality = modalities[grammarType.trim()] || ExerciceModalite.DEFAUT;
+            return encodeExerciseTypeWithModality('grammaire', grammarType.trim(), ExerciceModalite.DEFAUT);
+          });
+        }
+        
+        if (type === 'conjugaison' && exerciceTypeParams.conjugaison) {
+          const tenses = exerciceTypeParams.conjugaison.tenses.split(',');
+          return tenses.map((tense: string) => {
+            // Always use DEFAUT for now: const modality = modalities[tense.trim()] || ExerciceModalite.DEFAUT;
+            return encodeExerciseTypeWithModality('conjugaison', tense.trim(), ExerciceModalite.DEFAUT);
+          });
+        }
+        
+        if (type === 'vocabulaire' && exerciceTypeParams.vocabulaire) {
+          const theme = exerciceTypeParams.vocabulaire.theme;
+          // Always use DEFAUT for now: const modality = modalities[theme] || ExerciceModalite.DEFAUT;
+          return [encodeExerciseTypeWithModality('vocabulaire', theme, ExerciceModalite.DEFAUT)];
+        }
+        
+        if (type === 'comprehension' && exerciceTypeParams.comprehension) {
+          const comprehensionTypes = exerciceTypeParams.comprehension.types.split(',');
+          return comprehensionTypes.map((comprType: string) => {
+            // Always use DEFAUT for now: const modality = modalities[comprType.trim()] || ExerciceModalite.DEFAUT;
+            return encodeExerciseTypeWithModality('comprehension', comprType.trim(), ExerciceModalite.DEFAUT);
+          });
+        }
+        
+        // For other types (lecture, orthographe), use default modality
+        return [encodeExerciseTypeWithModality(type, undefined, ExerciceModalite.DEFAUT)];
+      });
+      
+      console.log('Types with modalities (always DEFAUT for now):', typesWithModalities);
+      
+      // Build the request using the helper function (this handles type conversion)
+      const request = buildExerciceGenerationRequest(
         level,
         duration,
-        selectedTypes,
+        typesWithModalities, // Use encoded types with modalities
         lectureTheme || "Exercices généraux",
         ExerciceDomain.FRANCAIS,
-        exerciceTypeParams, // Pass exercise type parameters
-        undefined // specific requirements
+        exerciceTypeParams,
+        undefined, // specific requirements
+        exercicesByType // New parameter with exercise lists
       );
       
-      // Check if generation was successful
-      if (response.success && response.pdf_path) {
-        // Store the full response for download handling
+      console.log('About to call generateExercisesApi with:', { userId: user.user_id, request });
+      
+      // Call the unified exercise service (top-level function export)
+      const response = await generateExercisesApi(user.user_id, request);
+      
+      console.log('generateExercisesApi response:', response);
+      
+      // Check if generation was successful (ExerciseSession should have an id if successful)
+      if (response.id) {
+        // Store the session response for download handling
         setGeneratedExercise(response);
         setShowGeneratingModal(false);
         setShowSuccessModal(true);
       } else {
-        throw new Error(response.error_message || "Erreur lors de la génération du PDF");
+        throw new Error("Erreur lors de la génération du PDF");
       }
       
     } catch (error: any) {
@@ -428,20 +798,27 @@ export default function GenerateFrenchPage() {
   };
 
   const handleDownload = async () => {
-    if (!generatedExercise?.pdf_path && !generatedExercise?.pdf_base64) return;
+    if (!generatedExercise?.pdf_url || !user?.user_id) return;
     
     try {
-      let blob: Blob;
+      console.log('Generated exercise:', generatedExercise);
+      console.log('PDF URL:', generatedExercise.pdf_url);
       
-      // Prefer base64 data if available (faster, no additional request)
-      if (generatedExercise.pdf_base64) {
-        blob = exerciseService.base64ToBlob(generatedExercise.pdf_base64);
-      } else if (generatedExercise.pdf_path) {
-        blob = await exerciseService.downloadExercisePDF(generatedExercise.pdf_path);
-      } else {
-        throw new Error('No PDF data available');
+      // Extract filename from the pdf_path returned by backend
+      // URL format: https://...blob.core.windows.net/.../filename.pdf?parameters
+      // We need to get the filename before the query parameters
+      const urlWithoutParams = generatedExercise.pdf_url.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop();
+      console.log('Extracted filename:', filename);
+      
+      if (!filename) {
+        throw new Error('Unable to extract filename from PDF path');
       }
       
+      console.log('Calling downloadSessionPDF with:', { userId: user.user_id, filename });
+      
+      // Use the downloadSessionPDF function with correct parameters (userId, filename)
+      const blob = await downloadSessionPDFApi(user.user_id, filename);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -458,20 +835,27 @@ export default function GenerateFrenchPage() {
   };
 
   const handleViewPDF = async () => {
-    if (!generatedExercise) return;
+    if (!generatedExercise?.pdf_url || !user?.user_id) return;
     
     try {
-      let blob: Blob;
+      console.log('Generated exercise:', generatedExercise);
+      console.log('PDF URL:', generatedExercise.pdf_url);
       
-      // Try base64 first (faster), fallback to URL download
-      if (generatedExercise.pdf_base64) {
-        blob = exerciseService.base64ToBlob(generatedExercise.pdf_base64);
-      } else if (generatedExercise.pdf_path) {
-        blob = await exerciseService.downloadExercisePDF(generatedExercise.pdf_path);
-      } else {
-        throw new Error("Aucune donnée PDF disponible");
+      // Extract filename from the pdf_path returned by backend
+      // URL format: https://...blob.core.windows.net/.../filename.pdf?parameters
+      // We need to get the filename before the query parameters
+      const urlWithoutParams = generatedExercise.pdf_url.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop();
+      console.log('Extracted filename:', filename);
+      
+      if (!filename) {
+        throw new Error('Unable to extract filename from PDF path');
       }
       
+      console.log('Calling downloadSessionPDF with:', { userId: user.user_id, filename });
+      
+      // Use the downloadSessionPDF function with correct parameters (userId, filename)
+      const blob = await downloadSessionPDFApi(user.user_id, filename);
       const url = URL.createObjectURL(blob);
       setPdfViewerUrl(url);
       setShowPDFViewerModal(true);
@@ -509,6 +893,31 @@ export default function GenerateFrenchPage() {
     setGeneratedExercise(null);
     setErrorMessage("");
     closePDFViewer();
+  };
+
+  const createNewSheet = () => {
+    // Reset all parameters for a completely new sheet
+    setLevel("CE1");
+    setDuration("20 minutes");
+    setSelectedTypes([]);
+    setExerciceTypeParams({});
+    setLastGeneratedParams(null);
+    resetFlow();
+  };
+
+  const regenerateSameSheet = () => {
+    // Close modal but keep current parameters
+    resetFlow();
+  };
+
+  const restoreLastParameters = () => {
+    if (lastGeneratedParams) {
+      setLevel(lastGeneratedParams.level);
+      setDuration(lastGeneratedParams.duration);
+      setSelectedTypes([...lastGeneratedParams.selectedTypes]);
+      setExerciceTypeParams(JSON.parse(JSON.stringify(lastGeneratedParams.exerciceTypeParams)));
+    }
+    resetFlow();
   };
 
   return (
@@ -586,14 +995,19 @@ export default function GenerateFrenchPage() {
                           <h6 className="mb-0">Types d'exercices</h6>
                           <div className="d-flex align-items-center gap-2">
                             <Badge 
-                              bg={selectedTypes.length >= getExerciseLimits(duration) ? 'warning' : 'secondary'} 
+                              bg={getTotalSelectedExercises() > getExerciseLimits(duration) ? 'danger' : getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'secondary'} 
                               className="d-flex align-items-center gap-1"
                             >
                               <i className="bi bi-list-ol"></i>
-                              {selectedTypes.length}/{getExerciseLimits(duration)}
+                              {getTotalSelectedExercises()}/{getExerciseLimits(duration)}
                             </Badge>
                             <small className="text-muted">
-                              {selectedTypes.length >= getExerciseLimits(duration) ? (
+                              {getTotalSelectedExercises() > getExerciseLimits(duration) ? (
+                                <>
+                                  <i className="bi bi-exclamation-triangle text-danger me-1"></i>
+                                  <span className="text-danger">Limite dépassée</span>
+                                </>
+                              ) : getTotalSelectedExercises() >= getExerciseLimits(duration) ? (
                                 <>
                                   <i className="bi bi-info-circle me-1"></i>
                                   Limite atteinte
@@ -609,8 +1023,8 @@ export default function GenerateFrenchPage() {
                             const hasSettings = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"].includes(type.key);
                             const isComprehensionDisabled = type.key === "comprehension" && !selectedTypes.includes("lecture");
                             const isSelected = selectedTypes.includes(type.key);
-                            const isLimitReached = !isSelected && !canAddMoreExercises();
-                            const isDisabled = isComprehensionDisabled || isLimitReached;
+                            const isAtLimit = !canAddMoreExercises();
+                            const isDisabled = isComprehensionDisabled || (!isSelected && isAtLimit);
                             
                             return (
                               <Card 
@@ -619,23 +1033,26 @@ export default function GenerateFrenchPage() {
                                 onClick={() => !isDisabled && toggleType(type.key)}
                                 style={{ 
                                   cursor: isDisabled ? 'not-allowed' : 'pointer',
-                                  opacity: isDisabled ? 0.6 : 1,
+                                  opacity: isDisabled ? 0.5 : 1,
                                   minWidth: '120px'
                                 }}
                                 title={
                                   isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : 
-                                  isLimitReached ? getLimitMessage() : ""
+                                  (!isSelected && isAtLimit) ? `Limite de ${getExerciseLimits(duration)} exercices atteinte` : ""
                                 }
                               >
                                 <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center" style={{ position: 'relative' }}>
-                                  <span className={`fw-bold ${isSelected ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                  <span className={`fw-bold ${isSelected ? 'text-dark-emphasis' : 'text-dark'}`} style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>
+                                    <i className={`${getTypeIcon(type.key)} me-2`}></i>
                                     {type.label}
                                   </span>
+                                  
                                   {isComprehensionDisabled && (
                                     <i className="bi bi-lock position-absolute" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
                                   )}
-                                  {isLimitReached && (
-                                    <i className="bi bi-info-circle-fill text-warning position-absolute" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
+                                  
+                                  {(!isSelected && isAtLimit && !isComprehensionDisabled) && (
+                                    <i className="bi bi-dash-circle position-absolute text-muted" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
                                   )}
                                 </Card.Body>
                               </Card>
@@ -675,7 +1092,7 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="bi bi-book-open me-1"></i>
+                                  <i className="bi bi-book me-1"></i>
                                   Lecture
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
@@ -690,7 +1107,7 @@ export default function GenerateFrenchPage() {
                                     )}
                                     {exerciceTypeParams.lecture.length && (
                                       <span>
-                                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length)}
+                                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length, level)}
                                       </span>
                                     )}
                                   </div>
@@ -757,7 +1174,7 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="bi bi-book me-1"></i>
+                                  <i className="bi bi-pencil-square me-1"></i>
                                   Grammaire
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
@@ -791,7 +1208,7 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="bi bi-chat-text me-1"></i>
+                                  <i className="bi bi-chat-dots me-1"></i>
                                   Vocabulaire
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
@@ -825,11 +1242,45 @@ export default function GenerateFrenchPage() {
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
-                                  <i className="bi bi-pen me-1"></i>
+                                  <i className="bi bi-check2-square me-1"></i>
                                   Orthographe
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
                                   {exerciceTypeParams.orthographe.words || exerciceTypeParams.orthographe.rules}
+                                </div>
+                              </div>
+                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                            </div>
+                          )}
+
+                          {/* Comprehension parameters */}
+                          {selectedTypes.includes("comprehension") && exerciceTypeParams.comprehension && (
+                            <div 
+                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              style={{ 
+                                backgroundColor: '#f8f9fa', 
+                                minWidth: '200px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onClick={handleEditComprehensionParams}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#e9ecef';
+                                e.currentTarget.style.borderColor = '#007bff';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                e.currentTarget.style.borderColor = '#dee2e6';
+                              }}
+                              title="Cliquer pour modifier les paramètres"
+                            >
+                              <div className="flex-grow-1">
+                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                  <i className="bi bi-lightbulb me-1"></i>
+                                  Compréhension
+                                </div>
+                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
+                                  {exerciceTypeParams.comprehension.types}
                                 </div>
                               </div>
                               <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
@@ -844,7 +1295,7 @@ export default function GenerateFrenchPage() {
                   <div className="d-grid gap-2 mt-3">
                     <Button 
                       type="submit" 
-                      disabled={selectedTypes.length === 0}
+                      disabled={selectedTypes.length === 0 || getTotalSelectedExercises() > getExerciseLimits(duration)}
                       className={styles.ctaPrimary}
                       size="lg"
                     >
@@ -1085,7 +1536,7 @@ export default function GenerateFrenchPage() {
             </Card>
           </Col>
         </Row>        {/* Preview Modal */}
-        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="md" centered className="preview-modal">
+        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="lg" centered className="preview-modal">
           <Modal.Header closeButton>
             <Modal.Title>Aperçu de votre fiche</Modal.Title>
           </Modal.Header>
@@ -1124,7 +1575,7 @@ export default function GenerateFrenchPage() {
                               <>
                                 {params.theme && <div>• Thème : {params.theme}</div>}
                                 {params.style && <div>• Style : {formatStyleLabel(params.style)}</div>}
-                                {params.length && <div>• Longueur : {formatLengthLabel(params.length)}</div>}
+                                {params.length && <div>• Longueur : {formatLengthLabel(params.length, preview.level)}</div>}
                               </>
                             )}
                             {type === 'conjugaison' && (
@@ -1148,6 +1599,11 @@ export default function GenerateFrenchPage() {
                               <>
                                 {params.rules && <div>• Règles : {params.rules}</div>}
                                 {params.words && <div>• Mots : {params.words}</div>}
+                              </>
+                            )}
+                            {type === 'comprehension' && (
+                              <>
+                                {params.types && <div>• Types : {params.types}</div>}
                               </>
                             )}
                           </div>
@@ -1185,7 +1641,7 @@ export default function GenerateFrenchPage() {
         </Modal>
 
         {/* Success Modal */}
-        <Modal show={showSuccessModal} onHide={resetFlow} size="lg" centered className="success-modal">
+        <Modal show={showSuccessModal} onHide={regenerateSameSheet} size="lg" centered className="success-modal">
           <Modal.Header closeButton>
             <Modal.Title className="text-success">🎉 Fiche générée avec succès !</Modal.Title>
           </Modal.Header>
@@ -1232,7 +1688,7 @@ export default function GenerateFrenchPage() {
                     {exerciceTypeParams.lecture.length && (
                       <div className="small text-muted">
                         <i className="bi bi-ruler me-1"></i>
-                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length)}
+                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length, level)}
                       </div>
                     )}
                   </div>
@@ -1244,22 +1700,32 @@ export default function GenerateFrenchPage() {
               <button 
                 onClick={handleDownload}
                 className="btn btn-success btn-lg"
-                disabled={!generatedExercise?.pdf_path && !generatedExercise?.pdf_base64}
+                disabled={!generatedExercise?.id}
               >
                 📥 Télécharger la fiche PDF
               </button>
               <button 
                 onClick={handleViewPDF}
                 className="btn btn-outline-primary btn-lg"
-                disabled={!generatedExercise?.pdf_path && !generatedExercise?.pdf_base64}
+                disabled={!generatedExercise?.id}
               >
                 👁️ Visualiser et imprimer
               </button>
             </div>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="outline-secondary" onClick={resetFlow}>
-              Créer une nouvelle fiche
+          <Modal.Footer className="d-flex justify-content-between">
+            <div className="d-flex gap-2">
+              <Button variant="outline-secondary" onClick={createNewSheet}>
+                ✨ Créer une nouvelle fiche
+              </Button>
+              {lastGeneratedParams && (
+                <Button variant="outline-primary" onClick={restoreLastParameters}>
+                  🔄 Régénérer la même fiche
+                </Button>
+              )}
+            </div>
+            <Button variant="secondary" onClick={regenerateSameSheet}>
+              Fermer
             </Button>
           </Modal.Footer>
         </Modal>        {/* Error Modal */}
@@ -1365,6 +1831,17 @@ export default function GenerateFrenchPage() {
             words: exerciceTypeParams.orthographe.words,
             rules: exerciceTypeParams.orthographe.rules
           } : undefined}
+        />
+
+        <ComprehensionModal
+          show={showComprehensionModal}
+          onHide={() => setShowComprehensionModal(false)}
+          onSave={handleComprehensionSave}
+          currentLevel={level}
+          initialParams={exerciceTypeParams.comprehension ? {
+            types: exerciceTypeParams.comprehension.types
+          } : undefined}
+          maxExercises={3}
         />
 
         {/* Level Change Confirmation Modal */}

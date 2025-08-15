@@ -44,7 +44,8 @@ class SynchronizedApiService {
     // Configuration d'Axios avec l'URL de base synchronisée
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      // Increase default timeout to 60s to handle slow backend responses during heavy operations
+      timeout: 60000,
       headers: {
         'Content-Type': 'application/json',
       },

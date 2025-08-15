@@ -1,5 +1,5 @@
 // Types générés automatiquement depuis le schéma OpenAPI
-// Généré le: 2025-07-31T09:36:12.275Z
+// Généré le: 2025-08-12T08:13:47.121Z
 // Source: http://localhost:8000/openapi.json
 
 export interface ApiInfo {
@@ -501,37 +501,19 @@ export const API_SCHEMA: OpenApiSchema = {
         }
       }
     },
-    "/api/education/exercises/reference": {
+    "/api/education/exercises/files/{user_id}": {
       "get": {
-        "summary": "Get All Reference Exercises",
-        "description": "Get all reference exercises organized by type and level",
-        "operationId": "get_all_reference_exercises_api_education_exercises_reference_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExerciceModels"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/education/exercises/reference/type/{exercise_type}": {
-      "get": {
-        "summary": "Get Reference Exercises By Type",
-        "description": "Get reference exercises for a specific type",
-        "operationId": "get_reference_exercises_by_type_api_education_exercises_reference_type__exercise_type__get",
+        "summary": "Get User Exercise Files",
+        "description": "Get all exercise files for a specific user",
+        "operationId": "get_user_exercise_files_api_education_exercises_files__user_id__get",
         "parameters": [
           {
-            "name": "exercise_type",
+            "name": "user_id",
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/ExerciceType"
+              "type": "string",
+              "title": "User Id"
             }
           }
         ],
@@ -541,17 +523,11 @@ export const API_SCHEMA: OpenApiSchema = {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ExerciceModel"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceFile"
                   },
-                  "propertyNames": {
-                    "$ref": "#/components/schemas/ExerciceLevel"
-                  },
-                  "title": "Response Get Reference Exercises By Type Api Education Exercises Reference Type  Exercise Type  Get"
+                  "title": "Response Get User Exercise Files Api Education Exercises Files  User Id  Get"
                 }
               }
             }
@@ -569,67 +545,19 @@ export const API_SCHEMA: OpenApiSchema = {
         }
       }
     },
-    "/api/education/exercises/reference/level/{level}": {
+    "/api/education/exercises/files/{user_id}/by-level/{level}": {
       "get": {
-        "summary": "Get Reference Exercises By Level",
-        "description": "Get reference exercises for a specific level",
-        "operationId": "get_reference_exercises_by_level_api_education_exercises_reference_level__level__get",
+        "summary": "Get User Exercise Files By Level",
+        "description": "Get exercise files for a specific user filtered by education level",
+        "operationId": "get_user_exercise_files_by_level_api_education_exercises_files__user_id__by_level__level__get",
         "parameters": [
           {
-            "name": "level",
+            "name": "user_id",
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/ExerciceLevel"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ExerciceModel"
-                    }
-                  },
-                  "propertyNames": {
-                    "$ref": "#/components/schemas/ExerciceType"
-                  },
-                  "title": "Response Get Reference Exercises By Level Api Education Exercises Reference Level  Level  Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/education/exercises/reference/{exercise_type}/{level}": {
-      "get": {
-        "summary": "Get Reference Exercises By Type And Level",
-        "description": "Get reference exercises for a specific type and level",
-        "operationId": "get_reference_exercises_by_type_and_level_api_education_exercises_reference__exercise_type___level__get",
-        "parameters": [
-          {
-            "name": "exercise_type",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ExerciceType"
+              "type": "string",
+              "title": "User Id"
             }
           },
           {
@@ -649,9 +577,9 @@ export const API_SCHEMA: OpenApiSchema = {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ExerciceModel"
+                    "$ref": "#/components/schemas/ExerciceFile"
                   },
-                  "title": "Response Get Reference Exercises By Type And Level Api Education Exercises Reference  Exercise Type   Level  Get"
+                  "title": "Response Get User Exercise Files By Level Api Education Exercises Files  User Id  By Level  Level  Get"
                 }
               }
             }
@@ -669,64 +597,27 @@ export const API_SCHEMA: OpenApiSchema = {
         }
       }
     },
-    "/api/education/exercises/reference/reload": {
-      "post": {
-        "summary": "Reload Reference Data",
-        "description": "Reload reference data from files (useful for development/updates)",
-        "operationId": "reload_reference_data_api_education_exercises_reference_reload_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "type": "object",
-                  "title": "Response Reload Reference Data Api Education Exercises Reference Reload Post"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/education/exercises/reference/types": {
+    "/api/education/exercises/files/{user_id}/by-domain/{domain}": {
       "get": {
-        "summary": "Get Available Exercise Types",
-        "description": "Get list of available exercise types",
-        "operationId": "get_available_exercise_types_api_education_exercises_reference_types_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ExerciceType"
-                  },
-                  "type": "array",
-                  "title": "Response Get Available Exercise Types Api Education Exercises Reference Types Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/education/exercises/reference/types/{exercise_type}/levels": {
-      "get": {
-        "summary": "Get Available Levels For Type",
-        "description": "Get list of available levels for a specific exercise type",
-        "operationId": "get_available_levels_for_type_api_education_exercises_reference_types__exercise_type__levels_get",
+        "summary": "Get User Exercise Files By Domain",
+        "description": "Get exercise files for a specific user filtered by subject domain",
+        "operationId": "get_user_exercise_files_by_domain_api_education_exercises_files__user_id__by_domain__domain__get",
         "parameters": [
           {
-            "name": "exercise_type",
+            "name": "user_id",
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/ExerciceType"
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExerciceDomain"
             }
           }
         ],
@@ -738,9 +629,9 @@ export const API_SCHEMA: OpenApiSchema = {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ExerciceLevel"
+                    "$ref": "#/components/schemas/ExerciceFile"
                   },
-                  "title": "Response Get Available Levels For Type Api Education Exercises Reference Types  Exercise Type  Levels Get"
+                  "title": "Response Get User Exercise Files By Domain Api Education Exercises Files  User Id  By Domain  Domain  Get"
                 }
               }
             }
@@ -758,20 +649,41 @@ export const API_SCHEMA: OpenApiSchema = {
         }
       }
     },
-    "/api/education/exercises/reference/stats": {
+    "/api/education/exercises/files/{user_id}/stats": {
       "get": {
-        "summary": "Get Exercise Statistics",
-        "description": "Get statistics about available exercises",
-        "operationId": "get_exercise_statistics_api_education_exercises_reference_stats_get",
+        "summary": "Get User Exercise File Statistics",
+        "description": "Get statistics about a user's exercise files",
+        "operationId": "get_user_exercise_file_statistics_api_education_exercises_files__user_id__stats_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "object",
                   "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Get Exercise Statistics Api Education Exercises Reference Stats Get"
+                  "title": "Response Get User Exercise File Statistics Api Education Exercises Files  User Id  Stats Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -779,26 +691,124 @@ export const API_SCHEMA: OpenApiSchema = {
         }
       }
     },
-    "/api/education/exercises/reference/{exercise_type}/{level}/count": {
+    "/api/education/exercises/files/{user_id}/{file_id}": {
       "get": {
-        "summary": "Get Exercise Count",
-        "description": "Get the count of exercises for a specific type and level",
-        "operationId": "get_exercise_count_api_education_exercises_reference__exercise_type___level__count_get",
+        "summary": "Get Exercise File By Id",
+        "description": "Get a specific exercise file by ID for a user",
+        "operationId": "get_exercise_file_by_id_api_education_exercises_files__user_id___file_id__get",
         "parameters": [
           {
-            "name": "exercise_type",
+            "name": "user_id",
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/ExerciceType"
+              "type": "string",
+              "title": "User Id"
             }
           },
           {
-            "name": "level",
+            "name": "file_id",
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/ExerciceLevel"
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExerciceFile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/{filename}/download": {
+      "get": {
+        "summary": "Download Exercise File",
+        "description": "Download exercise file directly with content streaming",
+        "operationId": "download_exercise_file_api_education_exercises_files__user_id___filename__download_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/{filename}/increment-download": {
+      "put": {
+        "summary": "Increment Download Count Only",
+        "description": "Increment download count for an exercise file without downloading",
+        "operationId": "increment_download_count_only_api_education_exercises_files__user_id___filename__increment_download_put",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
             }
           }
         ],
@@ -810,9 +820,225 @@ export const API_SCHEMA: OpenApiSchema = {
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "integer"
+                    "type": "string"
                   },
-                  "title": "Response Get Exercise Count Api Education Exercises Reference  Exercise Type   Level  Count Get"
+                  "title": "Response Increment Download Count Only Api Education Exercises Files  User Id   Filename  Increment Download Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/{file_id}/name": {
+      "put": {
+        "summary": "Update Exercise File Custom Name",
+        "description": "Update the custom name for an exercise file",
+        "operationId": "update_exercise_file_custom_name_api_education_exercises_files__user_id___file_id__name_put",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExerciceFile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/{file_id}/tags": {
+      "options": {
+        "summary": "Options Update Exercise File Tags",
+        "description": "Handle OPTIONS preflight request for tags update",
+        "operationId": "options_update_exercise_file_tags_api_education_exercises_files__user_id___file_id__tags_options",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Exercise File Tags",
+        "description": "Update the tags for an exercise file",
+        "operationId": "update_exercise_file_tags_api_education_exercises_files__user_id___file_id__tags_put",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTagsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExerciceFile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/by-tags": {
+      "get": {
+        "summary": "Get User Exercise Files By Tags",
+        "description": "Get exercise files for a specific user filtered by tags (comma-separated)",
+        "operationId": "get_user_exercise_files_by_tags_api_education_exercises_files__user_id__by_tags_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tags"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceFile"
+                  },
+                  "title": "Response Get User Exercise Files By Tags Api Education Exercises Files  User Id  By Tags Get"
                 }
               }
             }
@@ -845,6 +1071,23 @@ export const API_SCHEMA: OpenApiSchema = {
           }
         }
       }
+    },
+    "/favicon.ico": {
+      "get": {
+        "summary": "Favicon",
+        "description": "Return empty response for favicon requests to avoid 404 errors",
+        "operationId": "favicon_favicon_ico_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -857,6 +1100,126 @@ export const API_SCHEMA: OpenApiSchema = {
         ],
         "title": "ExerciceDomain"
       },
+      "ExerciceFile": {
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "title": "File Id",
+            "description": "Identifiant unique du fichier"
+          },
+          "parcours_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcours Id",
+            "description": "Identifiant du parcours auquel le fichier est associé"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "Nom du fichier"
+          },
+          "filepath": {
+            "type": "string",
+            "title": "Filepath",
+            "description": "Chemin d'accès du fichier dans le stockage cloud"
+          },
+          "custom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Name",
+            "description": "Nom personnalisé défini par l'utilisateur"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "Liste des tags associés au fichier",
+            "default": []
+          },
+          "class_level": {
+            "$ref": "#/components/schemas/ExerciceLevel",
+            "description": "Niveau de classe associé"
+          },
+          "exercice_time": {
+            "$ref": "#/components/schemas/ExerciceTime",
+            "description": "Temps estimé pour la feuille d'exercice"
+          },
+          "exercice_domain": {
+            "$ref": "#/components/schemas/ExerciceDomain",
+            "description": "Domaine de l'exercice"
+          },
+          "exercice_types": {
+            "items": {
+              "$ref": "#/components/schemas/ExerciceType"
+            },
+            "type": "array",
+            "title": "Exercice Types",
+            "description": "Types d'exercices contenus dans le fichier"
+          },
+          "exercice_type_params": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ExerciceType"
+            },
+            "type": "object",
+            "title": "Exercice Type Params",
+            "description": "Paramètres spécifiques à chaque type d'exercice"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "Date de création du fichier (ISO format)"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By",
+            "description": "Identifiant de l'utilisateur créateur"
+          },
+          "download_count": {
+            "type": "integer",
+            "title": "Download Count",
+            "description": "Nombre de téléchargements",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_id",
+          "filename",
+          "filepath",
+          "class_level",
+          "exercice_time",
+          "exercice_domain",
+          "exercice_types",
+          "exercice_type_params",
+          "created_at"
+        ],
+        "title": "ExerciceFile"
+      },
       "ExerciceGenerationRequest": {
         "properties": {
           "theme": {
@@ -865,10 +1228,9 @@ export const API_SCHEMA: OpenApiSchema = {
             "description": "Thème des exercices à générer"
           },
           "class_level": {
-            "type": "string",
-            "title": "Class Level",
+            "$ref": "#/components/schemas/ExerciceLevel",
             "description": "Niveau de classe",
-            "default": "CE1"
+            "default": "ce1"
           },
           "exercice_domain": {
             "$ref": "#/components/schemas/ExerciceDomain",
@@ -940,77 +1302,6 @@ export const API_SCHEMA: OpenApiSchema = {
         ],
         "title": "ExerciceLevel"
       },
-      "ExerciceModel": {
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/ExerciceType",
-            "description": "Type d'exercice"
-          },
-          "level": {
-            "$ref": "#/components/schemas/ExerciceLevel",
-            "description": "Niveau de l'exercice"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Nom de l'exercice"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Description de l'exercice"
-          },
-          "instructions": {
-            "type": "string",
-            "title": "Instructions",
-            "description": "Instructions pour l'exercice"
-          },
-          "exemple": {
-            "type": "string",
-            "title": "Exemple",
-            "description": "Exemple de question"
-          }
-        },
-        "type": "object",
-        "required": [
-          "type",
-          "level",
-          "name",
-          "description",
-          "instructions",
-          "exemple"
-        ],
-        "title": "ExerciceModel"
-      },
-      "ExerciceModels": {
-        "properties": {
-          "exercices": {
-            "additionalProperties": {
-              "additionalProperties": {
-                "items": {
-                  "$ref": "#/components/schemas/ExerciceModel"
-                },
-                "type": "array"
-              },
-              "propertyNames": {
-                "$ref": "#/components/schemas/ExerciceLevel"
-              },
-              "type": "object"
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/ExerciceType"
-            },
-            "type": "object",
-            "title": "Exercices",
-            "description": "Liste des exercices"
-          }
-        },
-        "type": "object",
-        "required": [
-          "exercices"
-        ],
-        "title": "ExerciceModels"
-      },
       "ExerciceResponse": {
         "properties": {
           "success": {
@@ -1040,7 +1331,7 @@ export const API_SCHEMA: OpenApiSchema = {
               }
             ],
             "title": "Pdf Path",
-            "description": "Chemin du PDF généré"
+            "description": "URL de téléchargement du PDF (Azure Blob Storage ou chemin local en fallback)"
           },
           "pdf_base64": {
             "anyOf": [
@@ -1221,6 +1512,37 @@ export const API_SCHEMA: OpenApiSchema = {
           "message"
         ],
         "title": "SendCodeResponse"
+      },
+      "UpdateCustomNameRequest": {
+        "properties": {
+          "custom_name": {
+            "type": "string",
+            "title": "Custom Name",
+            "description": "New custom name for the exercise file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "custom_name"
+        ],
+        "title": "UpdateCustomNameRequest"
+      },
+      "UpdateTagsRequest": {
+        "properties": {
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "List of tags for the exercise file"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tags"
+        ],
+        "title": "UpdateTagsRequest"
       },
       "UserCreate": {
         "properties": {
@@ -1596,16 +1918,18 @@ export const API_ENDPOINTS = {
   '_API_USERS_{USER_ID}': '/api/users/{user_id}',
   '_API_USERS': '/api/users',
   '_API_EDUCATION_EXERCISES_GENERATE_{USERID}': '/api/education/exercises/generate/{userId}',
-  '_API_EDUCATION_EXERCISES_REFERENCE': '/api/education/exercises/reference',
-  '_API_EDUCATION_EXERCISES_REFERENCE_TYPE_{EXERCISE_TYPE}': '/api/education/exercises/reference/type/{exercise_type}',
-  '_API_EDUCATION_EXERCISES_REFERENCE_LEVEL_{LEVEL}': '/api/education/exercises/reference/level/{level}',
-  '_API_EDUCATION_EXERCISES_REFERENCE_{EXERCISE_TYPE}_{LEVEL}': '/api/education/exercises/reference/{exercise_type}/{level}',
-  '_API_EDUCATION_EXERCISES_REFERENCE_RELOAD': '/api/education/exercises/reference/reload',
-  '_API_EDUCATION_EXERCISES_REFERENCE_TYPES': '/api/education/exercises/reference/types',
-  '_API_EDUCATION_EXERCISES_REFERENCE_TYPES_{EXERCISE_TYPE}_LEVELS': '/api/education/exercises/reference/types/{exercise_type}/levels',
-  '_API_EDUCATION_EXERCISES_REFERENCE_STATS': '/api/education/exercises/reference/stats',
-  '_API_EDUCATION_EXERCISES_REFERENCE_{EXERCISE_TYPE}_{LEVEL}_COUNT': '/api/education/exercises/reference/{exercise_type}/{level}/count',
-  '_': '/'
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}': '/api/education/exercises/files/{user_id}',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_BY-LEVEL_{LEVEL}': '/api/education/exercises/files/{user_id}/by-level/{level}',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_BY-DOMAIN_{DOMAIN}': '/api/education/exercises/files/{user_id}/by-domain/{domain}',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_STATS': '/api/education/exercises/files/{user_id}/stats',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_{FILE_ID}': '/api/education/exercises/files/{user_id}/{file_id}',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_{FILENAME}_DOWNLOAD': '/api/education/exercises/files/{user_id}/{filename}/download',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_{FILENAME}_INCREMENT-DOWNLOAD': '/api/education/exercises/files/{user_id}/{filename}/increment-download',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_{FILE_ID}_NAME': '/api/education/exercises/files/{user_id}/{file_id}/name',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_{FILE_ID}_TAGS': '/api/education/exercises/files/{user_id}/{file_id}/tags',
+  '_API_EDUCATION_EXERCISES_FILES_{USER_ID}_BY-TAGS': '/api/education/exercises/files/{user_id}/by-tags',
+  '_': '/',
+  '_FAVICON.ICO': '/favicon.ico'
 } as const;
 
 // URL de base (à configurer selon votre environnement)

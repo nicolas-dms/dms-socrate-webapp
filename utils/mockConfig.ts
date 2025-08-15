@@ -1,7 +1,8 @@
 // Development configuration
 // Set MOCK_APIS to true to enable mock responses for development/demo purposes
 export const config = {
-  MOCK_APIS: true, // Set to false when connecting to real backend
+  MOCK_APIS: false, // Set to false when connecting to real backend
+  MOCK_AUTH: false,
   MOCK_USER: {
     user_id: "admin-user-123",
     email: "admin@exominutes.com",

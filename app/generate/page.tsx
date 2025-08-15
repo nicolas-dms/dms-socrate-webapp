@@ -30,14 +30,9 @@ export default function GeneratePage() {
           </Button>          <Button
             variant="primary"
             size="lg"
-            onClick={() => router.push("/generate/math")} 
-            disabled
-            className="position-relative"
+            onClick={() => router.push("/generate/math")}
           >
             {t('generate.math')}
-            <small className="d-block text-muted" style={{ fontSize: '0.8rem' }}>
-              Bientôt disponible
-            </small>
           </Button>
         </div>
       </div>
