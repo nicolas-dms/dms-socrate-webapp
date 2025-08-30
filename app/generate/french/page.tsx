@@ -105,6 +105,21 @@ export default function GenerateFrenchPage() {
     }
   };
 
+  // Helper function to convert old grammar type names to new ones
+  const convertGrammarType = (oldType: string): string => {
+    const conversionMap: Record<string, string> = {
+      'accord_adjectif': 'nom_adjectif'
+    };
+    return conversionMap[oldType] || oldType;
+  };
+
+  // Helper function to format grammar types for display
+  const formatGrammarTypes = (types: string): string => {
+    return types.split(',')
+      .map((t: string) => convertGrammarType(t.trim()))
+      .join(',');
+  };
+
   // Helper function to format style labels
   const formatStyleLabel = (style: string) => {
     const styleLabels: Record<string, string> = {
@@ -453,10 +468,15 @@ export default function GenerateFrenchPage() {
       setSelectedTypes([...selectedTypes, "grammaire"]);
     }
     
+    // Convert old parameter names to new ones before saving
+    const convertedTypes = params.types.split(',')
+      .map((t: string) => convertGrammarType(t.trim()))
+      .join(',');
+    
     setExerciceTypeParams({
       ...exerciceTypeParams,
       grammaire: {
-        types: params.types
+        types: convertedTypes
       }
     });
   };
@@ -623,7 +643,7 @@ export default function GenerateFrenchPage() {
         if (type === 'grammaire' && exerciceTypeParams.grammaire) {
           const grammarTypes = exerciceTypeParams.grammaire.types.split(',').map((t: string) => t.trim());
           exercicesByType['grammaire'] = grammarTypes.map((grammarType: string) => ({
-            exercice_id: grammarType,
+            exercice_id: convertGrammarType(grammarType),
             params: {
               verbs: exerciceTypeParams.grammaire?.verbs || undefined,
               tenses: exerciceTypeParams.grammaire?.tenses || undefined
@@ -1586,7 +1606,7 @@ export default function GenerateFrenchPage() {
                             )}
                             {type === 'grammaire' && (
                               <>
-                                {params.types && <div>• Types : {params.types}</div>}
+                                {params.types && <div>• Types : {formatGrammarTypes(params.types)}</div>}
                               </>
                             )}
                             {type === 'vocabulaire' && (
