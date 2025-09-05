@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Badge, Card } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 
 export interface GeometrieParams {
@@ -11,44 +11,14 @@ interface GeometrieModalProps {
   show: boolean;
   onHide: () => void;
   onSave: (params: GeometrieParams) => void;
+  level: string;
   initialParams?: GeometrieParams;
-  level: string; // CP, CE1, CE2, CM1, CM2
-  exerciseLimit?: number;
-  currentTotalExercises?: number;
-  domainKey?: string;
-  canAddMoreExercises?: (domainKey?: string, additionalCount?: number) => boolean;
+  exerciseLimit: number;
+  currentTotalExercises: number;
+  domainKey: string;
+  canAddMoreExercises: (domainKey?: string, additionalExercises?: number) => boolean;
+  mathDomains?: any; // Add this prop
 }
-
-const GEOMETRY_TYPES = {
-  CP: [
-    { key: "formes_simples", label: "Formes simples", examples: "Cercle, carré, triangle..." },
-    { key: "reconnaissance", label: "Reconnaissance de formes", examples: "Identifier les formes..." },
-  ],
-  CE1: [
-    { key: "formes_simples", label: "Formes simples", examples: "Cercle, carré, triangle, rectangle..." },
-    { key: "reconnaissance", label: "Reconnaissance de formes", examples: "Identifier et nommer..." },
-    { key: "lignes", label: "Lignes", examples: "Droites, courbes..." },
-  ],
-  CE2: [
-    { key: "polygones", label: "Polygones", examples: "Triangle, carré, rectangle, losange..." },
-    { key: "lignes", label: "Lignes et segments", examples: "Droites, segments, parallèles..." },
-    { key: "angles", label: "Angles", examples: "Angles droits, aigus, obtus..." },
-    { key: "symetrie", label: "Symétrie", examples: "Axes de symétrie..." },
-  ],
-  CM1: [
-    { key: "polygones", label: "Polygones", examples: "Propriétés des quadrilatères..." },
-    { key: "angles", label: "Angles", examples: "Mesure d'angles, construction..." },
-    { key: "symetrie", label: "Symétrie", examples: "Symétrie axiale..." },
-    { key: "perimetre", label: "Périmètre", examples: "Calcul de périmètres..." },
-  ],
-  CM2: [
-    { key: "polygones", label: "Polygones réguliers", examples: "Pentagone, hexagone..." },
-    { key: "angles", label: "Angles", examples: "Construction, bissectrice..." },
-    { key: "aires", label: "Aires", examples: "Calcul d'aires..." },
-    { key: "volumes", label: "Volumes", examples: "Cube, parallélépipède..." },
-    { key: "cercle", label: "Cercle", examples: "Rayon, diamètre, circonférence..." },
-  ]
-};
 
 export default function GeometrieModal({ 
   show, 
@@ -59,15 +29,23 @@ export default function GeometrieModal({
   exerciseLimit = 10,
   currentTotalExercises = 0,
   domainKey = "espace-geometrie",
-  canAddMoreExercises
+  canAddMoreExercises,
+  mathDomains
 }: GeometrieModalProps) {
   const { t } = useTranslation();
   
   // State for type selection
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(["formes_simples"]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
-  // Get level-specific options
-  const currentTypes = GEOMETRY_TYPES[level as keyof typeof GEOMETRY_TYPES] || GEOMETRY_TYPES.CE1;
+  // Get exercises for current level and domain
+  const getAvailableExercises = () => {
+    if (!mathDomains) return [];
+    
+    const domain = mathDomains.find((d: any) => d.key === domainKey);
+    if (!domain || !domain.exercises[level]) return [];
+    
+    return domain.exercises[level];
+  };
   
   useEffect(() => {
     if (initialParams) {
@@ -75,10 +53,15 @@ export default function GeometrieModal({
       const types = initialParams.types.split(",");
       setSelectedTypes(types);
     } else {
-      // Reset to default for level
-      setSelectedTypes([currentTypes[0]?.key || "formes_simples"]);
+      // Reset to default for level - use first available exercise
+      const availableExercises = getAvailableExercises();
+      if (availableExercises.length > 0) {
+        setSelectedTypes([availableExercises[0].exercise]);
+      } else {
+        setSelectedTypes([]);
+      }
     }
-  }, [initialParams, level, currentTypes]);
+  }, [initialParams, level]);
 
   const toggleType = (type: string) => {
     if (selectedTypes.includes(type)) {
@@ -125,58 +108,62 @@ export default function GeometrieModal({
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered>
+    <Modal show={show} onHide={onHide} size="xl" centered>
       <Modal.Header closeButton>
         <Modal.Title>
           <i className="bi bi-triangle me-2"></i>
           Configurer les exercices de géométrie - {level}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <div className="mb-4">
-          <h6 className="mb-3">Sélectionnez les types d'exercices à inclure</h6>
+      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        <div className="mb-3">
+          <h6 className="mb-2">Exercices disponibles pour {level}</h6>
           <p className="text-muted small">
-            Les exercices seront adaptés au niveau {level}. Au moins un type doit être sélectionné.
+            Sélectionnez les exercices de géométrie que vous souhaitez inclure. Au moins un exercice doit être sélectionné.
           </p>
         </div>
 
-        <div className="mb-4">
-          <Row className="g-3">
-            {currentTypes.map((type) => {
-              const isSelected = selectedTypes.includes(type.key);
-              const isDisabled = isSelected && selectedTypes.length === 1;
+        <div className="mb-3">
+          <Row className="g-2">
+            {getAvailableExercises().map((exercise: any, index: number) => {
+              const isSelected = selectedTypes.includes(exercise.exercise);
+              const canSelect = !isSelected && canAddMoreExercises && canAddMoreExercises(domainKey, 1);
               const cannotAddMore = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
+              const isDisabled = (isSelected && selectedTypes.length === 1) || cannotAddMore;
               
               return (
-                <Col key={type.key} sm={6}>
+                <Col key={index} md={6} lg={4}>
                   <div 
-                    className={`border rounded p-3 h-100 ${isSelected ? 'border-primary bg-primary bg-opacity-10' : cannotAddMore ? 'border-warning bg-warning bg-opacity-10' : 'border-secondary-subtle'} ${isDisabled || cannotAddMore ? '' : 'cursor-pointer'}`}
-                    onClick={() => !(isDisabled || cannotAddMore) && toggleType(type.key)}
+                    className={`border rounded p-2 h-100 ${isSelected ? 'border-primary bg-primary bg-opacity-10' : cannotAddMore ? 'border-warning bg-warning bg-opacity-10' : 'border-secondary-subtle'} ${isDisabled ? '' : 'cursor-pointer'}`}
                     style={{ 
-                      cursor: isDisabled || cannotAddMore ? 'not-allowed' : 'pointer',
-                      opacity: isDisabled ? 0.7 : cannotAddMore ? 0.8 : 1,
-                      transition: 'all 0.2s ease'
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.7 : 1,
+                      transition: 'all 0.2s ease',
+                      minHeight: '80px'
                     }}
+                    onClick={() => !isDisabled && toggleType(exercise.exercise)}
                     title={
-                      isDisabled ? "Au moins un type doit être sélectionné" : 
-                      cannotAddMore ? "Limite d'exercices atteinte" : ""
+                      isSelected && selectedTypes.length === 1 ? "Au moins un exercice doit être sélectionné" :
+                      cannotAddMore ? `Limite d'exercices atteinte (${currentTotalExercises}/${exerciseLimit})` : ""
                     }
                   >
                     <div className="d-flex align-items-start gap-2">
-                      <div className="flex-shrink-0">
-                        <span style={{ fontSize: '1.2rem' }}>
-                          {getTypeIcon(type.key)}
+                      <div className="flex-shrink-0 mt-1">
+                        <span style={{ fontSize: '1rem' }}>
+                          {getTypeIcon(exercise.exercise)}
                         </span>
                       </div>
                       <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-2 mb-1">
-                          <span className="fw-semibold">{type.label}</span>
-                          {isSelected && <i className="bi bi-check-circle-fill text-primary"></i>}
-                          {isDisabled && <i className="bi bi-lock-fill text-muted"></i>}
-                          {cannotAddMore && <i className="bi bi-exclamation-triangle-fill text-warning"></i>}
+                        <div className="d-flex align-items-center gap-1 mb-1">
+                          <span className="fw-semibold" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>
+                            {exercise.exercise}
+                          </span>
+                          {isSelected && <i className="bi bi-check-circle-fill text-primary" style={{ fontSize: '0.8rem' }}></i>}
+                          {isSelected && selectedTypes.length === 1 && <i className="bi bi-lock-fill text-muted" style={{ fontSize: '0.8rem' }}></i>}
+                          {cannotAddMore && <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '0.8rem' }}></i>}
                         </div>
-                        <div className="text-muted small">
-                          {type.examples}
+                        <div className="small text-muted" style={{ fontSize: '0.75rem', lineHeight: '1.2' }}>
+                          {exercise.contenu.length > 60 ? exercise.contenu.substring(0, 60) + '...' : exercise.contenu}
                         </div>
                       </div>
                     </div>
@@ -187,22 +174,24 @@ export default function GeometrieModal({
           </Row>
         </div>
 
-        <div className="border-top pt-3">
-          <h6 className="mb-2">Résumé de la sélection</h6>
-          <div className="d-flex flex-wrap gap-1">
+        <div className="border-top pt-2">
+          <div className="d-flex justify-content-between align-items-center">
+            <h6 className="mb-0">Sélection actuelle</h6>
+            <small className="text-muted">
+              {selectedTypes.length} exercice{selectedTypes.length > 1 ? 's' : ''} sélectionné{selectedTypes.length > 1 ? 's' : ''}
+            </small>
+          </div>
+          <div className="d-flex flex-wrap gap-1 mt-2">
             {selectedTypes.map((type) => {
-              const typeData = currentTypes.find(t => t.key === type);
+              const exerciseData = getAvailableExercises().find((ex: any) => ex.exercise === type);
               return (
-                <Badge key={type} bg="primary" className="d-flex align-items-center gap-1">
+                <Badge key={type} bg="primary" className="d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
                   {getTypeIcon(type)}
-                  {typeData?.label}
+                  {exerciseData?.exercise || type}
                 </Badge>
               );
             })}
           </div>
-          <small className="text-muted d-block mt-2">
-            {selectedTypes.length} type{selectedTypes.length > 1 ? 's' : ''} sélectionné{selectedTypes.length > 1 ? 's' : ''}
-          </small>
         </div>
       </Modal.Body>
       <Modal.Footer>

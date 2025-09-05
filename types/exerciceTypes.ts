@@ -187,15 +187,19 @@ export const convertTimeToBackend = (uiTime: string): ExerciceTime => {
 
 export const convertTypesToBackend = (uiTypes: string[]): ExerciceType[] => {
   const mapping: Record<string, ExerciceType> = {
+    // French types
     "lecture": ExerciceType.LECTURE,
-    "comprehension": ExerciceType.COMPREHENSION, // Map comprehension to lecture
+    "comprehension": ExerciceType.COMPREHENSION,
     "ecriture": ExerciceType.ECRITURE,
     "grammaire": ExerciceType.GRAMMAIRE,
     "conjugaison": ExerciceType.CONJUGAISON,
     "orthographe": ExerciceType.ORTHOGRAPHE,
-    "vocabulaire": ExerciceType.ECRITURE, // Map vocabulaire to ecriture
-    "calcul": ExerciceType.CALCUL,
-    "probleme": ExerciceType.PROBLEME
+    "vocabulaire": ExerciceType.VOCABULAIRE,
+    // Math types
+    "nombres": ExerciceType.CALCUL,
+    "calculs": ExerciceType.CALCUL,
+    "grandeurs": ExerciceType.PROBLEME,
+    "geometrie": ExerciceType.PROBLEME
   };
   
   return uiTypes.map(type => mapping[type]).filter(Boolean);
