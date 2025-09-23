@@ -88,7 +88,7 @@ export default function GenerateFrenchPage() {
     { key: "comprehension", label: "Compréhension" },
     { key: "grammaire", label: "Grammaire" },
     { key: "conjugaison", label: "Conjugaison" },
-    { key: "vocabulaire", label: "Vocabulaire" },
+    // { key: "vocabulaire", label: "Vocabulaire" }, // Temporarily disabled
     { key: "orthographe", label: "Orthographe" },
   ];
 
@@ -231,8 +231,26 @@ export default function GenerateFrenchPage() {
             totalExercises += 1;
             break;
           case 'orthographe':
-            // Count orthography exercises (always 1 per selection)
-            totalExercises += 1;
+            // Count orthography exercises - each rule is a separate exercise + dictée if present
+            let orthographyCount = 0;
+            
+            // Count custom words (dictée) if present
+            if (params.words && params.words.startsWith('#dictee,')) {
+              orthographyCount += 1;
+            }
+            
+            // Count standard rules
+            if (params.rules) {
+              const rules = params.rules.split(',').map((r: string) => r.trim()).filter(Boolean);
+              orthographyCount += rules.length;
+            }
+            
+            // If no specific exercises, count as 1 default
+            if (orthographyCount === 0) {
+              orthographyCount = 1;
+            }
+            
+            totalExercises += orthographyCount;
             break;
           default:
             totalExercises += 1;
@@ -320,7 +338,7 @@ export default function GenerateFrenchPage() {
   };
 
   const toggleType = (type: string) => {
-    const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe", "comprehension"];
+    const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "orthographe", "comprehension"]; // Vocabulaire temporarily removed
     
     // Check if trying to add a new exercise when at limit
     if (!selectedTypes.includes(type) && !canAddMoreExercises()) {
@@ -708,13 +726,42 @@ export default function GenerateFrenchPage() {
         
         if (type === 'orthographe') {
           if (exerciceTypeParams.orthographe) {
-            exercicesByType['orthographe'] = [{
-              exercice_id: 'orthographe_generale',
-              params: {
-                words: exerciceTypeParams.orthographe.words || undefined,
-                rules: exerciceTypeParams.orthographe.rules || undefined
-              }
-            }];
+            const orthographyExercises: ExerciseWithParams[] = [];
+            
+            // Handle custom words (dictée) - check if words start with #dictee
+            if (exerciceTypeParams.orthographe.words && exerciceTypeParams.orthographe.words.startsWith('#dictee,')) {
+              const customWords = exerciceTypeParams.orthographe.words.replace('#dictee,', '');
+              orthographyExercises.push({
+                exercice_id: 'dictee',
+                params: {
+                  words: customWords
+                }
+              });
+            }
+            
+            // Handle standard orthography rules
+            if (exerciceTypeParams.orthographe.rules) {
+              const rules = exerciceTypeParams.orthographe.rules.split(',');
+              rules.forEach((rule: string) => {
+                const trimmedRule = rule.trim();
+                if (trimmedRule) {
+                  orthographyExercises.push({
+                    exercice_id: trimmedRule, // Use the rule name directly as exercice_id
+                    params: {}
+                  });
+                }
+              });
+            }
+            
+            // If no specific exercises were created, use default
+            if (orthographyExercises.length === 0) {
+              orthographyExercises.push({
+                exercice_id: 'orthographe_generale',
+                params: {}
+              });
+            }
+            
+            exercicesByType['orthographe'] = orthographyExercises;
           } else {
             exercicesByType['orthographe'] = [{
               exercice_id: 'orthographe_generale',
@@ -1040,7 +1087,7 @@ export default function GenerateFrenchPage() {
                         </div>
                         <div className="d-flex gap-2 flex-wrap">
                           {frenchTypes.map(type => {
-                            const hasSettings = ["lecture", "conjugaison", "grammaire", "vocabulaire", "orthographe"].includes(type.key);
+                            const hasSettings = ["lecture", "conjugaison", "grammaire", "orthographe"].includes(type.key); // Vocabulaire temporarily removed
                             const isComprehensionDisabled = type.key === "comprehension" && !selectedTypes.includes("lecture");
                             const isSelected = selectedTypes.includes(type.key);
                             const isAtLimit = !canAddMoreExercises();
@@ -1266,7 +1313,22 @@ export default function GenerateFrenchPage() {
                                   Orthographe
                                 </div>
                                 <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams.orthographe.words || exerciceTypeParams.orthographe.rules}
+                                  {(() => {
+                                    const parts = [];
+                                    
+                                    // Show "dictée" if custom words are provided
+                                    if (exerciceTypeParams.orthographe.words && exerciceTypeParams.orthographe.words.startsWith('#dictee,')) {
+                                      parts.push('dictée');
+                                    }
+                                    
+                                    // Show rule names if rules are provided
+                                    if (exerciceTypeParams.orthographe.rules) {
+                                      const rules = exerciceTypeParams.orthographe.rules.split(',').map((r: string) => r.trim()).filter(Boolean);
+                                      parts.push(...rules);
+                                    }
+                                    
+                                    return parts.length > 0 ? parts.join(', ') : 'orthographe générale';
+                                  })()}
                                 </div>
                               </div>
                               <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
@@ -1617,8 +1679,27 @@ export default function GenerateFrenchPage() {
                             )}
                             {type === 'orthographe' && (
                               <>
-                                {params.rules && <div>• Règles : {params.rules}</div>}
-                                {params.words && <div>• Mots : {params.words}</div>}
+                                {(() => {
+                                  const exercises = [];
+                                  
+                                  // List selected rule exercises
+                                  if (params.rules) {
+                                    const rules = params.rules.split(',').map((r: string) => r.trim()).filter(Boolean);
+                                    rules.forEach((rule: string) => {
+                                      exercises.push(`• ${rule}`);
+                                    });
+                                  }
+                                  
+                                  // List dictée exercise with custom words
+                                  if (params.words && params.words.startsWith('#dictee,')) {
+                                    const customWords = params.words.replace('#dictee,', '');
+                                    exercises.push(`• dictée (${customWords})`);
+                                  }
+                                  
+                                  return exercises.map((exercise, index) => (
+                                    <div key={index}>{exercise}</div>
+                                  ));
+                                })()}
                               </>
                             )}
                             {type === 'comprehension' && (

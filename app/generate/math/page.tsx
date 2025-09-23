@@ -66,29 +66,36 @@ export default function GenerateMathPage() {
       label: "Nombres",
       exercises: {
         "CP": [
-          { exercise: "Nombres jusqu'à 10", contenu: "Dénombrer, lire, écrire et comparer de petites collections. Introduction au nombre 10 et aux dizaines/unités." },
-          { exercise: "Nombres jusqu'à 19", contenu: "Lire, écrire, décomposer, encadrer et comparer les nombres jusqu'à 19." },
-          { exercise: "Nombres jusqu'à 69", contenu: "Compter, lire/écrire, encadrer et comparer les nombres jusqu'à 69." },
-          { exercise: "Nombres jusqu'à 100", contenu: "Lire, écrire, décomposer, encadrer et comparer les nombres jusqu'à 100. Introduction au nombre 100." }
+          { exercise: "Lire, écrire, décomposer jusqu'à 10", contenu: "Lire, écrire et décomposer les nombres jusqu'à 10. Introduction aux dizaines et unités." },
+          { exercise: "Ranger, comparer jusqu'à 10", contenu: "Ranger et comparer les nombres jusqu'à 10. Ordonner de petites collections." },
+          { exercise: "Lire, écrire, décomposer jusqu'à 100", contenu: "Lire, écrire et décomposer les nombres jusqu'à 100. Comprendre la structure du nombre 100." },
+          { exercise: "Ranger, comparer jusqu'à 100", contenu: "Ranger et comparer les nombres jusqu'à 100. Encadrer et ordonner les nombres." }
         ],
         "CE1": [
-          { exercise: "Nombres jusqu'à 99", contenu: "Lire, écrire, décomposer, encadrer et comparer les nombres jusqu'à 99." },
-          { exercise: "Nombres jusqu'à 199", contenu: "Compter, lire, écrire, décomposer et comparer les nombres jusqu'à 199." },
-          { exercise: "Nombres jusqu'à 999", contenu: "Lire, écrire, décomposer, encadrer et comparer les nombres jusqu'à 999." }
+          { exercise: "Lire, écrire, décomposer jusqu'à 100", contenu: "Lire, écrire et décomposer les nombres jusqu'à 100. Maîtriser les dizaines et unités." },
+          { exercise: "Ranger, comparer jusqu'à 100", contenu: "Ranger et comparer les nombres jusqu'à 100. Encadrer et ordonner efficacement." },
+          { exercise: "Lire, écrire, décomposer jusqu'à 1000", contenu: "Lire, écrire et décomposer les nombres jusqu'à 1000. Introduction aux centaines." },
+          { exercise: "Ranger, comparer jusqu'à 1000", contenu: "Ranger et comparer les nombres jusqu'à 1000. Encadrer et ordonner les grands nombres." }
         ],
         "CE2": [
-          { exercise: "Nombres jusqu'à 999", contenu: "Lire, écrire, décomposer, encadrer et comparer les nombres jusqu'à 999." },
-          { exercise: "Nombres jusqu'à 9 999", contenu: "Lire, écrire, décomposer, encadrer et comparer les nombres jusqu'à 9 999." }
+          { exercise: "Lire, écrire, décomposer jusqu'à 1000", contenu: "Lire, écrire et décomposer les nombres jusqu'à 1000. Maîtriser centaines, dizaines et unités." },
+          { exercise: "Ranger, comparer jusqu'à 1000", contenu: "Ranger et comparer les nombres jusqu'à 1000. Encadrer et ordonner avec aisance." },
+          { exercise: "Lire, écrire, décomposer jusqu'à 10 000", contenu: "Lire, écrire et décomposer les nombres jusqu'à 10 000. Introduction aux milliers." },
+          { exercise: "Ranger, comparer jusqu'à 10 000", contenu: "Ranger et comparer les nombres jusqu'à 10 000. Encadrer et ordonner les très grands nombres." }
         ],
         "CM1": [
-          { exercise: "Grands nombres", contenu: "Lire, écrire, décomposer et comparer des nombres jusqu'aux milliards." },
+          { exercise: "Grands nombres - Lire et écrire", contenu: "Lire, écrire et décomposer des nombres jusqu'aux milliards." },
+          { exercise: "Grands nombres - Comparer et encadrer", contenu: "Comparer, encadrer et ordonner des nombres jusqu'aux milliards." },
           { exercise: "Fractions", contenu: "Nommer, représenter, placer, comparer et ranger des fractions." },
-          { exercise: "Décimaux", contenu: "Relier fractions et décimaux, lire, écrire et comparer des nombres décimaux." }
+          { exercise: "Décimaux - Lire et écrire", contenu: "Relier fractions et décimaux, lire et écrire des nombres décimaux." },
+          { exercise: "Décimaux - Comparer et ranger", contenu: "Comparer, ranger et encadrer des nombres décimaux." }
         ],
         "CM2": [
-          { exercise: "Grands nombres", contenu: "Lire, écrire, décomposer, encadrer et comparer des nombres jusqu'aux milliards." },
+          { exercise: "Grands nombres - Lire et décomposer", contenu: "Lire, écrire et décomposer des nombres jusqu'aux milliards." },
+          { exercise: "Grands nombres - Comparer et ordonner", contenu: "Encadrer, comparer et ordonner des nombres jusqu'aux milliards." },
           { exercise: "Fractions", contenu: "Lire, représenter, placer et comparer des fractions, y compris les fractions décimales." },
-          { exercise: "Décimaux", contenu: "Lire, écrire, décomposer et comparer des nombres décimaux." }
+          { exercise: "Décimaux - Lire et décomposer", contenu: "Lire, écrire et décomposer des nombres décimaux." },
+          { exercise: "Décimaux - Comparer et encadrer", contenu: "Comparer, ranger et encadrer des nombres décimaux." }
         ]
       }
     },
@@ -118,12 +125,14 @@ export default function GenerateMathPage() {
           { exercise: "Additions et soustractions", contenu: "Techniques d'addition et soustraction avec des entiers." },
           { exercise: "Multiplication", contenu: "Multiplications par 1 chiffre, 10, 100, 25, 50; décompositions; multiplications posées." },
           { exercise: "Division", contenu: "Comprendre multiples et diviseurs; divisions en ligne; divisions par 1 chiffre." },
-          { exercise: "Décimaux", contenu: "Additions, soustractions, multiplications et divisions avec des décimaux." },
+          { exercise: "Décimaux - Addition et soustraction", contenu: "Additions et soustractions avec des nombres décimaux." },
+          { exercise: "Décimaux - Multiplication", contenu: "Multiplications avec des nombres décimaux." },
           { exercise: "Proportionnalité", contenu: "Lire tableaux et graphiques; premiers problèmes de proportionnalité." }
         ],
         "CM2": [
           { exercise: "Opérations entières", contenu: "Additions, soustractions, multiplications et divisions avec des entiers simples et grands." },
-          { exercise: "Opérations décimales", contenu: "Additions, soustractions, multiplications et divisions avec des nombres décimaux." },
+          { exercise: "Décimaux - Addition et soustraction", contenu: "Additions et soustractions avec des nombres décimaux." },
+          { exercise: "Décimaux - Multiplication et division", contenu: "Multiplications et divisions avec des nombres décimaux." },
           { exercise: "Proportionnalité", contenu: "Résoudre des problèmes avec tableaux, graphiques, pourcentages, échelles et vitesses." }
         ]
       }
@@ -238,8 +247,9 @@ export default function GenerateMathPage() {
     return selectedTypes.reduce((total, domainKey) => {
       const domainParams = exerciceTypeParams[domainKey];
       if (domainParams && domainParams.exercises) {
-        // Count exercises in this domain
-        const exercisesList = domainParams.exercises.split(',').filter((ex: string) => ex.trim() !== '');
+        // Count exercises in this domain - use different delimiter for Nombres
+        const delimiter = domainKey === "Nombres" ? "|||" : ",";
+        const exercisesList = domainParams.exercises.split(delimiter).filter((ex: string) => ex.trim() !== '');
         return total + exercisesList.length;
       }
       return total;
@@ -253,7 +263,8 @@ export default function GenerateMathPage() {
     
     // If we're checking for a specific domain, exclude it from current count
     if (domainKey && exerciceTypeParams[domainKey]) {
-      const domainExercisesList = exerciceTypeParams[domainKey].exercises?.split(',').filter((ex: string) => ex.trim() !== '') || [];
+      const delimiter = domainKey === "Nombres" ? "|||" : ",";
+      const domainExercisesList = exerciceTypeParams[domainKey].exercises?.split(delimiter).filter((ex: string) => ex.trim() !== '') || [];
       const currentTotalWithoutDomain = currentTotal - domainExercisesList.length;
       return (currentTotalWithoutDomain + additionalExercises) <= limit;
     }
@@ -283,7 +294,8 @@ export default function GenerateMathPage() {
       for (const domainKey of selectedTypes) {
         const domainParams = exerciceTypeParams[domainKey];
         if (domainParams && domainParams.exercises) {
-          const exercisesList = domainParams.exercises.split(',').filter((ex: string) => ex.trim() !== '');
+          const delimiter = domainKey === "Nombres" ? "|||" : ",";
+          const exercisesList = domainParams.exercises.split(delimiter).filter((ex: string) => ex.trim() !== '');
           if (exercisesList.length <= remainingLimit) {
             newSelectedTypes.push(domainKey);
             remainingLimit -= exercisesList.length;
@@ -383,7 +395,7 @@ export default function GenerateMathPage() {
     }
     
     // Convert selected exercises to comma-separated string format
-    const exercisesString = selectedExercises.join(",");
+    const exercisesString = selectedExercises.join("|||");
     
     setExerciceTypeParams({
       ...exerciceTypeParams,
@@ -519,8 +531,9 @@ export default function GenerateMathPage() {
       selectedTypes.forEach(domainKey => {
         const domainParams = exerciceTypeParams[domainKey];
         if (domainParams && domainParams.exercises) {
-          // Split exercises and create ExerciseWithParams structure
-          const exercisesList = domainParams.exercises.split(',').map((ex: string) => ex.trim()).filter((ex: string) => ex !== '');
+          // Split exercises and create ExerciseWithParams structure - use different delimiter for Nombres
+          const delimiter = domainKey === "Nombres" ? "|||" : ",";
+          const exercisesList = domainParams.exercises.split(delimiter).map((ex: string) => ex.trim()).filter((ex: string) => ex !== '');
           exercicesByType[domainKey] = exercisesList.map((exerciseId: string) => ({
             exercice_id: exerciseId,
             params: {}
@@ -1162,7 +1175,7 @@ export default function GenerateMathPage() {
           onHide={() => setShowNombresModal(false)}
           onSave={handleNombresSave}
           level={level}
-          initialSelections={exerciceTypeParams["Nombres"] ? exerciceTypeParams["Nombres"].exercises?.split(',') : []}
+          initialSelections={exerciceTypeParams["Nombres"] ? exerciceTypeParams["Nombres"].exercises?.split('|||') : []}
           exerciseLimit={getExerciseLimits(duration)}
           currentTotalExercises={getTotalSelectedExercises()}
           canAddMoreExercises={canAddMoreExercises}

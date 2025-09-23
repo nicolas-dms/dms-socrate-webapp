@@ -16,35 +16,46 @@ interface OrthographyModalProps {
   level: string; // CE1, CE2, etc.
 }
 
-const ORTHOGRAPHY_RULES = {
+interface OrthographyRule {
+  key: string;
+  label: string;
+  isCustom?: boolean;
+}
+
+const ORTHOGRAPHY_RULES: Record<string, OrthographyRule[]> = {
   CP: [
     { key: "sons_simples", label: "Sons simples (a, e, i, o, u)" },
     { key: "consonnes", label: "Consonnes de base" },
-    { key: "syllabes", label: "Syllabes simples" }
+    { key: "syllabes", label: "Syllabes simples" },
+    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
   ],
   CE1: [
     { key: "sons_complexes", label: "Sons complexes (ou, on, an, in)" },
     { key: "lettres_muettes", label: "Lettres muettes" },
     { key: "doubles_consonnes", label: "Doubles consonnes" },
-    { key: "accents", label: "Les accents" }
+    { key: "accents", label: "Les accents" },
+    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
   ],
   CE2: [
     { key: "homophones", label: "Homophones (a/à, et/est, son/sont)" },
     { key: "pluriels", label: "Pluriels en -s, -x" },
     { key: "feminins", label: "Féminins des mots" },
-    { key: "g_gu", label: "g/gu devant e, i" }
+    { key: "g_gu", label: "g/gu devant e, i" },
+    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
   ],
   CM1: [
     { key: "homophones_complexes", label: "Homophones complexes" },
     { key: "accord_participe", label: "Accord du participe passé" },
     { key: "mots_invariables", label: "Mots invariables" },
-    { key: "prefixes_suffixes", label: "Préfixes et suffixes" }
+    { key: "prefixes_suffixes", label: "Préfixes et suffixes" },
+    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
   ],
   CM2: [
     { key: "accord_participe_avance", label: "Accord du participe passé avancé" },
     { key: "subjonctif", label: "Terminaisons du subjonctif" },
     { key: "mots_complexes", label: "Orthographe des mots complexes" },
-    { key: "etymologie", label: "Étymologie et orthographe" }
+    { key: "etymologie", label: "Étymologie et orthographe" },
+    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
   ]
 };
 
@@ -59,47 +70,72 @@ export default function OrthographyModal({
   
   const [customWords, setCustomWords] = useState("");
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
-  const [useCustomWords, setUseCustomWords] = useState(false);
   
   useEffect(() => {
     if (initialParams) {
-      setCustomWords(initialParams.words || "");
-      setSelectedRules(initialParams.rules ? initialParams.rules.split(",") : []);
-      setUseCustomWords(!!initialParams.words);
+      // Check if words contain the #dictee prefix
+      if (initialParams.words && initialParams.words.startsWith("#dictee,")) {
+        const wordsWithoutPrefix = initialParams.words.replace("#dictee,", "");
+        setCustomWords(wordsWithoutPrefix);
+        setSelectedRules(["dictee"]);
+      } else {
+        setCustomWords("");
+        setSelectedRules(initialParams.rules ? initialParams.rules.split(",") : []);
+      }
     } else {
       // Set defaults based on level
       setCustomWords("");
-      setSelectedRules(["sons_simples"]);
-      setUseCustomWords(false);
+      setSelectedRules([]);
     }
   }, [initialParams, level]);
 
   const toggleRule = (ruleKey: string) => {
-    if (useCustomWords) return;
+    const rule = currentRules.find(r => r.key === ruleKey);
     
-    setSelectedRules(prev => 
-      prev.includes(ruleKey)
-        ? prev.filter(r => r !== ruleKey)
-        : [...prev, ruleKey]
-    );
+    if (rule?.isCustom) {
+      // If selecting custom dictée
+      if (selectedRules.includes(ruleKey)) {
+        // Deselecting dictée
+        setSelectedRules(prev => prev.filter(r => r !== ruleKey));
+        setCustomWords("");
+      } else {
+        // Selecting dictée - allow multiple selection
+        setSelectedRules(prev => [...prev, ruleKey]);
+      }
+    } else {
+      // Regular rule toggle - allow multiple selection
+      setSelectedRules(prev => 
+        prev.includes(ruleKey)
+          ? prev.filter(r => r !== ruleKey)
+          : [...prev, ruleKey]
+      );
+    }
   };
 
   const handleSave = () => {
+    if (selectedRules.length === 0) {
+      alert("Veuillez sélectionner au moins une règle d'orthographe ou la dictée personnalisée");
+      return;
+    }
+
+    // Check if dictée is selected and if custom words are provided
+    const hasDictee = selectedRules.includes("dictee");
+    if (hasDictee && !customWords.trim()) {
+      alert("Veuillez saisir des mots personnalisés pour la dictée");
+      return;
+    }
+
     let wordsValue = "";
     let rulesValue = "";
 
-    if (useCustomWords) {
-      if (!customWords.trim()) {
-        alert("Veuillez saisir des mots personnalisés ou sélectionner des règles d'orthographe");
-        return;
-      }
-      wordsValue = customWords.trim();
-      rulesValue = "";
+    if (hasDictee) {
+      // If dictée is selected, include the prefix and custom words
+      wordsValue = `#dictee,${customWords.trim()}`;
+      // Include other rules (excluding dictée) in the rules parameter
+      const otherRules = selectedRules.filter(rule => rule !== "dictee");
+      rulesValue = otherRules.join(",");
     } else {
-      if (selectedRules.length === 0) {
-        alert("Veuillez sélectionner au moins une règle d'orthographe");
-        return;
-      }
+      // Only regular rules selected
       wordsValue = "";
       rulesValue = selectedRules.join(",");
     }
@@ -114,9 +150,8 @@ export default function OrthographyModal({
   };
 
   const handleReset = () => {
-    setUseCustomWords(false);
     setCustomWords("");
-    setSelectedRules(["sons_simples"]);
+    setSelectedRules([]);
   };
 
   const currentRules = ORTHOGRAPHY_RULES[level as keyof typeof ORTHOGRAPHY_RULES] || ORTHOGRAPHY_RULES.CE1;
@@ -141,71 +176,59 @@ export default function OrthographyModal({
       
       <Modal.Body>
         <Form>
-          {/* Rules vs Custom Words Selection */}
+          {/* Exercise Selection */}
           <div className="mb-4">
             <h6 className="fw-bold mb-3">
               <i className="fas fa-list-ul me-2"></i>
               Sélection du contenu
             </h6>
             
-            <Form.Check
-              type="radio"
-              name="orthoChoice"
-              id="rules"
-              label="Choisir par règles d'orthographe"
-              checked={!useCustomWords}
-              onChange={() => setUseCustomWords(false)}
-              className="mb-3"
-            />
+            <Row className="mb-3">
+              {currentRules.map(rule => (
+                <Col md={6} key={rule.key} className="mb-2">
+                  <div 
+                    className={`selector-card p-2 border rounded text-center ${
+                      selectedRules.includes(rule.key) 
+                        ? 'border-warning-subtle bg-warning-subtle text-dark' 
+                        : 'border-secondary bg-light'
+                    }`}
+                    onClick={() => toggleRule(rule.key)}
+                    style={{ 
+                      cursor: 'pointer',
+                      border: selectedRules.includes(rule.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                      position: 'relative'
+                    }}
+                  >
+                    {rule.label}
+                    {rule.isCustom && selectedRules.includes(rule.key) && (
+                      <i className="bi bi-pencil-square position-absolute" style={{ top: '5px', right: '8px', fontSize: '0.8rem' }}></i>
+                    )}
+                  </div>
+                </Col>
+              ))}
+            </Row>
             
-            {!useCustomWords && (
-              <Row className="mb-3">
-                {currentRules.map(rule => (
-                  <Col md={6} key={rule.key} className="mb-2">
-                    <div 
-                      className={`selector-card p-2 border rounded text-center ${
-                        selectedRules.includes(rule.key) 
-                          ? 'border-warning-subtle bg-warning-subtle text-dark' 
-                          : 'border-secondary bg-light'
-                      }`}
-                      onClick={() => toggleRule(rule.key)}
-                      style={{ 
-                        cursor: 'pointer',
-                        border: selectedRules.includes(rule.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-                      }}
-                    >
-                      {rule.label}
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-            )}
-            
-            <Form.Check
-              type="radio"
-              name="orthoChoice"
-              id="custom"
-              label="Mots personnalisés"
-              checked={useCustomWords}
-              onChange={() => setUseCustomWords(true)}
-              className="mb-3"
-            />
-            
-            {useCustomWords && (
-              <Form.Group className="mb-3">
-                <Form.Label>Mots pour les exercices d'orthographe (séparés par des virgules)</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={4}
-                  placeholder="château, bâteau, forêt, être, avoir, mangé, mangée..."
-                  value={customWords}
-                  onChange={(e) => setCustomWords(e.target.value)}
-                />
-                <Form.Text className="text-muted">
-                  Saisissez les mots à travailler en orthographe, séparés par des virgules
-                </Form.Text>
-              </Form.Group>
+            {/* Custom Words Input - Show when dictée is selected */}
+            {selectedRules.includes("dictee") && (
+              <div className="mt-3 p-3 border rounded bg-light">
+                <Form.Group className="mb-0">
+                  <Form.Label className="fw-semibold">
+                    <i className="bi bi-pencil me-2"></i>
+                    Mots pour la dictée personnalisée
+                  </Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    placeholder="château, bâteau, forêt, être, avoir, mangé, mangée..."
+                    value={customWords}
+                    onChange={(e) => setCustomWords(e.target.value)}
+                  />
+                  <Form.Text className="text-muted">
+                    Saisissez les mots à travailler en dictée, séparés par des virgules
+                  </Form.Text>
+                </Form.Group>
+              </div>
             )}
           </div>
         </Form>
