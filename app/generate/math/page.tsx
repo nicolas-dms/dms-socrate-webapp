@@ -674,11 +674,14 @@ export default function GenerateMathPage() {
         <Row className="justify-content-center">
           <Col lg={10}>
             {/* Enhanced Main Title */}
-            <div className="text-center mb-4">
-              <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
+            <div className="text-center mb-3">
+              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                <i className="bi bi-calculator me-2" style={{ color: '#87ceeb' }}></i>
                 Exercices de Mathématiques
               </h2>
-              <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
+              <p className="text-muted" style={{ fontSize: '0.95rem' }}>
+                Configurez vos exercices de mathématiques personnalisés
+              </p>
             </div>
             
             {/* Subscription info - only show when low */}
@@ -696,23 +699,42 @@ export default function GenerateMathPage() {
               );
             })()}
 
-            <Card className="shadow-sm border-0">
-              <Card.Body className="p-4">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+              <Card.Body className="p-3">
                 <form onSubmit={handlePreview}>
                   <div className="row g-3">
                     {/* Level Selection */}
                     <div className="col-12">
-                      <h6 className="mb-3">Niveau</h6>
+                      <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Niveau</h6>
                       <div className="d-flex gap-2 flex-wrap">
                         {levels.map((lvl) => (
                           <Card 
                             key={lvl}
-                            className={`${styles.selectorCard} border border-2 ${level === lvl ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                            className={`border ${level === lvl ? 'border-primary' : 'border-secondary-subtle'} flex-fill`}
                             onClick={() => handleLevelChange(lvl)}
-                            style={{ cursor: 'pointer', minWidth: '60px' }}
+                            style={{ 
+                              cursor: 'pointer', 
+                              minWidth: '60px',
+                              borderRadius: '10px',
+                              backgroundColor: level === lvl ? '#e0f6ff' : 'white',
+                              transition: 'all 0.2s ease',
+                              borderWidth: '2px'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (level !== lvl) {
+                                e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                e.currentTarget.style.borderColor = '#87ceeb';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (level !== lvl) {
+                                e.currentTarget.style.backgroundColor = 'white';
+                                e.currentTarget.style.borderColor = '#dee2e6';
+                              }
+                            }}
                           >
-                            <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                              <span className={`fw-bold ${level === lvl ? 'text-dark-emphasis' : 'text-dark'}`}>
+                            <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
+                              <span className={`fw-bold ${level === lvl ? 'text-primary' : 'text-dark'}`} style={{ fontSize: '0.9rem' }}>
                                 {lvl}
                               </span>
                             </Card.Body>
@@ -723,17 +745,35 @@ export default function GenerateMathPage() {
 
                     {/* Duration Selection */}
                     <div className="col-12">
-                      <h6 className="mb-3">Durée de la séance</h6>
+                      <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Durée de la séance</h6>
                       <div className="d-flex gap-2">
                         {durations.map((dur) => (
                           <div key={dur} className="flex-fill">
                             <Card 
-                              className={`${styles.selectorCard} border border-2 ${duration === dur ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
+                              className={`border ${duration === dur ? 'border-primary' : 'border-secondary-subtle'}`}
                               onClick={() => handleDurationChange(dur)}
-                              style={{ cursor: 'pointer' }}
+                              style={{ 
+                                cursor: 'pointer',
+                                borderRadius: '10px',
+                                backgroundColor: duration === dur ? '#e0f6ff' : 'white',
+                                transition: 'all 0.2s ease',
+                                borderWidth: '2px'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (duration !== dur) {
+                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                  e.currentTarget.style.borderColor = '#87ceeb';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (duration !== dur) {
+                                  e.currentTarget.style.backgroundColor = 'white';
+                                  e.currentTarget.style.borderColor = '#dee2e6';
+                                }
+                              }}
                             >
-                              <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                                <span className={`fw-bold ${duration === dur ? 'text-dark-emphasis' : 'text-dark'}`}>
+                              <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
+                                <span className={`fw-bold ${duration === dur ? 'text-primary' : 'text-dark'}`} style={{ fontSize: '0.9rem' }}>
                                   {dur}
                                 </span>
                               </Card.Body>
@@ -745,24 +785,26 @@ export default function GenerateMathPage() {
 
                     {/* Exercise Domains Selection */}
                     <div className="col-12">
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h6 className="mb-0">Domaines d'exercices</h6>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Domaines d'exercices</h6>
                         <div className="d-flex align-items-center gap-2">
                           <Badge 
-                            bg={getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'secondary'} 
+                            bg={getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'light'}
+                            text={getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'dark' : 'dark'}
                             className="d-flex align-items-center gap-1"
+                            style={{ fontSize: '0.75rem', border: '1px solid #dee2e6' }}
                           >
                             <i className="bi bi-list-ol"></i>
                             {getTotalSelectedExercises()}/{getExerciseLimits(duration)} exercices
                           </Badge>
-                          <small className="text-muted">
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>
                             {getTotalSelectedExercises() >= getExerciseLimits(duration) ? (
                               <>
                                 <i className="bi bi-info-circle me-1"></i>
-                                Limite atteinte
+                                Limite: {getExerciseLimits(duration)} pour {duration}
                               </>
                             ) : (
-                              <>Limite: {getExerciseLimits(duration)} exercices pour {duration}</>
+                              <>Limite: {getExerciseLimits(duration)} pour {duration}</>
                             )}
                           </small>
                         </div>
@@ -778,31 +820,47 @@ export default function GenerateMathPage() {
                           return (
                             <Card 
                               key={domain.key}
-                              className={`${styles.selectorCard} border border-2 ${isSelected ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                              className={`border ${isSelected ? 'border-primary' : 'border-secondary-subtle'} flex-fill`}
                               onClick={() => !isDisabled && hasExercisesForLevel && toggleType(domain.key)}
                               style={{ 
                                 cursor: isDisabled ? 'not-allowed' : 'pointer',
                                 opacity: isDisabled ? 0.6 : 1,
-                                minWidth: '180px'
+                                minWidth: '160px',
+                                borderRadius: '10px',
+                                backgroundColor: isSelected ? '#e0f6ff' : 'white',
+                                transition: 'all 0.2s ease',
+                                borderWidth: '2px'
                               }}
                               title={
                                 !hasExercisesForLevel 
                                   ? `Aucun exercice disponible pour le niveau ${level}` 
                                   : `${availableExercises.length} exercice${availableExercises.length > 1 ? 's' : ''} disponible${availableExercises.length > 1 ? 's' : ''} pour ${level}`
                               }
+                              onMouseEnter={(e) => {
+                                if (!isDisabled && !isSelected) {
+                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                  e.currentTarget.style.borderColor = '#87ceeb';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isDisabled && !isSelected) {
+                                  e.currentTarget.style.backgroundColor = 'white';
+                                  e.currentTarget.style.borderColor = '#dee2e6';
+                                }
+                              }}
                             >
-                              <Card.Body className="p-3 text-center d-flex flex-column align-items-center justify-content-center" style={{ position: 'relative', minHeight: '80px' }}>
-                                <span className={`fw-bold ${isSelected ? 'text-dark-emphasis' : 'text-dark'}`} style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>
-                                  <i className={`${getDomainIcon(domain.key)} me-2`}></i>
+                              <Card.Body className="p-2 text-center d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '70px' }}>
+                                <span className={`fw-semibold ${isSelected ? 'text-primary' : 'text-dark'}`} style={{ fontSize: '0.8rem', lineHeight: '1.2' }}>
+                                  <i className={`${getDomainIcon(domain.key)} me-1`}></i>
                                   {domain.label}
                                 </span>
                                 {hasExercisesForLevel && (
-                                  <small className="text-muted mt-1" style={{ fontSize: '0.7rem' }}>
+                                  <small className="text-muted mt-1" style={{ fontSize: '0.65rem' }}>
                                     {availableExercises.length} exercice{availableExercises.length > 1 ? 's' : ''}
                                   </small>
                                 )}
                                 {!hasExercisesForLevel && (
-                                  <small className="text-muted mt-1" style={{ fontSize: '0.7rem' }}>
+                                  <small className="text-muted mt-1" style={{ fontSize: '0.65rem' }}>
                                     Non disponible
                                   </small>
                                 )}
@@ -815,10 +873,10 @@ export default function GenerateMathPage() {
                   </div>
 
                   {/* Exercise Parameters Section */}
-                  <div className="mb-3">
+                  <div className="mb-2">
                     {(selectedTypes.some(type => exerciceTypeParams[type])) && (
                       <div>
-                        <h6 className="mb-3 text-muted">Paramètres des exercices</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.85rem', color: '#6c757d' }}>Paramètres configurés</h6>
                         
                         <div className="d-flex gap-2 flex-wrap">
                           {/* Nombres parameters */}
@@ -826,32 +884,34 @@ export default function GenerateMathPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#f0f8ff', 
+                                minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#87ceeb'
                               }}
                               onClick={handleEditNombresParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#e0f0ff';
+                                e.currentTarget.style.borderColor = '#5fa8d3';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#f0f8ff';
+                                e.currentTarget.style.borderColor = '#87ceeb';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-123 me-1"></i>
                                   Nombres
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams["Nombres"].exercises || "Exercices sélectionnés"}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
 
@@ -860,32 +920,34 @@ export default function GenerateMathPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#f0f8ff', 
+                                minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#87ceeb'
                               }}
                               onClick={handleEditCalculParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#e0f0ff';
+                                e.currentTarget.style.borderColor = '#5fa8d3';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#f0f8ff';
+                                e.currentTarget.style.borderColor = '#87ceeb';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-calculator me-1"></i>
                                   Calculs
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams["Calculs"].exercises || "Exercices sélectionnés"}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
                           
@@ -894,32 +956,34 @@ export default function GenerateMathPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#f0f8ff', 
+                                minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#87ceeb'
                               }}
                               onClick={handleEditMesuresParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#e0f0ff';
+                                e.currentTarget.style.borderColor = '#5fa8d3';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#f0f8ff';
+                                e.currentTarget.style.borderColor = '#87ceeb';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-rulers me-1"></i>
-                                  Grandeurs et mesures
+                                  Grandeurs
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams["Grandeurs"].exercises || "Exercices sélectionnés"}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
 
@@ -928,32 +992,34 @@ export default function GenerateMathPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#f0f8ff', 
+                                minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#87ceeb'
                               }}
                               onClick={handleEditGeometrieParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#e0f0ff';
+                                e.currentTarget.style.borderColor = '#5fa8d3';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#f0f8ff';
+                                e.currentTarget.style.borderColor = '#87ceeb';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-triangle me-1"></i>
-                                  Espace et géométrie
+                                  Géométrie
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams["Geometrie"].exercises || "Exercices sélectionnés"}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
                         </div>
@@ -967,13 +1033,19 @@ export default function GenerateMathPage() {
                     </Alert>
                   )}
 
-                  <div className="d-grid mt-4">
+                  <div className="d-grid mt-3">
                     <Button 
                       type="submit" 
                       disabled={!canGenerate} 
                       size="lg"
-                      variant="primary"
-                      className="fw-semibold"
+                      style={{
+                        background: canGenerate ? 'linear-gradient(135deg, #87ceeb, #70b8d6)' : undefined,
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '0.7rem',
+                        fontWeight: '600',
+                        boxShadow: canGenerate ? '0 4px 15px rgba(135, 206, 235, 0.3)' : undefined
+                      }}
                     >
                       {generating ? (
                         <>
@@ -990,13 +1062,15 @@ export default function GenerateMathPage() {
                   </div>
                   
                   {!canGenerate && selectedTypes.length === 0 && (
-                    <small className="text-muted d-block text-center mt-2">
-                      Veuillez sélectionner au moins un type d'exercice
+                    <small className="text-muted d-block text-center mt-2" style={{ fontSize: '0.8rem' }}>
+                      <i className="bi bi-info-circle me-1"></i>
+                      Veuillez sélectionner au moins un domaine d'exercice
                     </small>
                   )}
                   
                   {!canGenerate && !canGenerateMore() && (
-                    <small className="text-danger d-block text-center mt-2">
+                    <small className="text-danger d-block text-center mt-2" style={{ fontSize: '0.8rem' }}>
+                      <i className="bi bi-exclamation-circle me-1"></i>
                       Limite d'abonnement atteinte ce mois
                     </small>
                   )}
@@ -1079,14 +1153,22 @@ export default function GenerateMathPage() {
 
         {/* Success Modal */}
         <Modal show={showSuccessModal} onHide={regenerateSameSheet} size="lg" centered className="success-modal">
-          <Modal.Header closeButton>
-            <Modal.Title className="text-success">🎉 Fiche générée avec succès !</Modal.Title>
+          <Modal.Header closeButton style={{ borderBottom: '3px solid #10b981' }}>
+            <Modal.Title style={{ color: '#2c3e50' }}>
+              <span style={{ color: '#10b981', marginRight: '8px' }}>✓</span>
+              Fiche générée avec succès !
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Alert variant="success">
-              <h6>Votre fiche est prête !</h6>
+            <div style={{ 
+              backgroundColor: '#f8f9fa', 
+              padding: '20px', 
+              borderRadius: '10px',
+              border: '1px solid #e9ecef'
+            }}>
+              <h6 style={{ color: '#2c3e50', marginBottom: '15px' }}>Votre fiche est prête !</h6>
               <div className="mb-2">
-                <strong>Fiche de mathématiques</strong>
+                <strong style={{ color: '#495057' }}>Fiche de mathématiques</strong>
                 <div className="d-flex align-items-center gap-2 mt-2">
                   <Badge bg="light" text="dark" className="border">
                     {level}
@@ -1097,7 +1179,7 @@ export default function GenerateMathPage() {
                 </div>
               </div>
               <p className="mb-2">
-                <strong>Types d'exercices :</strong>
+                <strong style={{ color: '#495057' }}>Types d'exercices :</strong>
                 <div className="d-flex flex-wrap gap-1 mt-1">
                   {selectedTypes.map(t => (
                     <Badge key={t} bg="light" text="dark" className="border">
@@ -1106,17 +1188,53 @@ export default function GenerateMathPage() {
                   ))}
                 </div>
               </p>
-            </Alert>
+            </div>
             {exercise && exercise.pdf_url && (
-              <div className="d-grid gap-2">
-                <Button onClick={handleDownload} variant="success" size="lg">
+              <div className="d-grid gap-2 mt-3">
+                <button
+                  onClick={handleDownload}
+                  style={{
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+                >
                   <i className="bi bi-download me-2"></i>
                   Télécharger le PDF
-                </Button>
-                <Button onClick={handleViewPDF} variant="outline-primary" size="lg">
+                </button>
+                <button
+                  onClick={handleViewPDF}
+                  style={{
+                    backgroundColor: 'white',
+                    color: '#495057',
+                    border: '2px solid #dee2e6',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                    e.currentTarget.style.borderColor = '#adb5bd';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.borderColor = '#dee2e6';
+                  }}
+                >
                   <i className="bi bi-eye me-2"></i>
                   Visualiser et imprimer
-                </Button>
+                </button>
               </div>
             )}
           </Modal.Body>

@@ -424,18 +424,29 @@ export default function SessionsPage() {
           <Col lg={10}>
             {/* Enhanced Main Title */}
             <div className="text-center mb-4">
-              <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
+              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                <i className="bi bi-folder2-open me-2" style={{ color: '#6c757d' }}></i>
                 Mes Fiches
               </h2>
-              <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
+              <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
+                Retrouvez et gérez tous vos exercices générés
+              </p>
             </div>
 
-            <Card className="shadow-sm border-0">
+            <Card style={{ 
+              border: '2px solid #e9ecef', 
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}>
               <Card.Body className="p-4">
                 {/* Filters Card */}
-                <Card className="border-0 mb-4" style={{ backgroundColor: '#fef3c7' }}>
+                <Card className="mb-4" style={{ 
+                  backgroundColor: '#f8f9fa',
+                  border: '1px solid #e9ecef',
+                  borderRadius: '10px'
+                }}>
                   <Card.Body className="p-3">
-                    <h6 className="text-muted mb-3 fw-semibold">
+                    <h6 className="mb-3 fw-semibold" style={{ color: '#495057', fontSize: '0.9rem' }}>
                       <i className="bi bi-funnel me-2"></i>
                       Filtres
                     </h6>
@@ -493,14 +504,30 @@ export default function SessionsPage() {
 
                         {/* Clear Filters */}
                         {(selectedDomain || selectedLevel || selectedTimeRange || selectedTag || selectedTags.length > 0) && (
-                          <Button 
-                            variant="outline-secondary" 
-                            size="sm"
+                          <button
                             onClick={clearFilters}
+                            style={{
+                              backgroundColor: 'white',
+                              color: '#6c757d',
+                              border: '1px solid #dee2e6',
+                              padding: '4px 12px',
+                              borderRadius: '6px',
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f8f9fa';
+                              e.currentTarget.style.borderColor = '#adb5bd';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'white';
+                              e.currentTarget.style.borderColor = '#dee2e6';
+                            }}
                           >
                             <i className="bi bi-x-circle me-1"></i>
                             Effacer
-                          </Button>
+                          </button>
                         )}
                       </div>
 
@@ -597,32 +624,68 @@ export default function SessionsPage() {
                 {!loading && !error && filteredFiles.length === 0 && files.length === 0 && (
                   <div className="text-center py-5">
                     <div className="mb-4">
-                      <i className="bi bi-file-earmark-pdf" style={{ fontSize: '4rem', color: '#6c757d' }}></i>
+                      <i className="bi bi-file-earmark-pdf" style={{ fontSize: '4rem', color: '#adb5bd' }}></i>
                     </div>
-                    <h3 className="text-muted mb-3">Aucune fiche générée</h3>
-                    <p className="text-muted mb-4">
+                    <h4 className="mb-3" style={{ color: '#495057', fontWeight: '600' }}>Aucune fiche générée</h4>
+                    <p className="text-muted mb-4" style={{ fontSize: '0.95rem' }}>
                       Vous n'avez pas encore généré de fiches d'exercices.
                     </p>
-                    <Button variant="primary" href="/generate/french">
+                    <button
+                      onClick={() => window.location.href = '/generate/french'}
+                      style={{
+                        backgroundColor: '#0d6efd',
+                        color: 'white',
+                        border: 'none',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        fontSize: '0.95rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0b5ed7'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0d6efd'}
+                    >
                       <i className="bi bi-plus-circle me-2"></i>
                       Créer ma première fiche
-                    </Button>
+                    </button>
                   </div>
                 )}
 
                 {!loading && !error && files.length > 0 && filteredFiles.length === 0 && (selectedDomain || selectedLevel || selectedTimeRange || selectedTag || selectedTags.length > 0) && (
                   <div className="text-center py-5">
                     <div className="mb-4">
-                      <i className="bi bi-funnel" style={{ fontSize: '3rem', color: '#6c757d' }}></i>
+                      <i className="bi bi-funnel" style={{ fontSize: '3rem', color: '#adb5bd' }}></i>
                     </div>
-                    <h4 className="text-muted mb-3">Aucun résultat</h4>
-                    <p className="text-muted mb-4">
+                    <h4 className="mb-3" style={{ color: '#495057', fontWeight: '600' }}>Aucun résultat</h4>
+                    <p className="text-muted mb-4" style={{ fontSize: '0.95rem' }}>
                       Aucune fiche ne correspond aux filtres sélectionnés.
                     </p>
-                    <Button variant="outline-secondary" onClick={clearFilters}>
+                    <button
+                      onClick={clearFilters}
+                      style={{
+                        backgroundColor: 'white',
+                        color: '#6c757d',
+                        border: '2px solid #dee2e6',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        fontSize: '0.95rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.borderColor = '#adb5bd';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'white';
+                        e.currentTarget.style.borderColor = '#dee2e6';
+                      }}
+                    >
                       <i className="bi bi-x-circle me-2"></i>
                       Effacer les filtres
-                    </Button>
+                    </button>
                   </div>
                 )}
 
@@ -640,9 +703,24 @@ export default function SessionsPage() {
                     {/* List View - One file per row */}
                     <div className="d-flex flex-column gap-3">
                       {filteredFiles.map((file) => (
-                        <Card key={file.file_id} className="border-0 shadow-sm" style={{ transition: 'transform 0.2s' }}
-                          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        <Card 
+                          key={file.file_id} 
+                          style={{ 
+                            border: '2px solid #e9ecef',
+                            borderRadius: '10px',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                            e.currentTarget.style.borderColor = '#dee2e6';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                            e.currentTarget.style.borderColor = '#e9ecef';
+                          }}
                         >
                           <Card.Body className="p-3">
                             <Row className="align-items-center">
@@ -654,18 +732,30 @@ export default function SessionsPage() {
                                   </div>
                                   <div className="flex-grow-1">
                                     <div className="d-flex align-items-center gap-2 mb-2">
-                                      <h6 className="mb-0 text-capitalize fw-semibold">
+                                      <h6 className="mb-0 text-capitalize fw-semibold" style={{ color: '#2c3e50' }}>
                                         Exercices de {file.exercice_domain}
                                       </h6>
-                                      <span className="badge bg-white text-dark border text-uppercase" style={{ fontSize: '0.75rem', color: '#495057' }}>
+                                      <span className="badge text-uppercase" style={{ 
+                                        fontSize: '0.75rem',
+                                        backgroundColor: '#f8f9fa',
+                                        color: '#495057',
+                                        border: '1px solid #dee2e6',
+                                        fontWeight: '600'
+                                      }}>
                                         {file.class_level}
                                       </span>
-                                      <small className="text-muted">• {file.exercice_time}</small>
+                                      <small className="text-muted" style={{ fontSize: '0.85rem' }}>• {file.exercice_time}</small>
                                     </div>
                                     
                                     <div className="d-flex flex-wrap gap-1 mb-2">
                                       {file.exercice_types.map((type) => (
-                                        <span key={type} className="badge bg-light text-dark border" style={{ fontSize: '0.75rem' }}>
+                                        <span key={type} className="badge" style={{ 
+                                          fontSize: '0.75rem',
+                                          backgroundColor: file.exercice_domain === 'francais' ? '#fffbeb' : '#f0f8ff',
+                                          color: file.exercice_domain === 'francais' ? '#d97706' : '#0066cc',
+                                          border: `1px solid ${file.exercice_domain === 'francais' ? '#fbbf24' : '#87ceeb'}`,
+                                          fontWeight: '500'
+                                        }}>
                                           {getExerciseIcon(type)} {type}
                                         </span>
                                       ))}
@@ -674,8 +764,15 @@ export default function SessionsPage() {
                                     {file.tags && file.tags.length > 0 && (
                                       <div className="d-flex flex-wrap gap-1 mb-2">
                                         {file.tags.map((tag) => (
-                                          <span key={tag} className="badge" style={{ fontSize: '0.7rem', backgroundColor: '#b3d9ff', color: '#1a5490' }}>
-                                            🏷️ {tag}
+                                          <span key={tag} className="badge" style={{ 
+                                            fontSize: '0.7rem',
+                                            backgroundColor: '#f1f3f5',
+                                            color: '#495057',
+                                            border: '1px solid #dee2e6',
+                                            fontWeight: '500'
+                                          }}>
+                                            <i className="bi bi-tag-fill me-1" style={{ fontSize: '0.65rem' }}></i>
+                                            {tag}
                                           </span>
                                         ))}
                                       </div>
@@ -701,42 +798,106 @@ export default function SessionsPage() {
                               <Col md={6} lg={5}>
                                 <div className="d-flex justify-content-end">
                                   <div className="d-flex gap-2">
-                                    <Button 
-                                      style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: 'white' }}
-                                      size="sm"
+                                    <button
                                       onClick={() => downloadFile(file)}
-                                      className="d-flex align-items-center gap-1"
+                                      style={{
+                                        backgroundColor: 'white',
+                                        color: '#495057',
+                                        border: '2px solid #dee2e6',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        fontWeight: '500'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                        e.currentTarget.style.borderColor = '#adb5bd';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'white';
+                                        e.currentTarget.style.borderColor = '#dee2e6';
+                                      }}
                                       title="Télécharger"
                                     >
                                       <i className="bi bi-download"></i>
-                                    </Button>
-                                    <Button 
-                                      variant="primary" 
-                                      size="sm"
+                                    </button>
+                                    <button
                                       onClick={() => viewFile(file)}
-                                      className="d-flex align-items-center gap-1"
+                                      style={{
+                                        backgroundColor: 'white',
+                                        color: '#495057',
+                                        border: '2px solid #dee2e6',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        fontWeight: '500'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                        e.currentTarget.style.borderColor = '#adb5bd';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'white';
+                                        e.currentTarget.style.borderColor = '#dee2e6';
+                                      }}
                                     >
-                                      <i className="bi bi-eye"></i>
+                                      <i className="bi bi-eye me-1"></i>
                                       <span className="d-none d-lg-inline">Visualiser</span>
-                                    </Button>
-                                    <Button 
-                                      size="sm"
+                                    </button>
+                                    <button
                                       onClick={() => openTagsModal(file)}
-                                      className="d-flex align-items-center gap-1"
-                                      style={{ backgroundColor: '#b3d9ff', borderColor: '#b3d9ff', color: '#1a5490' }}
+                                      style={{
+                                        backgroundColor: 'white',
+                                        color: '#495057',
+                                        border: '2px solid #dee2e6',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        fontWeight: '500'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                        e.currentTarget.style.borderColor = '#adb5bd';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'white';
+                                        e.currentTarget.style.borderColor = '#dee2e6';
+                                      }}
                                     >
-                                      <i className="bi bi-tags"></i>
+                                      <i className="bi bi-tags me-1"></i>
                                       <span className="d-none d-lg-inline">Tags</span>
-                                    </Button>
-                                    <Button 
-                                      variant="outline-secondary" 
-                                      size="sm"
+                                    </button>
+                                    <button
                                       onClick={() => showFileDetails(file)}
-                                      className="d-flex align-items-center gap-1"
+                                      style={{
+                                        backgroundColor: 'white',
+                                        color: '#495057',
+                                        border: '2px solid #dee2e6',
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        fontWeight: '500'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                        e.currentTarget.style.borderColor = '#adb5bd';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'white';
+                                        e.currentTarget.style.borderColor = '#dee2e6';
+                                      }}
                                     >
-                                      <i className="bi bi-info-circle"></i>
+                                      <i className="bi bi-info-circle me-1"></i>
                                       <span className="d-none d-lg-inline">Détails</span>
-                                    </Button>
+                                    </button>
                                   </div>
                                 </div>
                               </Col>

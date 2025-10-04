@@ -1002,30 +1002,52 @@ export default function GenerateFrenchPage() {
         <Row className="justify-content-center">
           <Col lg={10}>
             {/* Enhanced Main Title */}
-            <div className="text-center mb-4">
-              <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
+            <div className="text-center mb-3">
+              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                <i className="bi bi-book me-2" style={{ color: '#fbbf24' }}></i>
                 Exercices de Français
               </h2>
-              <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
+              <p className="text-muted" style={{ fontSize: '0.95rem' }}>
+                Configurez vos exercices de français personnalisés
+              </p>
             </div>
             
-              <Card className="shadow-sm border-0">
-                <Card.Body className="p-4">
+              <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+                <Card.Body className="p-3">
                   <form onSubmit={handlePreview}>
                     <div className="row g-3">
                       {/* Level Selection */}
                       <div className="col-12">
-                        <h6 className="mb-3">Niveau</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Niveau</h6>
                         <div className="d-flex gap-2 flex-wrap">
                           {levels.map((lvl) => (
                             <Card 
                               key={lvl}
-                              className={`${styles.selectorCard} border border-2 ${level === lvl ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                              className={`border ${level === lvl ? 'border-warning' : 'border-secondary-subtle'} flex-fill`}
                               onClick={() => handleLevelChange(lvl)}
-                              style={{ cursor: 'pointer', minWidth: '60px' }}
+                              style={{ 
+                                cursor: 'pointer', 
+                                minWidth: '60px',
+                                borderRadius: '10px',
+                                backgroundColor: level === lvl ? '#fef3c7' : 'white',
+                                transition: 'all 0.2s ease',
+                                borderWidth: '2px'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (level !== lvl) {
+                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                  e.currentTarget.style.borderColor = '#fbbf24';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (level !== lvl) {
+                                  e.currentTarget.style.backgroundColor = 'white';
+                                  e.currentTarget.style.borderColor = '#dee2e6';
+                                }
+                              }}
                             >
-                              <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                                <span className={`fw-bold ${level === lvl ? 'text-dark-emphasis' : 'text-dark'}`}>
+                              <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
+                                <span className={`fw-bold`} style={{ fontSize: '0.9rem', color: level === lvl ? '#d97706' : '#2c3e50' }}>
                                   {lvl}
                                 </span>
                               </Card.Body>
@@ -1036,17 +1058,35 @@ export default function GenerateFrenchPage() {
 
                       {/* Duration Selection */}
                       <div className="col-12">
-                        <h6 className="mb-3">Durée de la séance</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Durée de la séance</h6>
                         <div className="d-flex gap-2">
                           {durations.map((dur) => (
                             <div key={dur} className="flex-fill">
                               <Card 
-                                className={`${styles.selectorCard} border border-2 ${duration === dur ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
+                                className={`border ${duration === dur ? 'border-warning' : 'border-secondary-subtle'}`}
                                 onClick={() => handleDurationChange(dur)}
-                                style={{ cursor: 'pointer' }}
+                                style={{ 
+                                  cursor: 'pointer',
+                                  borderRadius: '10px',
+                                  backgroundColor: duration === dur ? '#fef3c7' : 'white',
+                                  transition: 'all 0.2s ease',
+                                  borderWidth: '2px'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (duration !== dur) {
+                                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                    e.currentTarget.style.borderColor = '#fbbf24';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (duration !== dur) {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = '#dee2e6';
+                                  }
+                                }}
                               >
-                                <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                                  <span className={`fw-bold ${duration === dur ? 'text-dark-emphasis' : 'text-dark'}`}>
+                                <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
+                                  <span className={`fw-bold`} style={{ fontSize: '0.9rem', color: duration === dur ? '#d97706' : '#2c3e50' }}>
                                     {dur}
                                   </span>
                                 </Card.Body>
@@ -1058,17 +1098,19 @@ export default function GenerateFrenchPage() {
 
                       {/* Exercise Types Selection */}
                       <div className="col-12">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <h6 className="mb-0">Types d'exercices</h6>
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Types d'exercices</h6>
                           <div className="d-flex align-items-center gap-2">
                             <Badge 
-                              bg={getTotalSelectedExercises() > getExerciseLimits(duration) ? 'danger' : getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'secondary'} 
+                              bg={getTotalSelectedExercises() > getExerciseLimits(duration) ? 'danger' : getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'light'}
+                              text={getTotalSelectedExercises() > getExerciseLimits(duration) ? 'white' : 'dark'}
                               className="d-flex align-items-center gap-1"
+                              style={{ fontSize: '0.75rem', border: getTotalSelectedExercises() <= getExerciseLimits(duration) ? '1px solid #dee2e6' : 'none' }}
                             >
                               <i className="bi bi-list-ol"></i>
-                              {getTotalSelectedExercises()}/{getExerciseLimits(duration)}
+                              {getTotalSelectedExercises()}/{getExerciseLimits(duration)} exercices
                             </Badge>
-                            <small className="text-muted">
+                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>
                               {getTotalSelectedExercises() > getExerciseLimits(duration) ? (
                                 <>
                                   <i className="bi bi-exclamation-triangle text-danger me-1"></i>
@@ -1077,10 +1119,10 @@ export default function GenerateFrenchPage() {
                               ) : getTotalSelectedExercises() >= getExerciseLimits(duration) ? (
                                 <>
                                   <i className="bi bi-info-circle me-1"></i>
-                                  Limite atteinte
+                                  Limite: {getExerciseLimits(duration)} pour {duration}
                                 </>
                               ) : (
-                                <>Limite: {getExerciseLimits(duration)} exercices pour {duration}</>
+                                <>Limite: {getExerciseLimits(duration)} pour {duration}</>
                               )}
                             </small>
                           </div>
@@ -1096,30 +1138,46 @@ export default function GenerateFrenchPage() {
                             return (
                               <Card 
                                 key={type.key}
-                                className={`${styles.selectorCard} border border-2 ${isSelected ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
+                                className={`border ${isSelected ? 'border-warning' : 'border-secondary-subtle'} flex-fill`}
                                 onClick={() => !isDisabled && toggleType(type.key)}
                                 style={{ 
                                   cursor: isDisabled ? 'not-allowed' : 'pointer',
                                   opacity: isDisabled ? 0.5 : 1,
-                                  minWidth: '120px'
+                                  minWidth: '110px',
+                                  borderRadius: '10px',
+                                  backgroundColor: isSelected ? '#fef3c7' : 'white',
+                                  transition: 'all 0.2s ease',
+                                  borderWidth: '2px'
                                 }}
                                 title={
                                   isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : 
                                   (!isSelected && isAtLimit) ? `Limite de ${getExerciseLimits(duration)} exercices atteinte` : ""
                                 }
+                                onMouseEnter={(e) => {
+                                  if (!isDisabled && !isSelected) {
+                                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                    e.currentTarget.style.borderColor = '#fbbf24';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isDisabled && !isSelected) {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = '#dee2e6';
+                                  }
+                                }}
                               >
-                                <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center" style={{ position: 'relative' }}>
-                                  <span className={`fw-bold ${isSelected ? 'text-dark-emphasis' : 'text-dark'}`} style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>
-                                    <i className={`${getTypeIcon(type.key)} me-2`}></i>
+                                <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center" style={{ position: 'relative', minHeight: '60px' }}>
+                                  <span className={`fw-semibold`} style={{ fontSize: '0.8rem', lineHeight: '1.2', color: isSelected ? '#d97706' : '#2c3e50' }}>
+                                    <i className={`${getTypeIcon(type.key)} me-1`}></i>
                                     {type.label}
                                   </span>
                                   
                                   {isComprehensionDisabled && (
-                                    <i className="bi bi-lock position-absolute" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
+                                    <i className="bi bi-lock position-absolute" style={{ fontSize: '0.7rem', top: '6px', right: '6px', color: '#6c757d' }}></i>
                                   )}
                                   
                                   {(!isSelected && isAtLimit && !isComprehensionDisabled) && (
-                                    <i className="bi bi-dash-circle position-absolute text-muted" style={{ fontSize: '0.8em', top: '8px', right: '8px' }}></i>
+                                    <i className="bi bi-dash-circle position-absolute text-muted" style={{ fontSize: '0.7rem', top: '6px', right: '6px' }}></i>
                                   )}
                                 </Card.Body>
                               </Card>
@@ -1130,10 +1188,10 @@ export default function GenerateFrenchPage() {
                     </div>
 
                   {/* Exercise Parameters Section */}
-                  <div className="mb-3">
+                  <div className="mb-2">
                     {(selectedTypes.some(type => exerciceTypeParams[type])) && (
                       <div>
-                        <h6 className="mb-3 text-muted">Paramètres des exercices</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.85rem', color: '#6c757d' }}>Paramètres configurés</h6>
                         
                         <div className="d-flex gap-2 flex-wrap">
                           {/* Lecture parameters */}
@@ -1141,46 +1199,34 @@ export default function GenerateFrenchPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#fffbeb', 
+                                minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#fbbf24'
                               }}
                               onClick={handleEditLectureParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#fef3c7';
+                                e.currentTarget.style.borderColor = '#f59e0b';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#fffbeb';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-book me-1"></i>
                                   Lecture
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams.lecture.theme || "Thème général"}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
-                                {(exerciceTypeParams.lecture.style || exerciceTypeParams.lecture.length) && (
-                                  <div style={{ fontSize: '0.7rem' }} className="text-muted">
-                                    {exerciceTypeParams.lecture.style && (
-                                      <span className="me-2">
-                                        Style: {formatStyleLabel(exerciceTypeParams.lecture.style)}
-                                      </span>
-                                    )}
-                                    {exerciceTypeParams.lecture.length && (
-                                      <span>
-                                        Longueur: {formatLengthLabel(exerciceTypeParams.lecture.length, level)}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
                           
@@ -1189,32 +1235,34 @@ export default function GenerateFrenchPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#fffbeb', 
+                                minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#fbbf24'
                               }}
                               onClick={handleEditConjugationParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#fef3c7';
+                                e.currentTarget.style.borderColor = '#f59e0b';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#fffbeb';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-gear me-1"></i>
                                   Conjugaison
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams.conjugaison.verbs} • {exerciceTypeParams.conjugaison.tenses}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
@@ -1223,32 +1271,34 @@ export default function GenerateFrenchPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#fffbeb', 
+                                minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#fbbf24'
                               }}
                               onClick={handleEditGrammarParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#fef3c7';
+                                e.currentTarget.style.borderColor = '#f59e0b';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#fffbeb';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-pencil-square me-1"></i>
                                   Grammaire
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams.grammaire.types}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
@@ -1257,32 +1307,34 @@ export default function GenerateFrenchPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#fffbeb', 
+                                minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#fbbf24'
                               }}
                               onClick={handleEditVocabularyParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#fef3c7';
+                                e.currentTarget.style.borderColor = '#f59e0b';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#fffbeb';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-chat-dots me-1"></i>
                                   Vocabulaire
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams.vocabulaire.words || exerciceTypeParams.vocabulaire.theme}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
@@ -1291,47 +1343,34 @@ export default function GenerateFrenchPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#fffbeb', 
+                                minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#fbbf24'
                               }}
                               onClick={handleEditOrthographyParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#fef3c7';
+                                e.currentTarget.style.borderColor = '#f59e0b';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#fffbeb';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-check2-square me-1"></i>
                                   Orthographe
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {(() => {
-                                    const parts = [];
-                                    
-                                    // Show "dictée" if custom words are provided
-                                    if (exerciceTypeParams.orthographe.words && exerciceTypeParams.orthographe.words.startsWith('#dictee,')) {
-                                      parts.push('dictée');
-                                    }
-                                    
-                                    // Show rule names if rules are provided
-                                    if (exerciceTypeParams.orthographe.rules) {
-                                      const rules = exerciceTypeParams.orthographe.rules.split(',').map((r: string) => r.trim()).filter(Boolean);
-                                      parts.push(...rules);
-                                    }
-                                    
-                                    return parts.length > 0 ? parts.join(', ') : 'orthographe générale';
-                                  })()}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
@@ -1340,32 +1379,34 @@ export default function GenerateFrenchPage() {
                             <div 
                               className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
                               style={{ 
-                                backgroundColor: '#f8f9fa', 
-                                minWidth: '200px',
+                                backgroundColor: '#fffbeb', 
+                                minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                borderColor: '#fbbf24'
                               }}
                               onClick={handleEditComprehensionParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#007bff';
+                                e.currentTarget.style.backgroundColor = '#fef3c7';
+                                e.currentTarget.style.borderColor = '#f59e0b';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.backgroundColor = '#fffbeb';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
-                              title="Cliquer pour modifier les paramètres"
+                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold text-dark" style={{ fontSize: '0.85rem' }}>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
                                   <i className="bi bi-lightbulb me-1"></i>
                                   Compréhension
                                 </div>
-                                <div style={{ fontSize: '0.75rem' }} className="text-muted">
-                                  {exerciceTypeParams.comprehension.types}
+                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                  Configuré
                                 </div>
                               </div>
-                              <i className="bi bi-pencil text-muted" style={{ fontSize: '0.8rem' }}></i>
+                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
                         </div>
@@ -1378,17 +1419,38 @@ export default function GenerateFrenchPage() {
                     <Button 
                       type="submit" 
                       disabled={selectedTypes.length === 0 || getTotalSelectedExercises() > getExerciseLimits(duration)}
-                      className={styles.ctaPrimary}
                       size="lg"
+                      style={{
+                        background: (selectedTypes.length > 0 && getTotalSelectedExercises() <= getExerciseLimits(duration)) ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : undefined,
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '0.7rem',
+                        fontWeight: '600',
+                        boxShadow: (selectedTypes.length > 0 && getTotalSelectedExercises() <= getExerciseLimits(duration)) ? '0 4px 15px rgba(251, 191, 36, 0.3)' : undefined
+                      }}
                     >
+                      <i className="bi bi-eye me-2"></i>
                       Aperçu de la fiche ({level} - {duration})
-                    </Button>                    {subscription && (() => {
+                    </Button>
+                    {selectedTypes.length === 0 && (
+                      <small className="text-muted text-center" style={{ fontSize: '0.8rem' }}>
+                        <i className="bi bi-info-circle me-1"></i>
+                        Veuillez sélectionner au moins un type d'exercice
+                      </small>
+                    )}
+                    {getTotalSelectedExercises() > getExerciseLimits(duration) && (
+                      <small className="text-danger text-center" style={{ fontSize: '0.8rem' }}>
+                        <i className="bi bi-exclamation-circle me-1"></i>
+                        Trop d'exercices sélectionnés pour la durée choisie
+                      </small>
+                    )}
+                    {subscription && (() => {
                       const remainingFiches = getRemainingFiches();
                       const monthlyLimit = subscription.monthlyLimit || 0;
                       const tenPercentLimit = Math.floor(monthlyLimit * 0.1);
                       
                       return remainingFiches <= tenPercentLimit && (
-                        <small className="text-center text-warning">
+                        <small className="text-center text-warning" style={{ fontSize: '0.8rem' }}>
                           ⚠️ Attention : Il vous reste seulement {remainingFiches} fiches ce mois • Coût : 1 fiche
                         </small>
                       );
@@ -1397,227 +1459,10 @@ export default function GenerateFrenchPage() {
                 </form>
               </Card.Body>
             </Card>
-
-            {/* Parcours Section */}
-            <Card className="shadow-sm border-0 mt-4">
-              <Card.Body className="p-3">
-                <div className="text-center mb-4">
-                  <h3 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
-                    <i className="bi bi-collection me-2"></i>
-                    Générer des Parcours
-                  </h3>
-                  <p className="text-muted">
-                    Créez des programmes d'exercices sur plusieurs semaines avec des thématiques structurées
-                  </p>
-                </div>
-
-                <div className="row g-3">
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours?template=conjugaison-ce1');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-alphabet"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Conjugaison CE1</h6>
-                            <small className="text-muted">Apprentissage progressif de la conjugaison • 4 semaines • ~8 fiches</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">CE1</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours?template=grammaire-ce2');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-book"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Grammaire CE2</h6>
-                            <small className="text-muted">Révision complète de la grammaire • 6 semaines • ~12 fiches</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">CE2</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours?template=revision-ete-ce1');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-sun"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Révision été CE1</h6>
-                            <small className="text-muted">Programme de révision vacances • 8 semaines • ~8 fiches</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">CE1</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-                </div>
-
-                <div className="row g-3 mt-2">
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours?template=lecture-cp');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-eye"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Lecture CP</h6>
-                            <small className="text-muted">Apprentissage de la lecture progressive • 12 semaines • ~36 fiches</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">CP</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours?template=orthographe-cm1');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-pencil"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Orthographe CM1</h6>
-                            <small className="text-muted">Maîtrise de l'orthographe lexicale • 10 semaines • ~20 fiches</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">CM1</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours?template=preparation-6eme');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-mortarboard"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Préparation 6ème</h6>
-                            <small className="text-muted">Révision complète pour le collège • 6 semaines • ~18 fiches</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">CM2</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-                </div>
-
-                <div className="row g-3 mt-2 justify-content-center">
-                  <div className="col-12">
-                    <Card 
-                      className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}
-                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => {
-                        router.push('/generate/parcours');
-                      }}
-                    >
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-shrink-0 me-3">
-                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                              <i className="bi bi-plus-circle"></i>
-                            </div>
-                          </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 text-dark">Autres...</h6>
-                            <small className="text-muted">Créer un parcours personnalisé • Configurez votre parcours</small>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="badge bg-primary-subtle text-primary">Personnalisé</span>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </div>
-                </div>
-
-                <div className="text-center mt-4">
-                  <Alert variant="light" className="border">
-                    <i className="bi bi-info-circle me-2"></i>
-                    <strong>Nouveau !</strong> Les parcours vous permettent de générer automatiquement 
-                    une série de fiches d'exercices sur plusieurs semaines, parfaitement structurées 
-                    selon une progression pédagogique.
-                  </Alert>
-                </div>
-              </Card.Body>
-            </Card>
           </Col>
-        </Row>        {/* Preview Modal */}
+        </Row>
+        
+        {/* Preview Modal */}
         <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="lg" centered className="preview-modal">
           <Modal.Header closeButton>
             <Modal.Title>Aperçu de votre fiche</Modal.Title>
@@ -1743,14 +1588,22 @@ export default function GenerateFrenchPage() {
 
         {/* Success Modal */}
         <Modal show={showSuccessModal} onHide={regenerateSameSheet} size="lg" centered className="success-modal">
-          <Modal.Header closeButton>
-            <Modal.Title className="text-success">🎉 Fiche générée avec succès !</Modal.Title>
+          <Modal.Header closeButton style={{ borderBottom: '3px solid #10b981' }}>
+            <Modal.Title style={{ color: '#2c3e50' }}>
+              <span style={{ color: '#10b981', marginRight: '8px' }}>✓</span>
+              Fiche générée avec succès !
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Alert variant="success">
-              <h6>Votre fiche est prête !</h6>
+            <div style={{ 
+              backgroundColor: '#f8f9fa', 
+              padding: '20px', 
+              borderRadius: '10px',
+              border: '1px solid #e9ecef'
+            }}>
+              <h6 style={{ color: '#2c3e50', marginBottom: '15px' }}>Votre fiche est prête !</h6>
               <div className="mb-2">
-                <strong>Fiche de français</strong>
+                <strong style={{ color: '#495057' }}>Fiche de français</strong>
                 <div className="d-flex align-items-center gap-2 mt-2">
                   <Badge bg="light" text="dark" className="border">
                     {level}
@@ -1761,7 +1614,7 @@ export default function GenerateFrenchPage() {
                 </div>
               </div>
               <p className="mb-2">
-                <strong>Types d'exercices :</strong>
+                <strong style={{ color: '#495057' }}>Types d'exercices :</strong>
                 <div className="d-flex flex-wrap gap-1 mt-1">
                   {selectedTypes.map(t => (
                     <Badge key={t} bg="light" text="dark" className="border">
@@ -1795,39 +1648,111 @@ export default function GenerateFrenchPage() {
                   </div>
                 </div>
               )}
-            </Alert>
+            </div>
             
-            <div className="d-grid gap-2">
+            <div className="d-grid gap-2 mt-3">
               <button 
                 onClick={handleDownload}
-                className="btn btn-success btn-lg"
+                style={{
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
                 disabled={!generatedExercise?.id}
               >
                 📥 Télécharger la fiche PDF
               </button>
               <button 
                 onClick={handleViewPDF}
-                className="btn btn-outline-primary btn-lg"
+                style={{
+                  backgroundColor: 'white',
+                  color: '#495057',
+                  border: '2px solid #dee2e6',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f8f9fa';
+                  e.currentTarget.style.borderColor = '#adb5bd';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.borderColor = '#dee2e6';
+                }}
                 disabled={!generatedExercise?.id}
               >
                 👁️ Visualiser et imprimer
               </button>
             </div>
           </Modal.Body>
-          <Modal.Footer className="d-flex justify-content-between">
+          <Modal.Footer style={{ backgroundColor: '#f8f9fa', borderTop: '1px solid #e9ecef' }} className="d-flex justify-content-between">
             <div className="d-flex gap-2">
-              <Button variant="outline-secondary" onClick={createNewSheet}>
+              <button
+                onClick={createNewSheet}
+                style={{
+                  backgroundColor: 'white',
+                  color: '#495057',
+                  border: '1px solid #dee2e6',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+              >
                 ✨ Créer une nouvelle fiche
-              </Button>
+              </button>
               {lastGeneratedParams && (
-                <Button variant="outline-primary" onClick={restoreLastParameters}>
+                <button
+                  onClick={restoreLastParameters}
+                  style={{
+                    backgroundColor: 'white',
+                    color: '#495057',
+                    border: '1px solid #dee2e6',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                >
                   🔄 Régénérer la même fiche
-                </Button>
+                </button>
               )}
             </div>
-            <Button variant="secondary" onClick={regenerateSameSheet}>
+            <button
+              onClick={regenerateSameSheet}
+              style={{
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5a6268'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6c757d'}
+            >
               Fermer
-            </Button>
+            </button>
           </Modal.Footer>
         </Modal>        {/* Error Modal */}
         <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered className="error-modal">
