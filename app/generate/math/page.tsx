@@ -492,6 +492,22 @@ export default function GenerateMathPage() {
     setShowMesuresModal(true);
   };
 
+  // Function to get exercise icon based on exercise type
+  const getExerciseIcon = (exerciseKey: string) => {
+    const lowerKey = exerciseKey.toLowerCase();
+    if (lowerKey.includes("addition")) return "➕";
+    if (lowerKey.includes("soustraction")) return "➖";
+    if (lowerKey.includes("multiplication")) return "✖️";
+    if (lowerKey.includes("division")) return "➗";
+    if (lowerKey.includes("fraction")) return "½";
+    if (lowerKey.includes("probleme") || lowerKey.includes("problème")) return "🧠";
+    if (lowerKey.includes("nombre")) return "🔢";
+    if (lowerKey.includes("calcul")) return "🧮";
+    if (lowerKey.includes("géométrie") || lowerKey.includes("geometrie")) return "📐";
+    if (lowerKey.includes("mesure") || lowerKey.includes("grandeur")) return "📏";
+    return "📝";
+  };
+
   const handlePreview = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -1039,9 +1055,19 @@ export default function GenerateMathPage() {
                       </div>
                       
                       {/* Exercise Parameters */}
-                      {params && Object.keys(params).length > 0 ? (
+                      {params && Object.keys(params).length > 0 && params.exercises ? (
                         <div className="small text-muted">
-                          {params.exercises && <div>• Exercices : {params.exercises}</div>}
+                          {/* Parse exercises and display with icons */}
+                          {params.exercises.split(type === "Nombres" ? "|||" : ",").map((exercise: string, idx: number) => {
+                            const trimmedExercise = exercise.trim();
+                            if (!trimmedExercise) return null;
+                            return (
+                              <div key={idx} className="d-flex align-items-center gap-1 mb-1">
+                                <span>{getExerciseIcon(trimmedExercise)}</span>
+                                <span>{trimmedExercise}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="small text-muted">• Paramètres par défaut</div>
