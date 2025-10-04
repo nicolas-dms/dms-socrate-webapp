@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import Button from "react-bootstrap/Button";
 import ProtectedPage from "../../components/ProtectedPage";
+import styles from "./generate.module.css";
 
 export default function GeneratePage() {
   const router = useRouter();
@@ -10,30 +11,90 @@ export default function GeneratePage() {
 
   return (
     <ProtectedPage>
-      <div className="container mt-3" style={{ maxWidth: 600 }}>
-        {/* Enhanced Main Title */}
-        <div className="text-center mb-4">
-          <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
-            <i className="bi bi-pen me-2"></i>
-            {t('generate.title')}
-          </h2>
-          <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
-        </div>
-        
-        <div className="d-flex flex-column gap-3">
-            <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => router.push("/generate/french")}
-          >
-            {t('generate.french')}
-          </Button>          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => router.push("/generate/math")}
-          >
-            {t('generate.math')}
-          </Button>
+      <div className={styles.generatePage}>
+        <div className={`container ${styles.pageContainer}`}>
+          {/* Title Section */}
+          <div className={styles.titleSection}>
+            <h1 className={styles.mainTitle}>
+              <i className="bi bi-pencil-square"></i>
+              {t('generate.title')}
+            </h1>
+            <p className={styles.subtitle}>
+              Choisissez la matière pour commencer à créer vos exercices personnalisés
+            </p>
+            <hr className={styles.divider} />
+          </div>
+          
+          {/* Subject Cards */}
+          <div className={styles.subjectsContainer}>
+            {/* French Card */}
+            <div 
+              className={`${styles.subjectCard} ${styles.frenchCard}`}
+              onClick={() => router.push("/generate/french")}
+            >
+              <div className={`${styles.cardIconContainer} ${styles.frenchIcon}`}>
+                <i className="bi bi-book"></i>
+              </div>
+              <h2 className={styles.cardTitle}>
+                {t('generate.french')}
+              </h2>
+              <p className={styles.cardDescription}>
+                Créez des exercices de grammaire, conjugaison, orthographe et vocabulaire adaptés au niveau de vos élèves
+              </p>
+              <ul className={styles.featuresList}>
+                <li>
+                  <i className="bi bi-check-circle-fill"></i>
+                  <span>Grammaire et conjugaison</span>
+                </li>
+                <li>
+                  <i className="bi bi-check-circle-fill"></i>
+                  <span>Orthographe et dictées</span>
+                </li>
+                <li>
+                  <i className="bi bi-check-circle-fill"></i>
+                  <span>Lecture et compréhension</span>
+                </li>
+              </ul>
+              <Button className={`${styles.cardButton} ${styles.frenchButton}`}>
+                <span>Créer des exercices de français</span>
+                <i className="bi bi-arrow-right"></i>
+              </Button>
+            </div>
+
+            {/* Math Card */}
+            <div 
+              className={`${styles.subjectCard} ${styles.mathCard}`}
+              onClick={() => router.push("/generate/math")}
+            >
+              <div className={`${styles.cardIconContainer} ${styles.mathIcon}`}>
+                <i className="bi bi-calculator"></i>
+              </div>
+              <h2 className={styles.cardTitle}>
+                {t('generate.math')}
+              </h2>
+              <p className={styles.cardDescription}>
+                Générez des exercices de calcul, géométrie, problèmes et grandeurs pour tous les niveaux du primaire
+              </p>
+              <ul className={styles.featuresList}>
+                <li>
+                  <i className="bi bi-check-circle-fill"></i>
+                  <span>Calcul et opérations</span>
+                </li>
+                <li>
+                  <i className="bi bi-check-circle-fill"></i>
+                  <span>Géométrie et mesures</span>
+                </li>
+                <li>
+                  <i className="bi bi-check-circle-fill"></i>
+                  <span>Problèmes et logique</span>
+                </li>
+              </ul>
+              <Button className={`${styles.cardButton} ${styles.mathButton}`}>
+                <span>Créer des exercices de maths</span>
+                <i className="bi bi-arrow-right"></i>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </ProtectedPage>
