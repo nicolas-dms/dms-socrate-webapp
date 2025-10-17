@@ -9,14 +9,21 @@ export const previewBackendRequest = (
   level: string,
   duration: string,
   selectedTypes: string[],
-  theme: string
+  theme: string,
+  title?: string,
+  tags?: string[]
 ): ExerciceGenerationRequest => {
   const request = buildExerciceGenerationRequest(
     level,
     duration,
     selectedTypes,
     theme || "Exercices généraux",
-    ExerciceDomain.FRANCAIS
+    ExerciceDomain.FRANCAIS,
+    undefined, // exercice_type_params
+    undefined, // specific_requirements
+    undefined, // exercices_by_type
+    title, // exercice_title
+    tags // exercice_tags
   );
   
   console.log("🔍 Backend Request Preview:", request);

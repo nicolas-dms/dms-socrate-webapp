@@ -16,6 +16,7 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
     rating: 5,
     message: ''
   });
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
 
@@ -47,6 +48,7 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
       // Reset form and close modal after delay
       setTimeout(() => {
         setFeedback({ type: 'general', rating: 5, message: '' });
+        setHoveredRating(null);
         setShowModal(false);
         setSubmitStatus(null);
       }, 2000);
@@ -85,17 +87,24 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
       <Button
         variant="primary"
         style={getPositionStyles()}
-        onClick={() => setShowModal(true)}
+        onClick={() => {
+          setFeedback({ type: 'general', rating: 5, message: '' });
+          setHoveredRating(null);
+          setSubmitStatus(null);
+          setShowModal(true);
+        }}
         className="feedback-float-btn"
         title="Donner votre avis"
       >
-        💬 Votre Avis
+        <i className="bi bi-chat-dots me-2"></i>
+        Votre Avis
       </Button>
 
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            💬 Votre avis nous intéresse
+        <Modal.Header closeButton style={{ borderBottom: 'none', paddingBottom: '0' }}>
+          <Modal.Title style={{ display: 'flex', alignItems: 'center', color: '#2c3e50' }}>
+            <i className="bi bi-chat-dots me-2" style={{ fontSize: '1.5rem', color: '#3b82f6' }}></i>
+            Votre avis nous intéresse
           </Modal.Title>
         </Modal.Header>
         
@@ -117,10 +126,11 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
 
             <Row className="mb-3">
               <Col md={6}>
-                <Form.Label>Type de retour</Form.Label>
+                <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Type de retour</Form.Label>
                 <Form.Select
                   value={feedback.type}
                   onChange={(e) => setFeedback({ ...feedback, type: e.target.value as FeedbackSubmission['type'] })}
+                  style={{ borderColor: '#dee2e6', borderRadius: '8px' }}
                 >
                   <option value="general">Commentaire général</option>
                   <option value="bug">Signaler un bug</option>
@@ -130,31 +140,44 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
               </Col>
               
               <Col md={6}>
-                <Form.Label>Note (1-5 étoiles)</Form.Label>
+                <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Note (1-5 étoiles)</Form.Label>
                 <div className="d-flex gap-1 mt-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Button
-                      key={star}
-                      variant="link"
-                      className="p-0"
-                      style={{
-                        fontSize: '1.5rem',
-                        color: star <= (feedback.rating || 0) ? '#ffc107' : '#dee2e6',
-                        textDecoration: 'none'
-                      }}
-                      onClick={() => setFeedback({ ...feedback, rating: star })}
-                      type="button"
-                    >
-                      ⭐
-                    </Button>
-                  ))}
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const currentRating = hoveredRating !== null ? hoveredRating : (feedback.rating || 0);
+                    const isActive = star <= currentRating;
+                    
+                    return (
+                      <Button
+                        key={star}
+                        variant="link"
+                        className="p-0"
+                        style={{
+                          fontSize: '1.8rem',
+                          color: isActive ? '#ffc107' : '#dee2e6',
+                          textDecoration: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                          textShadow: isActive ? '0 2px 4px rgba(255, 193, 7, 0.3)' : 'none',
+                          filter: isActive ? 'none' : 'grayscale(1) brightness(1.5)'
+                        }}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(null)}
+                        onClick={() => setFeedback({ ...feedback, rating: star })}
+                        type="button"
+                        title={`${star} étoile${star > 1 ? 's' : ''}`}
+                      >
+                        ⭐
+                      </Button>
+                    );
+                  })}
                 </div>
-                <small className="text-muted">Note: {feedback.rating}/5</small>
+                <small className="text-muted">Note: {feedback.rating || 0}/5</small>
               </Col>
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label>Votre message</Form.Label>
+              <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Votre message</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={4}
@@ -162,6 +185,7 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
                 value={feedback.message}
                 onChange={(e) => setFeedback({ ...feedback, message: e.target.value })}
                 required
+                style={{ borderColor: '#dee2e6', borderRadius: '8px' }}
               />
             </Form.Group>
 
@@ -170,15 +194,38 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
               Votre retour est anonyme et nous aide à améliorer l'application.
             </small>
           </Modal.Body>
-          
-          <Modal.Footer>
-            <Button variant="outline-secondary" onClick={() => setShowModal(false)}>
+          <Modal.Footer style={{ borderTop: 'none', paddingTop: '0' }}>
+            <Button 
+              variant="outline-secondary" 
+              onClick={() => {
+                setHoveredRating(null);
+                setShowModal(false);
+              }}
+              style={{ borderRadius: '8px' }}
+            >
               Annuler
             </Button>
             <Button 
-              variant="primary" 
               type="submit"
               disabled={isSubmitting || !feedback.message?.trim()}
+              style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '8px',
+                padding: '8px 20px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting && feedback.message?.trim()) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               {isSubmitting ? (
                 <>
@@ -189,7 +236,7 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
                 </>
               ) : (
                 <>
-                  <i className="fas fa-paper-plane me-2"></i>
+                  <i className="bi bi-send me-2"></i>
                   Envoyer
                 </>
               )}

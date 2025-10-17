@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import { formatExercisesForModal } from '../types/frenchExerciseNaming';
 
 export interface OrthographyParams {
   words: string;
@@ -16,49 +17,6 @@ interface OrthographyModalProps {
   level: string; // CE1, CE2, etc.
 }
 
-interface OrthographyRule {
-  key: string;
-  label: string;
-  isCustom?: boolean;
-}
-
-const ORTHOGRAPHY_RULES: Record<string, OrthographyRule[]> = {
-  CP: [
-    { key: "sons_simples", label: "Sons simples (a, e, i, o, u)" },
-    { key: "consonnes", label: "Consonnes de base" },
-    { key: "syllabes", label: "Syllabes simples" },
-    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
-  ],
-  CE1: [
-    { key: "sons_complexes", label: "Sons complexes (ou, on, an, in)" },
-    { key: "lettres_muettes", label: "Lettres muettes" },
-    { key: "doubles_consonnes", label: "Doubles consonnes" },
-    { key: "accents", label: "Les accents" },
-    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
-  ],
-  CE2: [
-    { key: "homophones", label: "Homophones (a/à, et/est, son/sont)" },
-    { key: "pluriels", label: "Pluriels en -s, -x" },
-    { key: "feminins", label: "Féminins des mots" },
-    { key: "g_gu", label: "g/gu devant e, i" },
-    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
-  ],
-  CM1: [
-    { key: "homophones_complexes", label: "Homophones complexes" },
-    { key: "accord_participe", label: "Accord du participe passé" },
-    { key: "mots_invariables", label: "Mots invariables" },
-    { key: "prefixes_suffixes", label: "Préfixes et suffixes" },
-    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
-  ],
-  CM2: [
-    { key: "accord_participe_avance", label: "Accord du participe passé avancé" },
-    { key: "subjonctif", label: "Terminaisons du subjonctif" },
-    { key: "mots_complexes", label: "Orthographe des mots complexes" },
-    { key: "etymologie", label: "Étymologie et orthographe" },
-    { key: "dictee", label: "Dictée de mots personnalisés", isCustom: true }
-  ]
-};
-
 export default function OrthographyModal({ 
   show, 
   onHide, 
@@ -67,6 +25,9 @@ export default function OrthographyModal({
   level 
 }: OrthographyModalProps) {
   const { t } = useTranslation();
+  
+  // Load orthography rules from configuration - memoized to prevent infinite loops
+  const orthographyRules = useMemo(() => formatExercisesForModal('orthographe', level), [level]);
   
   const [customWords, setCustomWords] = useState("");
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
@@ -90,7 +51,7 @@ export default function OrthographyModal({
   }, [initialParams, level]);
 
   const toggleRule = (ruleKey: string) => {
-    const rule = currentRules.find(r => r.key === ruleKey);
+    const rule = orthographyRules.find(r => r.key === ruleKey);
     
     if (rule?.isCustom) {
       // If selecting custom dictée
@@ -154,8 +115,6 @@ export default function OrthographyModal({
     setSelectedRules([]);
   };
 
-  const currentRules = ORTHOGRAPHY_RULES[level as keyof typeof ORTHOGRAPHY_RULES] || ORTHOGRAPHY_RULES.CE1;
-
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
       <style jsx>{`
@@ -184,7 +143,7 @@ export default function OrthographyModal({
             </h6>
             
             <Row className="mb-3">
-              {currentRules.map(rule => (
+              {orthographyRules.map(rule => (
                 <Col md={6} key={rule.key} className="mb-2">
                   <div 
                     className={`selector-card p-2 border rounded text-center ${

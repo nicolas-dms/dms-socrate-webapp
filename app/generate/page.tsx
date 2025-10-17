@@ -14,7 +14,7 @@ export default function GeneratePage() {
         {/* Enhanced Main Title */}
         <div className="text-center mb-4">
           <h1 className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '2rem' }}>
-            <i className="bi bi-pen me-3" style={{ color: '#fbbf24' }}></i>
+            <i className="bi bi-pencil-square me-3" style={{ color: '#495057' }}></i>
             {t('generate.title')}
           </h1>
           <p className="text-muted" style={{ fontSize: '1rem', maxWidth: '700px', margin: '0 auto' }}>
@@ -181,52 +181,8 @@ export default function GeneratePage() {
           </Col>
         </Row>
 
-        {/* Additional Info Section */}
-        <Row className="mt-4">
-          <Col lg={10} className="mx-auto">
-            <Card 
-              className="border-0 shadow-sm"
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '15px',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <Card.Body className="p-3">
-                <Row className="align-items-center">
-                  <Col md={8}>
-                    <h6 className="fw-semibold mb-1" style={{ color: '#2c3e50' }}>
-                      <i className="bi bi-lightbulb text-warning me-2"></i>
-                      Besoin d'un parcours complet ?
-                    </h6>
-                    <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
-                      Créez un parcours personnalisé avec plusieurs fiches programmées sur plusieurs semaines
-                    </p>
-                  </Col>
-                  <Col md={4} className="text-md-end mt-2 mt-md-0">
-                    <Button
-                      variant="outline-primary"
-                      style={{
-                        borderRadius: '20px',
-                        padding: '0.5rem 1.5rem',
-                        fontWeight: '600',
-                        borderWidth: '2px',
-                        fontSize: '0.9rem'
-                      }}
-                      onClick={() => router.push("/generate/parcours")}
-                    >
-                      <i className="bi bi-collection me-2"></i>
-                      Parcours
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
         {/* Help Section */}
-        <div className="text-center mt-4">
+        <div className="text-center mt-5">
           <p className="text-muted" style={{ fontSize: '0.9rem' }}>
             <i className="bi bi-info-circle me-2"></i>
             Les exercices sont générés instantanément et adaptés au niveau sélectionné

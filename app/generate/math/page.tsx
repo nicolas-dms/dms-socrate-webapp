@@ -16,6 +16,8 @@ import CalculModal, { CalculParams } from "../../../components/CalculModal";
 import NombresModal from "../../../components/NombresModal";
 import GeometrieModal, { GeometrieParams } from "../../../components/GeometrieModal";
 import MesuresModal, { MesuresParams } from "../../../components/MesuresModal";
+import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
+import { getMathExerciseLabel } from "../../../types/mathExerciseNaming";
 
 const levels = ["CP", "CE1", "CE2", "CM1", "CM2"];
 const durations = ["20 min", "30 min", "40 min"];
@@ -49,6 +51,7 @@ export default function GenerateMathPage() {
   // Generation workflow modals
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showGeneratingModal, setShowGeneratingModal] = useState(false);
+  const [generationCompleted, setGenerationCompleted] = useState(false); // New state for completion
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showPDFViewerModal, setShowPDFViewerModal] = useState(false);
@@ -59,6 +62,59 @@ export default function GenerateMathPage() {
   const [error, setError] = useState<string | null>(null);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  // Fiche metadata (title and tags)
+  const [ficheTitle, setFicheTitle] = useState("");
+  const [ficheTags, setFicheTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+
+  // Helper functions for tags
+  const addTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !ficheTags.includes(newTag)) {
+      setFicheTags([...ficheTags, newTag]);
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setFicheTags(ficheTags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
+  // Reset modal metadata when closing
+  const handleClosePreviewModal = () => {
+    setShowPreviewModal(false);
+    setFicheTitle("");
+    setFicheTags([]);
+    setTagInput("");
+  };
+
+  // Helper function to get configured exercise labels for display
+  const getConfiguredExerciseLabels = (type: string): string => {
+    const params = exerciceTypeParams[type];
+    if (!params || !params.exercises) return "Configuré";
+    
+    const delimiter = type === "Nombres" ? "|||" : ",";
+    const exercisesList = params.exercises.split(delimiter)
+      .map((ex: string) => ex.trim())
+      .filter((ex: string) => ex !== '');
+    
+    if (exercisesList.length === 0) return "Configuré";
+    
+    // Show first 2 exercises, then +N for remaining
+    if (exercisesList.length <= 2) {
+      return exercisesList.join(", ");
+    } else {
+      return exercisesList.slice(0, 2).join(", ") + ` +${exercisesList.length - 2}`;
+    }
+  };
 
   const mathDomains = [
     { 
@@ -558,7 +614,9 @@ export default function GenerateMathPage() {
         ExerciceDomain.MATHEMATIQUES,
         exerciceTypeParams,
         undefined, // specific requirements
-        exercicesByType // Add the exercices_by_type parameter
+        exercicesByType, // Add the exercices_by_type parameter
+        ficheTitle || undefined, // Custom title
+        ficheTags.length > 0 ? ficheTags : undefined // Tags
       );
       
       console.log('Math generation request:', request);
@@ -572,8 +630,16 @@ export default function GenerateMathPage() {
       if (response.id) {
         // Store the session response for download handling
         setExercise(response);
-        setShowGeneratingModal(false);
-        setShowSuccessModal(true);
+        
+        // Show completion at 100% for 2 seconds
+        setGenerationCompleted(true);
+        
+        // Wait 2 seconds before showing success modal
+        setTimeout(() => {
+          setShowGeneratingModal(false);
+          setGenerationCompleted(false); // Reset for next time
+          setShowSuccessModal(true);
+        }, 2000);
         
         // Use a fiche from subscription allowance
         await useCredit();
@@ -908,7 +974,7 @@ export default function GenerateMathPage() {
                                   Nombres
                                 </div>
                                 <div style={{ fontSize: '0.7rem' }} className="text-muted">
-                                  Configuré
+                                  {getConfiguredExerciseLabels("Nombres")}
                                 </div>
                               </div>
                               <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
@@ -944,7 +1010,7 @@ export default function GenerateMathPage() {
                                   Calculs
                                 </div>
                                 <div style={{ fontSize: '0.7rem' }} className="text-muted">
-                                  Configuré
+                                  {getConfiguredExerciseLabels("Calculs")}
                                 </div>
                               </div>
                               <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
@@ -980,7 +1046,7 @@ export default function GenerateMathPage() {
                                   Grandeurs
                                 </div>
                                 <div style={{ fontSize: '0.7rem' }} className="text-muted">
-                                  Configuré
+                                  {getConfiguredExerciseLabels("Grandeurs")}
                                 </div>
                               </div>
                               <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
@@ -1016,7 +1082,7 @@ export default function GenerateMathPage() {
                                   Géométrie
                                 </div>
                                 <div style={{ fontSize: '0.7rem' }} className="text-muted">
-                                  Configuré
+                                  {getConfiguredExerciseLabels("Geometrie")}
                                 </div>
                               </div>
                               <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
@@ -1081,162 +1147,230 @@ export default function GenerateMathPage() {
         </Row>
 
         {/* Preview Modal */}
-        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="lg" centered className="preview-modal">
-          <Modal.Header closeButton>
-            <Modal.Title>Aperçu de votre fiche</Modal.Title>
+        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered>
+          <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
+            <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
+              Aperçu de votre fiche
+            </Modal.Title>
           </Modal.Header>
-          <Modal.Body className="p-4">
+          <Modal.Body style={{ padding: '1.5rem' }}>
             <div>
-              {/* Basic Information */}
-              <div className="mb-4">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span className="fw-semibold">Niveau :</span>
-                  <Badge bg="primary" className="fs-6">{level}</Badge>
+              {/* Fiche Title Input */}
+              <div className="mb-3">
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
+                  Titre de la fiche <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ex: Exercices de calcul mental"
+                  value={ficheTitle}
+                  onChange={(e) => setFicheTitle(e.target.value)}
+                  style={{ fontSize: '0.9rem' }}
+                />
+              </div>
+
+              {/* Tags Input */}
+              <div className="mb-3">
+                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
+                  Tags <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
+                </label>
+                <div className="d-flex gap-2 align-items-center">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Ajouter un tag..."
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                    style={{ fontSize: '0.9rem' }}
+                  />
+                  <Button 
+                    variant="outline-secondary" 
+                    size="sm" 
+                    onClick={addTag}
+                    disabled={!tagInput.trim()}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    Ajouter
+                  </Button>
                 </div>
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span className="fw-semibold">Durée :</span>
-                  <Badge bg="secondary" className="fs-6">{duration}</Badge>
+                {ficheTags.length > 0 && (
+                  <div className="d-flex gap-2 flex-wrap mt-2">
+                    {ficheTags.map(tag => (
+                      <span 
+                        key={tag} 
+                        className="badge d-flex align-items-center gap-1" 
+                        style={{ 
+                          fontSize: '0.8rem', 
+                          backgroundColor: '#e3f2fd', 
+                          color: '#1976d2',
+                          padding: '0.35rem 0.6rem'
+                        }}
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          className="btn-close"
+                          style={{ fontSize: '0.6rem' }}
+                          onClick={() => removeTag(tag)}
+                          aria-label={`Remove ${tag}`}
+                        ></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
+
+              {/* Basic Information - Compact */}
+              <div className="d-flex gap-3 mb-3">
+                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                  <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
+                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                    {level}
+                  </Badge>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                  <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
+                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                    {duration}
+                  </Badge>
                 </div>
               </div>
 
-              {/* Selected Exercises */}
-              <div className="mb-4">
-                <h6 className="fw-bold mb-3">Exercices sélectionnés :</h6>
-                {selectedTypes.map(type => {
-                  const exerciseInfo = mathDomains.find(domain => domain.key === type);
-                  const params = exerciceTypeParams[type];
-                  
-                  return (
-                    <div key={type} className="border rounded p-3 mb-2 bg-light">
-                      <div className="fw-semibold text-primary mb-1">
-                        {exerciseInfo?.label}
-                      </div>
-                      
-                      {/* Exercise Parameters */}
-                      {params && Object.keys(params).length > 0 ? (
-                        <div className="small text-muted">
-                          {params.exercises && <div>• Exercices : {params.exercises}</div>}
+              {/* Selected Exercises - Compact List with Labels */}
+              <div>
+                <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
+                  Exercices sélectionnés
+                </h6>
+                <div style={{ fontSize: '0.85rem' }}>
+                  {selectedTypes.map((type, index) => {
+                    const exerciseInfo = mathDomains.find(domain => domain.key === type);
+                    return (
+                      <div 
+                        key={type} 
+                        style={{ 
+                          padding: '0.5rem 0',
+                          borderBottom: index < selectedTypes.length - 1 ? '1px solid #f0f0f0' : 'none'
+                        }}
+                      >
+                        <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
+                          {exerciseInfo?.label}
                         </div>
-                      ) : (
-                        <div className="small text-muted">• Paramètres par défaut</div>
-                      )}
-                    </div>
-                  );
-                })}
+                        <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
+                          {getConfiguredExerciseLabels(type)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowPreviewModal(false)}>
-              Modifier les paramètres
+          <Modal.Footer style={{ borderTop: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
+            <Button 
+              variant="outline-secondary" 
+              onClick={handleClosePreviewModal}
+              style={{ fontSize: '0.9rem' }}
+            >
+              Modifier
             </Button>
             <Button 
-              variant="success" 
               onClick={handleConfirmGeneration}
               disabled={!canGenerateMore()}
+              style={{
+                background: canGenerateMore() ? 'linear-gradient(135deg, #60a5fa, #3b82f6)' : undefined,
+                border: 'none',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                color: 'white'
+              }}
             >
-              {!canGenerateMore() ? 'Limite d\'abonnement atteinte' : 'Confirmer et générer'}
+              {!canGenerateMore() ? 'Limite atteinte' : 'Confirmer et générer'}
             </Button>
           </Modal.Footer>
         </Modal>
 
         {/* Generating Modal */}
-        <Modal show={showGeneratingModal} backdrop="static" keyboard={false} centered className="generation-loading">
-          <Modal.Body className="text-center py-4">
-            <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
-              <span className="visually-hidden">Génération en cours...</span>
-            </div>
-            <h5>Génération de votre fiche en cours...</h5>
-            <p className="text-muted mb-0">Veuillez patienter, cela peut prendre jusqu'à 2 minutes</p>
-          </Modal.Body>
-        </Modal>
+        <GenerationLoadingModal show={showGeneratingModal} completed={generationCompleted} />
 
         {/* Success Modal */}
-        <Modal show={showSuccessModal} onHide={regenerateSameSheet} size="lg" centered className="success-modal">
-          <Modal.Header closeButton style={{ borderBottom: '3px solid #10b981' }}>
-            <Modal.Title style={{ color: '#2c3e50' }}>
-              <span style={{ color: '#10b981', marginRight: '8px' }}>✓</span>
+        <Modal show={showSuccessModal} onHide={regenerateSameSheet} centered>
+          <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
+            <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
+              <span style={{ color: '#3b82f6', marginRight: '6px', fontSize: '1.2rem' }}>✓</span>
               Fiche générée avec succès !
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            <div style={{ 
-              backgroundColor: '#f8f9fa', 
-              padding: '20px', 
-              borderRadius: '10px',
-              border: '1px solid #e9ecef'
-            }}>
-              <h6 style={{ color: '#2c3e50', marginBottom: '15px' }}>Votre fiche est prête !</h6>
-              <div className="mb-2">
-                <strong style={{ color: '#495057' }}>Fiche de mathématiques</strong>
-                <div className="d-flex align-items-center gap-2 mt-2">
-                  <Badge bg="light" text="dark" className="border">
+          <Modal.Body style={{ padding: '1.5rem' }}>
+            <div>
+              {/* Success Message */}
+              <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '1rem', textAlign: 'center' }}>
+                Votre fiche est prête !
+              </p>
+
+              <hr style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid #e9ecef' }} />
+
+              {/* Level and Duration */}
+              <div className="d-flex gap-3 mb-3">
+                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                  <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
+                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
                     {level}
                   </Badge>
-                  <Badge bg="light" text="dark" className="border">
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                  <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
+                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
                     {duration}
                   </Badge>
                 </div>
               </div>
-              <p className="mb-2">
-                <strong style={{ color: '#495057' }}>Types d'exercices :</strong>
-                <div className="d-flex flex-wrap gap-1 mt-1">
+
+              {/* Exercise Types */}
+              <div className="mb-3">
+                <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
+                  Types d'exercices
+                </h6>
+                <div className="d-flex flex-wrap gap-2">
                   {selectedTypes.map(t => (
-                    <Badge key={t} bg="light" text="dark" className="border">
+                    <Badge key={t} bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500', padding: '0.4rem 0.6rem' }}>
                       {mathDomains.find(domain => domain.key === t)?.label}
                     </Badge>
                   ))}
                 </div>
-              </p>
-            </div>
-            {exercise && exercise.pdf_url && (
-              <div className="d-grid gap-2 mt-3">
-                <button
-                  onClick={handleDownload}
-                  style={{
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
-                >
-                  <i className="bi bi-download me-2"></i>
-                  Télécharger le PDF
-                </button>
-                <button
-                  onClick={handleViewPDF}
-                  style={{
-                    backgroundColor: 'white',
-                    color: '#495057',
-                    border: '2px solid #dee2e6',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f8f9fa';
-                    e.currentTarget.style.borderColor = '#adb5bd';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
-                    e.currentTarget.style.borderColor = '#dee2e6';
-                  }}
-                >
-                  <i className="bi bi-eye me-2"></i>
-                  Visualiser et imprimer
-                </button>
               </div>
-            )}
+
+              <hr style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid #e9ecef' }} />
+
+              {/* Action Buttons */}
+              {exercise && exercise.pdf_url && (
+                <div className="d-grid gap-2">
+                  <Button 
+                    onClick={handleDownload}
+                    style={{
+                      background: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
+                      border: 'none',
+                      fontSize: '0.9rem',
+                      fontWeight: '500',
+                      padding: '0.6rem',
+                      color: 'white'
+                    }}
+                  >
+                    📥 Télécharger le PDF
+                  </Button>
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={handleViewPDF}
+                    style={{ fontSize: '0.9rem', padding: '0.6rem' }}
+                  >
+                    👁️ Visualiser et imprimer
+                  </Button>
+                </div>
+              )}
+            </div>
           </Modal.Body>
         </Modal>
 

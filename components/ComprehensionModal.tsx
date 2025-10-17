@@ -1,16 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-
-interface ComprehensionType {
-  id: string;
-  label: string;
-}
-
-interface ComprehensionData {
-  [key: string]: ComprehensionType[];
-}
+import { formatExercisesForModal } from '../types/frenchExerciseNaming';
 
 export interface ComprehensionParams {
   types: string;
@@ -25,34 +17,6 @@ interface ComprehensionModalProps {
   initialParams?: ComprehensionParams;
   maxExercises: number;
 }
-
-const comprehensionData: ComprehensionData = {
-  "CP": [
-    { "id": "cp_questions_generales", "label": "Questions générales" },
-    { "id": "cp_info_explicit", "label": "Trouver les infos du texte" },
-    { "id": "cp_ordonner_evenements", "label": "Remettre l'histoire en ordre" }
-  ],
-  "CE1": [
-    { "id": "ce1_questions_generales", "label": "Questions générales" },
-    { "id": "ce1_vrai_faux", "label": "Vrai ou faux" }
-  ],
-  "CE2": [
-    { "id": "ce2_questions_generales", "label": "Questions générales" },
-    { "id": "ce2_repere_inference", "label": "Repérer et déduire" },
-    { "id": "ce2_personnage_action", "label": "Associer personnage et action" }
-  ],
-  "CM1": [
-    { "id": "cm1_questions_generales", "label": "Questions générales" },
-    { "id": "cm1_inference", "label": "Deviner sentiments ou intentions" },
-    { "id": "cm1_theme_morale", "label": "Trouver le thème ou la morale" }
-  ],
-  "CM2": [
-    { "id": "cm2_questions_generales", "label": "Questions générales" },
-    { "id": "cm2_point_de_vue", "label": "Analyser le point de vue" },
-    { "id": "cm2_comparer_passages", "label": "Comparer deux passages" },
-    { "id": "cm2_implicite", "label": "Comprendre l'implicite" }
-  ]
-};
 
 // Modality recommendations (hidden for now)
 // const modalityRecommendations: { [key: string]: string } = {
@@ -81,10 +45,11 @@ const ComprehensionModal: React.FC<ComprehensionModalProps> = ({
   initialParams,
   maxExercises
 }) => {
+  // Load comprehension types from configuration - memoized to prevent infinite loops
+  const availableTypes = useMemo(() => formatExercisesForModal('comprehension', currentLevel), [currentLevel]);
+  
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   // const [modalities, setModalities] = useState<{ [key: string]: string }>({}); // Hidden but preserved
-
-  const availableTypes = comprehensionData[currentLevel] || [];
 
   // Initialize with previous selection or default
   useEffect(() => {
@@ -101,7 +66,7 @@ const ComprehensionModal: React.FC<ComprehensionModalProps> = ({
     } else {
       // Default selection: first exercise type
       if (availableTypes.length > 0) {
-        const defaultType = availableTypes[0].id;
+        const defaultType = availableTypes[0].key;
         setSelectedTypes([defaultType]);
         // const defaultModality = modalityRecommendations[defaultType] || 'defaut';
         // setModalities({ [defaultType]: defaultModality });
@@ -174,16 +139,16 @@ const ComprehensionModal: React.FC<ComprehensionModalProps> = ({
 
         <div className="row">
           {availableTypes.map((type) => (
-            <div key={type.id} className="col-12 mb-3">
-              <div className={`card h-100 ${selectedTypes.includes(type.id) ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'}`}>
+            <div key={type.key} className="col-12 mb-3">
+              <div className={`card h-100 ${selectedTypes.includes(type.key) ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'}`}>
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center">
                       <Form.Check
                         type="checkbox"
-                        id={`comprehension-${type.id}`}
-                        checked={selectedTypes.includes(type.id)}
-                        onChange={() => handleTypeToggle(type.id)}
+                        id={`comprehension-${type.key}`}
+                        checked={selectedTypes.includes(type.key)}
+                        onChange={() => handleTypeToggle(type.key)}
                         className="me-3"
                       />
                       <div>
@@ -192,12 +157,12 @@ const ComprehensionModal: React.FC<ComprehensionModalProps> = ({
                     </div>
 
                     {/* Modality selector - Hidden for now but structure preserved */}
-                    {false && selectedTypes.includes(type.id) && (
+                    {false && selectedTypes.includes(type.key) && (
                       <div style={{ minWidth: '120px' }}>
                         <Form.Select
                           size="sm"
-                          // value={modalities[type.id] || 'defaut'}
-                          // onChange={(e) => handleModalityChange(type.id, e.target.value)}
+                          // value={modalities[type.key] || 'defaut'}
+                          // onChange={(e) => handleModalityChange(type.key, e.target.value)}
                         >
                           <option value="defaut">Par défaut</option>
                           <option value="qcm">QCM</option>

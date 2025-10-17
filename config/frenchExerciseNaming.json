@@ -1,0 +1,489 @@
+{
+  "grammaire": [
+    {
+      "id": "majuscules",
+      "label": "Majuscules et points",
+      "levels": ["CP"],
+      "description": "Utilisation des majuscules et des points"
+    },
+    {
+      "id": "masculin_feminin",
+      "label": "Masculin/Féminin",
+      "levels": ["CP", "CE1"],
+      "description": "Identifier et utiliser le genre des mots"
+    },
+    {
+      "id": "singulier_pluriel",
+      "label": "Singulier-Pluriel",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Accords en nombre"
+    },
+    {
+      "id": "sujet_verbe",
+      "label": "Sujet-Verbe",
+      "levels": ["CE1", "CE2", "CM1"],
+      "description": "Identifier le sujet et le verbe"
+    },
+    {
+      "id": "actif_passif",
+      "label": "Voix active et passive",
+      "levels": ["CE1"],
+      "description": "Voix active et passive"
+    },
+    {
+      "id": "noms_propres_communs",
+      "label": "Noms Propres/Communs",
+      "levels": ["CE1"],
+      "description": "Distinguer noms propres et communs"
+    },
+    {
+      "id": "determinants",
+      "label": "Les déterminants",
+      "levels": ["CE1"],
+      "description": "Identifier et utiliser les déterminants"
+    },
+    {
+      "id": "accord_adjectif",
+      "label": "Accord des adjectifs",
+      "levels": ["CE2", "CM1", "CM2"],
+      "description": "Accords de l'adjectif qualificatif"
+    },
+    {
+      "id": "complement",
+      "label": "Compléments",
+      "levels": ["CE2", "CM2"],
+      "description": "Compléments du verbe et de phrase"
+    },
+    {
+      "id": "propositions",
+      "label": "Propositions",
+      "levels": ["CM1"],
+      "description": "Propositions indépendantes et subordonnées"
+    },
+    {
+      "id": "voix_active_passive",
+      "label": "Voix active/passive",
+      "levels": ["CM2"],
+      "description": "Transformation voix active et passive"
+    }
+  ],
+  "conjugaison": [
+    {
+      "id": "present",
+      "label": "Présent",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Conjugaison au présent de l'indicatif"
+    },
+    {
+      "id": "futur",
+      "label": "Futur simple",
+      "levels": ["CE1", "CE2"],
+      "description": "Conjugaison au futur simple"
+    },
+    {
+      "id": "imparfait",
+      "label": "Imparfait",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "description": "Conjugaison à l'imparfait"
+    },
+    {
+      "id": "passe_compose",
+      "label": "Passé composé",
+      "levels": ["CM1", "CM2"],
+      "description": "Conjugaison au passé composé"
+    },
+    {
+      "id": "passe_simple",
+      "label": "Passé simple",
+      "levels": ["CM2"],
+      "description": "Conjugaison au passé simple"
+    },
+    {
+      "id": "conditionnel",
+      "label": "Conditionnel",
+      "levels": ["CM2"],
+      "description": "Conjugaison au conditionnel présent"
+    },
+    {
+      "id": "les_temps",
+      "label": "Les temps",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Identifier et différencier les temps verbaux"
+    },
+    {
+      "id": "infinitif",
+      "label": "L'infinitif",
+      "levels": ["CE1", "CE2"],
+      "description": "Reconnaître et utiliser l'infinitif des verbes"
+    },
+    {
+      "id": "les_groupes",
+      "label": "Les groupes",
+      "levels": ["CE2", "CM1"],
+      "description": "Identifier les groupes de verbes (1er, 2ème, 3ème)"
+    }
+  ],
+  "verb_groups": [
+    {
+      "id": "1er_groupe_simple",
+      "label": "1er groupe - verbes simples",
+      "levels": ["CP"],
+      "examples": "être, avoir, aller..."
+    },
+    {
+      "id": "1er_groupe",
+      "label": "1er groupe (verbes en -er)",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "examples": "aimer, chanter, jouer..."
+    },
+    {
+      "id": "2eme_groupe",
+      "label": "2ème groupe (verbes en -ir)",
+      "levels": ["CE2", "CM1", "CM2"],
+      "examples": "finir, grandir, choisir..."
+    },
+    {
+      "id": "3eme_groupe",
+      "label": "3ème groupe (verbes irréguliers)",
+      "levels": ["CM1", "CM2"],
+      "examples": "être, avoir, aller, faire..."
+    },
+    {
+      "id": "verbes_frequents",
+      "label": "Verbes fréquents",
+      "levels": ["CE1", "CE2"],
+      "examples": "être, avoir, aller, faire..."
+    }
+  ],
+  "orthographe": [
+    {
+      "id": "sons_simples",
+      "label": "Sons simples (a, e, i, o, u)",
+      "levels": ["CP"],
+      "description": "Reconnaissance des sons simples"
+    },
+    {
+      "id": "consonnes",
+      "label": "Consonnes de base",
+      "levels": ["CP"],
+      "description": "Consonnes simples"
+    },
+    {
+      "id": "syllabes",
+      "label": "Syllabes simples",
+      "levels": ["CP"],
+      "description": "Décomposition syllabique"
+    },
+    {
+      "id": "sons_complexes",
+      "label": "Sons complexes (ou, on, an, in)",
+      "levels": ["CE1"],
+      "description": "Sons composés"
+    },
+    {
+      "id": "lettres_muettes",
+      "label": "Lettres muettes",
+      "levels": ["CE1"],
+      "description": "Lettres finales muettes"
+    },
+    {
+      "id": "doubles_consonnes",
+      "label": "Doubles consonnes",
+      "levels": ["CE1"],
+      "description": "Consonnes doubles (ll, tt, pp...)"
+    },
+    {
+      "id": "accents",
+      "label": "Les accents",
+      "levels": ["CE1"],
+      "description": "Accents aigus, graves, circonflexes"
+    },
+    {
+      "id": "homophones",
+      "label": "Homophones (a/à, et/est, son/sont)",
+      "levels": ["CE2"],
+      "description": "Homophones grammaticaux simples"
+    },
+    {
+      "id": "pluriels",
+      "label": "Pluriels en -s, -x",
+      "levels": ["CE2"],
+      "description": "Formation des pluriels"
+    },
+    {
+      "id": "feminins",
+      "label": "Féminins des mots",
+      "levels": ["CE2"],
+      "description": "Formation du féminin"
+    },
+    {
+      "id": "g_gu",
+      "label": "g/gu devant e, i",
+      "levels": ["CE2"],
+      "description": "Utilisation de g et gu"
+    },
+    {
+      "id": "homophones_complexes",
+      "label": "Homophones complexes",
+      "levels": ["CM1"],
+      "description": "Homophones grammaticaux avancés"
+    },
+    {
+      "id": "accord_participe",
+      "label": "Accord du participe passé",
+      "levels": ["CM1"],
+      "description": "Règles d'accord du participe passé"
+    },
+    {
+      "id": "mots_invariables",
+      "label": "Mots invariables",
+      "levels": ["CM1"],
+      "description": "Liste de mots invariables"
+    },
+    {
+      "id": "prefixes_suffixes",
+      "label": "Préfixes et suffixes",
+      "levels": ["CM1"],
+      "description": "Formation des mots par affixes"
+    },
+    {
+      "id": "accord_participe_avance",
+      "label": "Accord du participe passé avancé",
+      "levels": ["CM2"],
+      "description": "Cas complexes d'accord"
+    },
+    {
+      "id": "subjonctif",
+      "label": "Terminaisons du subjonctif",
+      "levels": ["CM2"],
+      "description": "Orthographe du subjonctif"
+    },
+    {
+      "id": "mots_complexes",
+      "label": "Orthographe des mots complexes",
+      "levels": ["CM2"],
+      "description": "Mots difficiles"
+    },
+    {
+      "id": "etymologie",
+      "label": "Étymologie et orthographe",
+      "levels": ["CM2"],
+      "description": "Origine des mots et orthographe"
+    },
+    {
+      "id": "dictee",
+      "label": "Dictée de mots personnalisés",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Dictée avec mots personnalisés",
+      "isCustom": true
+    }
+  ],
+  "comprehension": [
+    {
+      "id": "questions_generales",
+      "label": "Questions générales",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Questions de compréhension générale"
+    },
+    {
+      "id": "info_explicit",
+      "label": "Trouver les infos du texte",
+      "levels": ["CP"],
+      "description": "Informations explicites"
+    },
+    {
+      "id": "ordonner_evenements",
+      "label": "Remettre l'histoire en ordre",
+      "levels": ["CP"],
+      "description": "Chronologie des événements"
+    },
+    {
+      "id": "vrai_faux",
+      "label": "Vrai ou faux",
+      "levels": ["CE1"],
+      "description": "Affirmations à vérifier"
+    },
+    {
+      "id": "repere_inference",
+      "label": "Repérer et déduire",
+      "levels": ["CE2"],
+      "description": "Inférences simples"
+    },
+    {
+      "id": "personnage_action",
+      "label": "Associer personnage et action",
+      "levels": ["CE2"],
+      "description": "Relations personnages-actions"
+    },
+    {
+      "id": "inference",
+      "label": "Deviner sentiments ou intentions",
+      "levels": ["CM1"],
+      "description": "Inférences sur les personnages"
+    },
+    {
+      "id": "theme_morale",
+      "label": "Trouver le thème ou la morale",
+      "levels": ["CM1"],
+      "description": "Message du texte"
+    },
+    {
+      "id": "point_de_vue",
+      "label": "Analyser le point de vue",
+      "levels": ["CM2"],
+      "description": "Point de vue narratif"
+    },
+    {
+      "id": "comparer_passages",
+      "label": "Comparer deux passages",
+      "levels": ["CM2"],
+      "description": "Analyse comparative"
+    },
+    {
+      "id": "implicite",
+      "label": "Comprendre l'implicite",
+      "levels": ["CM2"],
+      "description": "Sens implicite du texte"
+    }
+  ],
+  "vocabulaire": [
+    {
+      "id": "animaux",
+      "label": "Les animaux",
+      "levels": ["CP", "CE1"],
+      "description": "Vocabulaire des animaux"
+    },
+    {
+      "id": "couleurs",
+      "label": "Les couleurs",
+      "levels": ["CP"],
+      "description": "Noms des couleurs"
+    },
+    {
+      "id": "famille",
+      "label": "La famille",
+      "levels": ["CP"],
+      "description": "Membres de la famille"
+    },
+    {
+      "id": "corps",
+      "label": "Le corps humain",
+      "levels": ["CP"],
+      "description": "Parties du corps"
+    },
+    {
+      "id": "ecole",
+      "label": "L'école",
+      "levels": ["CE1"],
+      "description": "Vocabulaire scolaire"
+    },
+    {
+      "id": "maison",
+      "label": "La maison",
+      "levels": ["CE1"],
+      "description": "Pièces et objets de la maison"
+    },
+    {
+      "id": "nourriture",
+      "label": "La nourriture",
+      "levels": ["CE1"],
+      "description": "Aliments et repas"
+    },
+    {
+      "id": "vetements",
+      "label": "Les vêtements",
+      "levels": ["CE1"],
+      "description": "Habits et accessoires"
+    },
+    {
+      "id": "nature",
+      "label": "La nature",
+      "levels": ["CE2"],
+      "description": "Éléments naturels"
+    },
+    {
+      "id": "ville",
+      "label": "La ville",
+      "levels": ["CE2"],
+      "description": "Lieux urbains"
+    },
+    {
+      "id": "metiers",
+      "label": "Les métiers",
+      "levels": ["CE2"],
+      "description": "Professions"
+    },
+    {
+      "id": "transport",
+      "label": "Les transports",
+      "levels": ["CE2"],
+      "description": "Moyens de transport"
+    },
+    {
+      "id": "emotions",
+      "label": "Les émotions",
+      "levels": ["CE2"],
+      "description": "Sentiments et émotions"
+    },
+    {
+      "id": "sciences",
+      "label": "Les sciences",
+      "levels": ["CM1"],
+      "description": "Vocabulaire scientifique"
+    },
+    {
+      "id": "histoire",
+      "label": "L'histoire",
+      "levels": ["CM1"],
+      "description": "Vocabulaire historique"
+    },
+    {
+      "id": "geographie",
+      "label": "La géographie",
+      "levels": ["CM1"],
+      "description": "Vocabulaire géographique"
+    },
+    {
+      "id": "arts",
+      "label": "Les arts",
+      "levels": ["CM1"],
+      "description": "Vocabulaire artistique"
+    },
+    {
+      "id": "sport",
+      "label": "Le sport",
+      "levels": ["CM1"],
+      "description": "Vocabulaire sportif"
+    },
+    {
+      "id": "litterature",
+      "label": "La littérature",
+      "levels": ["CM2"],
+      "description": "Vocabulaire littéraire"
+    },
+    {
+      "id": "philosophie",
+      "label": "La philosophie",
+      "levels": ["CM2"],
+      "description": "Concepts philosophiques"
+    },
+    {
+      "id": "societe",
+      "label": "La société",
+      "levels": ["CM2"],
+      "description": "Vocabulaire social"
+    },
+    {
+      "id": "environnement",
+      "label": "L'environnement",
+      "levels": ["CM2"],
+      "description": "Écologie et environnement"
+    },
+    {
+      "id": "technologie",
+      "label": "La technologie",
+      "levels": ["CM2"],
+      "description": "Vocabulaire technologique"
+    }
+  ]
+}

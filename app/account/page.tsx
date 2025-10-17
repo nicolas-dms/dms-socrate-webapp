@@ -163,72 +163,215 @@ export default function AccountPage() {
           <Col lg={10} className="mx-auto">
             {/* Enhanced Main Title */}
             <div className="text-center mb-4">
-              <h2 className="fw-semibold mb-3" style={{ color: '#5a6c7d' }}>
-                <i className="bi bi-person-circle me-2"></i>
+              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>
                 Mon compte
               </h2>
-              <hr className="w-25 mx-auto mt-3 mb-4" style={{ height: '2px', background: 'linear-gradient(90deg, #6c757d, #adb5bd)', border: 'none', borderRadius: '1px' }} />
+              <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
+                Gérez votre profil, abonnement et préférences
+              </p>
             </div>
 
             {/* Navigation Tabs */}
             <div className="mb-4">
-              <div className="d-flex gap-2 flex-wrap">
-                <Button
-                  className={`account-nav-button ${activeSection === "profile" ? "active" : ""}`}
+              <div className="d-flex gap-2 flex-wrap justify-content-center">
+                <button
                   onClick={() => setActiveSection("profile")}
+                  style={{
+                    backgroundColor: activeSection === "profile" ? '#f8f9fa' : 'white',
+                    color: activeSection === "profile" ? '#2c3e50' : '#6c757d',
+                    border: `2px solid ${activeSection === "profile" ? '#dee2e6' : '#e9ecef'}`,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: activeSection === "profile" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== "profile") {
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      e.currentTarget.style.borderColor = '#dee2e6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== "profile") {
+                      e.currentTarget.style.backgroundColor = 'white';
+                      e.currentTarget.style.borderColor = '#e9ecef';
+                    }
+                  }}
                 >
                   Profil utilisateur
-                </Button>
-                <Button
-                  className={`account-nav-button ${activeSection === "subscription" ? "active" : ""}`}
+                </button>
+                <button
                   onClick={() => setActiveSection("subscription")}
+                  style={{
+                    backgroundColor: activeSection === "subscription" ? '#f8f9fa' : 'white',
+                    color: activeSection === "subscription" ? '#2c3e50' : '#6c757d',
+                    border: `2px solid ${activeSection === "subscription" ? '#dee2e6' : '#e9ecef'}`,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: activeSection === "subscription" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== "subscription") {
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      e.currentTarget.style.borderColor = '#dee2e6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== "subscription") {
+                      e.currentTarget.style.backgroundColor = 'white';
+                      e.currentTarget.style.borderColor = '#e9ecef';
+                    }
+                  }}
                 >
                   Mon abonnement
-                </Button>
-                <Button
-                  className={`account-nav-button ${activeSection === "settings" ? "active" : ""}`}
+                </button>
+                <button
                   onClick={() => setActiveSection("settings")}
+                  style={{
+                    backgroundColor: activeSection === "settings" ? '#f8f9fa' : 'white',
+                    color: activeSection === "settings" ? '#2c3e50' : '#6c757d',
+                    border: `2px solid ${activeSection === "settings" ? '#dee2e6' : '#e9ecef'}`,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: activeSection === "settings" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== "settings") {
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      e.currentTarget.style.borderColor = '#dee2e6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== "settings") {
+                      e.currentTarget.style.backgroundColor = 'white';
+                      e.currentTarget.style.borderColor = '#e9ecef';
+                    }
+                  }}
                 >
                   Paramètres
-                </Button>
-                <Button
-                  className={`account-nav-button ${activeSection === "support" ? "active" : ""}`}
+                </button>
+                <button
                   onClick={() => setActiveSection("support")}
+                  style={{
+                    backgroundColor: activeSection === "support" ? '#f8f9fa' : 'white',
+                    color: activeSection === "support" ? '#2c3e50' : '#6c757d',
+                    border: `2px solid ${activeSection === "support" ? '#dee2e6' : '#e9ecef'}`,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: activeSection === "support" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== "support") {
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      e.currentTarget.style.borderColor = '#dee2e6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== "support") {
+                      e.currentTarget.style.backgroundColor = 'white';
+                      e.currentTarget.style.borderColor = '#e9ecef';
+                    }
+                  }}
                 >
-                  <svg width="16" height="16" fill="currentColor" className="me-1" viewBox="0 0 16 16">
-                    <path d="M8 1a5 5 0 0 0-5 5v1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a6 6 0 1 1 12 0v6a2.5 2.5 0 0 1-2.5 2.5H9.366a1 1 0 0 1-.866.5h-1a1 1 0 1 1 0-2h1a1 1 0 0 1 .866.5H11.5A1.5 1.5 0 0 0 13 12V6a5 5 0 0 0-5-5z"/>
-                  </svg>
+                  <i className="bi bi-headset me-1"></i>
                   Support
-                </Button>
+                </button>
                 {/* Section Admin - uniquement pour admin@exominutes.com */}
                 {isAdmin && (
-                  <Button
-                    className={`account-nav-button admin-btn ${activeSection === "admin" ? "active" : ""}`}
+                  <button
                     onClick={() => setActiveSection("admin")}
+                    style={{
+                      backgroundColor: activeSection === "admin" ? '#f8f9fa' : 'white',
+                      color: activeSection === "admin" ? '#2c3e50' : '#6c757d',
+                      border: `2px solid ${activeSection === "admin" ? '#dee2e6' : '#e9ecef'}`,
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      fontSize: '0.9rem',
+                      fontWeight: activeSection === "admin" ? '600' : '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeSection !== "admin") {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.borderColor = '#dee2e6';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeSection !== "admin") {
+                        e.currentTarget.style.backgroundColor = 'white';
+                        e.currentTarget.style.borderColor = '#e9ecef';
+                      }
+                    }}
                   >
-                    <svg width="16" height="16" fill="currentColor" className="me-1" viewBox="0 0 16 16">
-                      <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-                      <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
-                    </svg>
+                    <i className="bi bi-gear me-1"></i>
                     Administration
-                  </Button>
+                  </button>
                 )}
-                <Button
-                  className={`account-nav-button logout-btn ${activeSection === "logout" ? "active" : ""}`}
+                <button
                   onClick={() => setActiveSection("logout")}
+                  style={{
+                    backgroundColor: activeSection === "logout" ? '#fff5f5' : 'white',
+                    color: activeSection === "logout" ? '#dc3545' : '#6c757d',
+                    border: `2px solid ${activeSection === "logout" ? '#f8d7da' : '#e9ecef'}`,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: activeSection === "logout" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== "logout") {
+                      e.currentTarget.style.backgroundColor = '#fff5f5';
+                      e.currentTarget.style.borderColor = '#f8d7da';
+                      e.currentTarget.style.color = '#dc3545';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== "logout") {
+                      e.currentTarget.style.backgroundColor = 'white';
+                      e.currentTarget.style.borderColor = '#e9ecef';
+                      e.currentTarget.style.color = '#6c757d';
+                    }
+                  }}
                 >
                   Se déconnecter
-                </Button>
+                </button>
               </div>
             </div>
 
             {/* Profile Section */}
             {activeSection === "profile" && (
-              <Card className="mb-4 border-primary">
-                <Card.Header className="bg-primary text-white">
-                  <h4 className="mb-0">Profil utilisateur</h4>
+              <Card style={{ 
+                border: '2px solid #e9ecef', 
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}>
+                <Card.Header style={{ 
+                  backgroundColor: '#f8f9fa',
+                  borderBottom: '2px solid #e9ecef',
+                  borderRadius: '10px 10px 0 0',
+                  padding: '16px 20px'
+                }}>
+                  <h5 className="mb-0 fw-semibold" style={{ color: '#2c3e50' }}>
+                    <i className="bi bi-person me-2" style={{ color: '#6c757d' }}></i>
+                    Profil utilisateur
+                  </h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-4">
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-3">
@@ -263,17 +406,23 @@ export default function AccountPage() {
 
             {/* Subscription Section */}
             {activeSection === "subscription" && (
-              <Card className="mb-4 border-primary">
-                <Card.Header className="bg-primary text-white">
-                  <h4 className="mb-0 d-flex align-items-center">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="me-2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="M12 8v4l3 3"/>
-                    </svg>
+              <Card style={{ 
+                border: '2px solid #e9ecef', 
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}>
+                <Card.Header style={{ 
+                  backgroundColor: '#f8f9fa',
+                  borderBottom: '2px solid #e9ecef',
+                  borderRadius: '10px 10px 0 0',
+                  padding: '16px 20px'
+                }}>
+                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#2c3e50' }}>
+                    <i className="bi bi-credit-card me-2" style={{ color: '#6c757d' }}></i>
                     Mon abonnement
-                  </h4>
+                  </h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-4">
                   {message && (
                     <Alert variant={message.type === 'success' ? 'success' : 'danger'} className="mb-4">
                       {message.text}
@@ -282,22 +431,34 @@ export default function AccountPage() {
 
                 {/* Current Subscription */}
                 {subscription && (
-                  <Card className="mb-4">
-                    <Card.Header className="d-flex justify-content-between align-items-center">
-                      <h4 className="mb-0 d-flex align-items-center">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="me-2">
-                          <circle cx="12" cy="12" r="10"/>
-                          <path d="M12 8v4l3 3"/>
-                        </svg>
+                  <Card className="mb-4" style={{ 
+                    border: '2px solid #e9ecef',
+                    borderRadius: '10px'
+                  }}>
+                    <Card.Header className="d-flex justify-content-between align-items-center" style={{ 
+                      backgroundColor: '#f8f9fa',
+                      borderBottom: '1px solid #e9ecef',
+                      padding: '12px 16px'
+                    }}>
+                      <h6 className="mb-0 d-flex align-items-center fw-semibold" style={{ color: '#2c3e50' }}>
+                        <i className="bi bi-clock-history me-2" style={{ color: '#6c757d' }}></i>
                         Mon abonnement actuel
-                      </h4>
-                      <span className={`badge ${subscription.status === 'active' ? 'bg-success' : 
-                        subscription.status === 'cancelled' ? 'bg-danger' : 'bg-warning'}`}>
+                      </h6>
+                      <span style={{
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        backgroundColor: subscription.status === 'active' ? '#d1e7dd' : 
+                          subscription.status === 'cancelled' ? '#f8d7da' : '#fff3cd',
+                        color: subscription.status === 'active' ? '#0f5132' : 
+                          subscription.status === 'cancelled' ? '#842029' : '#664d03'
+                      }}>
                         {subscription.status === 'active' ? 'Actif' : 
                          subscription.status === 'cancelled' ? 'Annulé' : 'Suspendu'}
                       </span>
                     </Card.Header>
-                    <Card.Body>
+                    <Card.Body className="p-3">
                       <Row>
                         <Col md={6}>
                           <h5>{getCurrentPlan()?.name}</h5>
@@ -365,13 +526,20 @@ export default function AccountPage() {
                 )}
 
                 {/* Available Plans */}
-                <Card className="mb-4">
-                  <Card.Header>
-                    <h4 className="mb-0">
+                <Card className="mb-4" style={{ 
+                  border: '2px solid #e9ecef',
+                  borderRadius: '10px'
+                }}>
+                  <Card.Header style={{ 
+                    backgroundColor: '#f8f9fa',
+                    borderBottom: '1px solid #e9ecef',
+                    padding: '12px 16px'
+                  }}>
+                    <h6 className="mb-0 fw-semibold" style={{ color: '#2c3e50' }}>
                       {subscription?.status === 'active' ? 'Changer d\'abonnement' : 'Choisir un abonnement'}
-                    </h4>
+                    </h6>
                   </Card.Header>
-                  <Card.Body>
+                  <Card.Body className="p-3">
                     <Row>
                       {plans.map((plan) => {
                         const isCurrentPlan = subscription?.planId === plan.id;
@@ -447,11 +615,23 @@ export default function AccountPage() {
 
             {/* Settings Section */}
             {activeSection === "settings" && (
-              <Card className="mb-4 border-primary">
-                <Card.Header className="bg-primary text-white">
-                  <h4 className="mb-0">Paramètres de l'application</h4>
+              <Card style={{ 
+                border: '2px solid #e9ecef', 
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}>
+                <Card.Header style={{ 
+                  backgroundColor: '#f8f9fa',
+                  borderBottom: '2px solid #e9ecef',
+                  borderRadius: '10px 10px 0 0',
+                  padding: '16px 20px'
+                }}>
+                  <h5 className="mb-0 fw-semibold" style={{ color: '#2c3e50' }}>
+                    <i className="bi bi-sliders me-2" style={{ color: '#6c757d' }}></i>
+                    Paramètres de l'application
+                  </h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-4">
                   <Form.Group className="mb-3">
                     <Form.Label>Niveau par défaut</Form.Label>
                     <Form.Select defaultValue="CE1">
@@ -499,16 +679,23 @@ export default function AccountPage() {
 
             {/* Support Section */}
             {activeSection === "support" && (
-              <Card className="mb-4 border-primary">
-                <Card.Header className="bg-primary text-white">
-                  <h4 className="mb-0 d-flex align-items-center">
-                    <svg width="20" height="20" fill="currentColor" className="me-2" viewBox="0 0 16 16">
-                      <path d="M8 1a5 5 0 0 0-5 5v1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a6 6 0 1 1 12 0v6a2.5 2.5 0 0 1-2.5 2.5H9.366a1 1 0 0 1-.866.5h-1a1 1 0 1 1 0-2h1a1 1 0 0 1 .866.5H11.5A1.5 1.5 0 0 0 13 12V6a5 5 0 0 0-5-5z"/>
-                    </svg>
+              <Card style={{ 
+                border: '2px solid #e9ecef', 
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}>
+                <Card.Header style={{ 
+                  backgroundColor: '#f8f9fa',
+                  borderBottom: '2px solid #e9ecef',
+                  borderRadius: '10px 10px 0 0',
+                  padding: '16px 20px'
+                }}>
+                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#2c3e50' }}>
+                    <i className="bi bi-headset me-2" style={{ color: '#6c757d' }}></i>
                     Support Technique
-                  </h4>
+                  </h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-4">
                   {supportMessage && (
                     <Alert variant={supportMessage.type === 'success' ? 'success' : 'danger'} className="mb-4">
                       {supportMessage.text}
@@ -633,17 +820,23 @@ Informations utiles :
 
             {/* Admin Section - uniquement pour admin@exominutes.com */}
             {activeSection === "admin" && isAdmin && (
-              <Card className="mb-4 border-warning">
-                <Card.Header className="bg-warning text-dark">
-                  <h4 className="mb-0 d-flex align-items-center">
-                    <svg width="20" height="20" fill="currentColor" className="me-2" viewBox="0 0 16 16">
-                      <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-                      <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
-                    </svg>
+              <Card style={{ 
+                border: '2px solid #ffc107', 
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}>
+                <Card.Header style={{ 
+                  backgroundColor: '#fff9e6',
+                  borderBottom: '2px solid #ffc107',
+                  borderRadius: '10px 10px 0 0',
+                  padding: '16px 20px'
+                }}>
+                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#2c3e50' }}>
+                    <i className="bi bi-gear me-2" style={{ color: '#ffc107' }}></i>
                     Administration
-                  </h4>
+                  </h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-4">
                   <div className="mb-4">
                     <h5 className="text-warning">🔧 Outils d'administration</h5>
                     <p className="text-muted">
@@ -701,11 +894,23 @@ Informations utiles :
 
             {/* Logout Section */}
             {activeSection === "logout" && (
-              <Card className="mb-4 border-danger">
-                <Card.Header className="bg-danger text-white">
-                  <h4 className="mb-0">Se déconnecter</h4>
+              <Card style={{ 
+                border: '2px solid #f8d7da', 
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}>
+                <Card.Header style={{ 
+                  backgroundColor: '#fff5f5',
+                  borderBottom: '2px solid #f8d7da',
+                  borderRadius: '10px 10px 0 0',
+                  padding: '16px 20px'
+                }}>
+                  <h5 className="mb-0 fw-semibold" style={{ color: '#dc3545' }}>
+                    <i className="bi bi-box-arrow-right me-2"></i>
+                    Se déconnecter
+                  </h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-4">
                   {!showLogoutConfirm ? (
                     <div>
                       <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>

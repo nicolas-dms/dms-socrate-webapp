@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col, Dropdown } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { ExerciceModalite, getDefaultModalityForType, getAvailableModalitiesForType, formatModalityLabel } from '../types/exerciceTypes';
+import { formatExercisesForModal } from '../types/frenchExerciseNaming';
 
 export interface VocabularyParams {
   words: string;
@@ -18,43 +19,6 @@ interface VocabularyModalProps {
   level: string; // CE1, CE2, etc.
 }
 
-const VOCABULARY_THEMES = {
-  CP: [
-    { key: "animaux", label: "Les animaux" },
-    { key: "couleurs", label: "Les couleurs" },
-    { key: "famille", label: "La famille" },
-    { key: "corps", label: "Le corps humain" }
-  ],
-  CE1: [
-    { key: "ecole", label: "L'école" },
-    { key: "maison", label: "La maison" },
-    { key: "animaux", label: "Les animaux" },
-    { key: "nourriture", label: "La nourriture" },
-    { key: "vetements", label: "Les vêtements" }
-  ],
-  CE2: [
-    { key: "nature", label: "La nature" },
-    { key: "ville", label: "La ville" },
-    { key: "metiers", label: "Les métiers" },
-    { key: "transport", label: "Les transports" },
-    { key: "emotions", label: "Les émotions" }
-  ],
-  CM1: [
-    { key: "sciences", label: "Les sciences" },
-    { key: "histoire", label: "L'histoire" },
-    { key: "geographie", label: "La géographie" },
-    { key: "arts", label: "Les arts" },
-    { key: "sport", label: "Le sport" }
-  ],
-  CM2: [
-    { key: "litterature", label: "La littérature" },
-    { key: "philosophie", label: "La philosophie" },
-    { key: "societe", label: "La société" },
-    { key: "environnement", label: "L'environnement" },
-    { key: "technologie", label: "La technologie" }
-  ]
-};
-
 export default function VocabularyModal({ 
   show, 
   onHide, 
@@ -63,6 +27,9 @@ export default function VocabularyModal({
   level 
 }: VocabularyModalProps) {
   const { t } = useTranslation();
+  
+  // Load vocabulary themes from configuration - memoized to prevent infinite loops
+  const vocabularyThemes = useMemo(() => formatExercisesForModal('vocabulaire', level), [level]);
   
   const [customWords, setCustomWords] = useState("");
   const [selectedTheme, setSelectedTheme] = useState("");
@@ -97,10 +64,10 @@ export default function VocabularyModal({
       // Set defaults
       setUseCustomWords(false);
       setCustomWords("");
-      setSelectedTheme("animaux");
+      setSelectedTheme(vocabularyThemes.length > 0 ? vocabularyThemes[0].key : "");
       // setExerciseModalities({}); // DISABLED FOR NOW
     }
-  }, [initialParams, level]);
+  }, [initialParams, level, vocabularyThemes]);
 
   const toggleTheme = (themeKey: string) => {
     if (useCustomWords) return;
@@ -140,10 +107,8 @@ export default function VocabularyModal({
   const handleReset = () => {
     setUseCustomWords(false);
     setCustomWords("");
-    setSelectedTheme("animaux");
+    setSelectedTheme(vocabularyThemes.length > 0 ? vocabularyThemes[0].key : "");
   };
-
-  const currentThemes = VOCABULARY_THEMES[level as keyof typeof VOCABULARY_THEMES] || VOCABULARY_THEMES.CE1;
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
@@ -184,7 +149,7 @@ export default function VocabularyModal({
             
             {!useCustomWords && (
               <Row className="mb-3">
-                {currentThemes.map(theme => (
+                {vocabularyThemes.map(theme => (
                   <Col md={6} key={theme.key} className="mb-3">
                     <div 
                       className={`selector-card p-3 border rounded ${

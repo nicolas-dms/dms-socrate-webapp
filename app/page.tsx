@@ -1,73 +1,77 @@
 "use client";
 import '../i18n/i18n';
-import React, { useState } from 'react';
+import React from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import styles from "./page.module.css";
 
 export default function Home() {
   const { t } = useTranslation();
-  const [selectedSubject, setSelectedSubject] = useState('français');
-  const [selectedLevel, setSelectedLevel] = useState('CE1');
-  const [selectedDuration, setSelectedDuration] = useState('30 min');
-
-  const subjects = ['Français', 'Maths'];
-  const levels = ['CP', 'CE1', 'CE2', 'CM1', 'CM2'];
-  const durations = ['20 min', '30 min', '40 min'];
-
-  const testimonials = [
-    {
-      text: "Fini les recherches, ma fille progresse enfin !",
-      author: "Sophie, maman de Emma (CE2)"
-    },
-    {
-      text: "Les exercices sont parfaitement adaptés au niveau de mon fils.",
-      author: "Marc, papa de Lucas (CM1)"
-    },
-    {
-      text: "Très pratique pour préparer mes séances rapidement.",
-      author: "Claire, enseignante"
-    }
-  ];
-
-  const exerciseExamples = [
-    { title: "Lecture compréhension", tags: ["compréhension", "lecture"] },
-    { title: "Conjugaison présent", tags: ["conjugaison", "grammaire"] },
-    { title: "Vocabulaire animaux", tags: ["vocabulaire"] },
-    { title: "Addition/Soustraction", tags: ["calcul", "nombres"] },
-    { title: "Géométrie", tags: ["formes", "espace"] },
-    { title: "Problèmes", tags: ["logique", "calcul"] }
-  ];
 
   return (
     <div className={styles.landingPage}>
       {/* Hero Section */}
       <section className={styles.hero}>
         <Container>
-          <Row className="align-items-center min-vh-75">
-            <Col lg={6}>
-              <h1 className={styles.heroTitle}>
-                Créez vos fiches d'exercices personnalisées, prêtes à imprimer
+          <Row className="align-items-center" style={{ minHeight: '80vh', paddingTop: '2rem', paddingBottom: '2rem' }}>
+            <Col lg={6} className="mb-4 mb-lg-0">
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: 'bold', 
+                color: '#2c3e50', 
+                marginBottom: '1.5rem',
+                lineHeight: '1.2'
+              }}>
+                Votre fiche d'exercices prête en moins d'une minute
               </h1>
-              <p className={styles.heroSubtitle}>
-                Français et Mathématiques • CP à CM2 • En 3 clics, sans écran
+              <p style={{ 
+                fontSize: '1.1rem', 
+                color: '#6c757d', 
+                marginBottom: '2rem',
+                lineHeight: '1.6'
+              }}>
+                Français et Mathématiques • CP à CM2 • Personnalisées, imprimables, sans écran.
               </p>
               <Link href="/generate">
-                <Button size="lg" className={styles.ctaPrimary}>
-                  Générer ma fiche maintenant
-                </Button>
+                <button
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 28px',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.5)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                  }}
+                >
+                  <i className="bi bi-pencil-square me-2"></i>
+                  Générer mes exercices maintenant
+                </button>
               </Link>
             </Col>
             <Col lg={6}>
-              <div className={styles.heroIllustration}>
+              <div style={{ textAlign: 'center' }}>
                 <Image
                   src="/working_girl2.png"
                   alt="Enfant qui étudie avec des fiches d'exercices ExoMinutes"
-                  width={400}
-                  height={400}
-                  className={styles.heroImage}
+                  width={500}
+                  height={500}
+                  style={{ maxWidth: '100%', height: 'auto' }}
                   priority
                 />
               </div>
@@ -76,311 +80,180 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* Quick Selectors */}
-      <section className={styles.selectors}>
+      {/* Value Proposition Section */}
+      <section style={{ backgroundColor: '#f8f9fa', padding: '5rem 0' }}>
         <Container>
-          <Row className="justify-content-center">
-            <Col lg={12}>
-              <h3 className="text-center mb-4">Configurez vos fiches en quelques clics</h3>
-              <p className="text-center text-muted mb-5">
-                Créez une fiche individuelle ou planifiez un parcours complet sur plusieurs semaines
-              </p>
-              
-              <Row>
-                {/* Left Column - Individual Worksheet Selectors */}
-                <Col lg={6} className="mb-4">
-                  <Card className="h-100 border-0 shadow-sm d-flex flex-column">
-                    <Card.Body className="p-4 d-flex flex-column flex-grow-1">
-                      <div className="flex-grow-1">
-                        <h5 className={`mb-4 text-center ${styles.sectionTitle}`}>
-                          <i className="bi bi-file-earmark-text me-2 text-warning"></i>
-                          Fiche individuelle
-                        </h5>
-                        
-                        <div className="row g-3">
-                          {/* Subject Selection */}
-                          <div className="col-12">
-                            <h6 className="mb-3">Matière</h6>
-                            <div className="d-flex gap-2">
-                              {subjects.map((subject) => (
-                                <div key={subject} className="flex-fill">
-                                  <Card 
-                                    className={`${styles.selectorCard} border border-2 ${selectedSubject === subject.toLowerCase() ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
-                                    onClick={() => setSelectedSubject(subject.toLowerCase())}
-                                    style={{ cursor: 'pointer' }}
-                                  >
-                                    <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                                      <span className={`fw-bold ${selectedSubject === subject.toLowerCase() ? 'text-dark-emphasis' : 'text-dark'}`}>
-                                        {subject}
-                                      </span>
-                                    </Card.Body>
-                                  </Card>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Level Selection */}
-                          <div className="col-12">
-                            <h6 className="mb-3">Niveau</h6>
-                            <div className="d-flex gap-2 flex-wrap">
-                              {levels.map((level) => (
-                                <Card 
-                                  key={level}
-                                  className={`${styles.selectorCard} border border-2 ${selectedLevel === level ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow flex-fill`}
-                                  onClick={() => setSelectedLevel(level)}
-                                  style={{ cursor: 'pointer', minWidth: '60px' }}
-                                >
-                                  <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                                    <span className={`fw-bold ${selectedLevel === level ? 'text-dark-emphasis' : 'text-dark'}`}>
-                                      {level}
-                                    </span>
-                                  </Card.Body>
-                                </Card>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Duration Selection */}
-                          <div className="col-12">
-                            <h6 className="mb-3">Durée</h6>
-                            <div className="d-flex gap-2">
-                              {durations.map((duration) => (
-                                <div key={duration} className="flex-fill">
-                                  <Card 
-                                    className={`${styles.selectorCard} border border-2 ${selectedDuration === duration ? 'border-warning-subtle bg-warning-subtle' : 'border-secondary-subtle'} hover-shadow`}
-                                    onClick={() => setSelectedDuration(duration)}
-                                    style={{ cursor: 'pointer' }}
-                                  >
-                                    <Card.Body className="p-3 text-center d-flex align-items-center justify-content-center">
-                                      <span className={`fw-bold ${selectedDuration === duration ? 'text-dark-emphasis' : 'text-dark'}`}>
-                                        {duration}
-                                      </span>
-                                    </Card.Body>
-                                  </Card>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Action Button */}
-                      <div className="text-center mt-4">
-                        <Link href={`/generate/${selectedSubject}`}>
-                          <Button size="lg" className={`w-100 ${styles.ctaButton}`}>
-                            <i className="bi bi-lightning-fill me-2"></i>
-                            Générer une fiche maintenant
-                          </Button>
-                        </Link>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-
-                {/* Right Column - Parcours Templates */}
-                <Col lg={6} className="mb-4">
-                  <Card className="h-100 border-0 shadow-sm d-flex flex-column">
-                    <Card.Body className="p-4 d-flex flex-column flex-grow-1">
-                      <div className="flex-grow-1">
-                        <h5 className={`mb-4 text-center ${styles.sectionTitle}`}>
-                          <i className="bi bi-collection me-2 text-primary"></i>
-                          Parcours personnalisés
-                        </h5>
-                        
-                        <div className="row g-3">
-                          {/* Parcours Template 1 */}
-                          <div className="col-12">
-                            <Link href="/generate/parcours?template=conjugaison-ce1" className="text-decoration-none">
-                              <Card className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}>
-                                <Card.Body className="p-3">
-                                  <div className="d-flex align-items-center">
-                                    <div className="flex-shrink-0 me-3">
-                                      <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                                        <i className="bi bi-book"></i>
-                                      </div>
-                                    </div>
-                                    <div className="flex-grow-1">
-                                      <h6 className="mb-1 text-dark">Conjugaison CE1 en 4 semaines</h6>
-                                      <small className="text-muted">Présent, futur, passé composé</small>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      <span className="badge bg-primary-subtle text-primary">CE1</span>
-                                    </div>
-                                  </div>
-                                </Card.Body>
-                              </Card>
-                            </Link>
-                          </div>
-
-                          {/* Parcours Template 2 */}
-                          <div className="col-12">
-                            <Link href="/generate/parcours?template=revision-cm2-francais" className="text-decoration-none">
-                              <Card className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}>
-                                <Card.Body className="p-3">
-                                  <div className="d-flex align-items-center">
-                                    <div className="flex-shrink-0 me-3">
-                                      <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                                        <i className="bi bi-mortarboard"></i>
-                                      </div>
-                                    </div>
-                                    <div className="flex-grow-1">
-                                      <h6 className="mb-1 text-dark">Révisions CM2 Français</h6>
-                                      <small className="text-muted">Préparation au collège</small>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      <span className="badge bg-primary-subtle text-primary">CM2</span>
-                                    </div>
-                                  </div>
-                                </Card.Body>
-                              </Card>
-                            </Link>
-                          </div>
-
-                          {/* Parcours Template 3 */}
-                          <div className="col-12">
-                            <Link href="/generate/parcours?template=lecture-comprehension-ce2" className="text-decoration-none">
-                              <Card className={`${styles.parcoursTemplate} border border-2 border-primary-subtle hover-shadow`}>
-                                <Card.Body className="p-3">
-                                  <div className="d-flex align-items-center">
-                                    <div className="flex-shrink-0 me-3">
-                                      <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '40px', height: '40px'}}>
-                                        <i className="bi bi-journal-text"></i>
-                                      </div>
-                                    </div>
-                                    <div className="flex-grow-1">
-                                      <h6 className="mb-1 text-dark">Lecture & Compréhension CE2</h6>
-                                      <small className="text-muted">Stratégies de lecture</small>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      <span className="badge bg-primary-subtle text-primary">CE2</span>
-                                    </div>
-                                  </div>
-                                </Card.Body>
-                              </Card>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* See More Button */}
-                      <div className="text-center mt-4">
-                        <Link href="/generate/parcours">
-                          <Button className={`w-100 ${styles.ctaButton}`}>
-                            <i className="bi bi-plus-circle me-2"></i>
-                            Voir tous les parcours
-                          </Button>
-                        </Link>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
+          <h2 style={{ 
+            textAlign: 'center', 
+            fontSize: '2rem', 
+            fontWeight: 'bold', 
+            color: '#2c3e50', 
+            marginBottom: '1rem' 
+          }}>
+            Pourquoi choisir ExoMinutes ?
+          </h2>
+          <p style={{
+            textAlign: 'center',
+            fontSize: '1.05rem',
+            color: '#6c757d',
+            marginBottom: '3.5rem',
+            fontStyle: 'italic'
+          }}>
+            Fini de chercher dans des dizaines de cahiers d'exercices différents,<br />
+            tout est là, disponible et toujours original en quelques clics
+          </p>
+          
+          <Row className="g-5 justify-content-center">
+            <Col md={4}>
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '2.5rem 2rem',
+                height: '100%',
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                border: '2px solid #e9ecef',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.15)';
+                e.currentTarget.style.borderColor = '#10b981';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = '#e9ecef';
+              }}>
+                <div style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  backgroundColor: '#d1fae5',
+                  marginBottom: '1.5rem' 
+                }}>
+                  <i className="bi bi-display-fill" style={{ color: '#10b981', fontSize: '2.5rem' }}></i>
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '700', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem' 
+                }}>
+                  Moins de temps d'écran
+                </h3>
+                <p style={{ 
+                  fontSize: '0.95rem', 
+                  color: '#6c757d', 
+                  lineHeight: '1.7',
+                  margin: 0
+                }}>
+                  Des exercices sur papier pour favoriser la concentration et l'apprentissage de votre enfant, loin des écrans.
+                </p>
+              </div>
             </Col>
-          </Row>
-        </Container>
-      </section>
-
-      {/* Exercise Preview */}
-      <section className={styles.preview}>
-        <Container>
-          <h3 className="text-center mb-5">Aperçu d'exercices</h3>
-          <Row>
-            {exerciseExamples.map((example, index) => (
-              <Col md={6} lg={4} key={index} className="mb-4">
-                <Card className={styles.exerciseCard}>
-                  <Card.Body>
-                    <Card.Title className="h6">{example.title}</Card.Title>
-                    <div className="mb-3">
-                      {example.tags.map((tag, tagIndex) => (
-                        <span key={tagIndex} className={`badge bg-light text-dark me-1 ${styles.tag}`}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className={styles.exercisePreview}>
-                      <div className={styles.exercisePlaceholder}></div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-          <div className="text-center">
-            <Button className={styles.ctaButton}>Voir un aperçu PDF</Button>
-          </div>
-        </Container>
-      </section>
-
-      {/* Key Features */}
-      <section className={styles.features}>
-        <Container>
-          <h3 className="text-center mb-5">Pourquoi choisir ExoMinutes ?</h3>
-          <Row>
-            <Col md={4} className="text-center mb-4">
-              <div className={styles.featureIcon}>
-                <Image src="/pen-icon.svg" alt="Personnalisation" width={48} height={48} />
+            
+            <Col md={4}>
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '2.5rem 2rem',
+                height: '100%',
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                border: '2px solid #e9ecef',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(102, 126, 234, 0.15)';
+                e.currentTarget.style.borderColor = '#667eea';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = '#e9ecef';
+              }}>
+                <div style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  backgroundColor: '#e0e7ff',
+                  marginBottom: '1.5rem' 
+                }}>
+                  <i className="bi bi-stopwatch-fill" style={{ color: '#667eea', fontSize: '2.5rem' }}></i>
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '700', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem' 
+                }}>
+                  Personnalisé et prêt en 1 minute
+                </h3>
+                <p style={{ 
+                  fontSize: '0.95rem', 
+                  color: '#6c757d', 
+                  lineHeight: '1.7',
+                  margin: 0
+                }}>
+                  Adapté au niveau exact et aux besoins spécifiques de votre enfant. Générez une fiche unique en moins d'une minute.
+                </p>
               </div>
-              <h5>Personnalisation instantanée</h5>
-              <p>Adaptez chaque exercice au niveau exact de votre enfant</p>
             </Col>
-            <Col md={4} className="text-center mb-4">
-              <div className={styles.featureIcon}>
-                📁
-              </div>
-              <h5>Toutes vos fiches archivées</h5>
-              <p>Retrouvez facilement tous vos exercices précédents</p>
-            </Col>
-            <Col md={4} className="text-center mb-4">
-              <div className={styles.featureIcon}>
-                🖨️
-              </div>
-              <h5>Prêtes à imprimer</h5>
-              <p>Format PDF optimisé pour une impression parfaite</p>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
-      {/* Testimonials */}
-      <section className={styles.testimonials}>
-        <Container>
-          <h3 className="text-center mb-5">Ce qu'en disent les parents</h3>
-          <Row>
-            {testimonials.map((testimonial, index) => (
-              <Col md={4} key={index} className="mb-4">
-                <Card className={styles.testimonialCard}>
-                  <Card.Body>
-                    <div className={styles.avatar}></div>
-                    <blockquote className="mb-3">
-                      "{testimonial.text}"
-                    </blockquote>
-                    <cite className="text-muted">— {testimonial.author}</cite>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Container>
-      </section>
-
-      {/* FAQ */}
-      <section className={styles.faq}>
-        <Container>
-          <h3 className="text-center mb-5">Questions fréquentes</h3>
-          <Row className="justify-content-center">
-            <Col lg={8}>
-              <div className="mb-4">
-                <h5>Comment ça marche ?</h5>
-                <p>Sélectionnez la matière, le niveau et la durée. Notre IA génère instantanément des exercices adaptés que vous pouvez imprimer.</p>
-              </div>
-              <div className="mb-4">
-                <h5>Pourquoi c'est sans écran ?</h5>
-                <p>Les enfants apprennent mieux avec le papier et le crayon. Nos fiches favorisent la concentration et l'écriture manuscrite.</p>
-              </div>
-              <div className="mb-4">
-                <h5>Quel prix ?</h5>
-                <p>Essai gratuit inclus ! Puis abonnement à partir de 9,99€/mois pour un accès illimité.</p>
+            
+            <Col md={4}>
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '2.5rem 2rem',
+                height: '100%',
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                border: '2px solid #e9ecef',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(245, 158, 11, 0.15)';
+                e.currentTarget.style.borderColor = '#f59e0b';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = '#e9ecef';
+              }}>
+                <div style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  backgroundColor: '#fef3c7',
+                  marginBottom: '1.5rem' 
+                }}>
+                  <i className="bi bi-patch-check-fill" style={{ color: '#f59e0b', fontSize: '2.5rem' }}></i>
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '700', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem' 
+                }}>
+                  Conforme au programme
+                </h3>
+                <p style={{ 
+                  fontSize: '0.95rem', 
+                  color: '#6c757d', 
+                  lineHeight: '1.7',
+                  margin: 0
+                }}>
+                  Tous nos exercices respectent scrupuleusement les programmes officiels de l'Éducation Nationale du CP au CM2.
+                </p>
               </div>
             </Col>
           </Row>
@@ -388,34 +261,87 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className={styles.footer}>
+      <footer style={{ 
+        backgroundColor: '#ffffff', 
+        borderTop: '1px solid #e9ecef',
+        padding: '3rem 0 2rem' 
+      }}>
         <Container>
           <Row>
-            <Col md={6}>
-              <div className="d-flex align-items-center mb-3">
+            <Col md={6} className="mb-4 mb-md-0">
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                marginBottom: '1rem' 
+              }}>
                 <Image
-                  src="/pen-icon.svg"
+                  src="/ExoMinutesIncon.png"
                   alt="ExoMinutes"
-                  width={24}
-                  height={24}
-                  className="me-2"
+                  width={36}
+                  height={36}
+                  style={{ marginRight: '0.7rem' }}
                 />
-                <span className={styles.footerLogo}>ExoMinutes</span>
+                <span style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: 'bold',
+                  color: '#2c3e50',
+                  letterSpacing: '-0.5px'
+                }}>
+                  ExoMinutes
+                </span>
               </div>
-              <p className="text-muted">
-                Générateur d'exercices personnalisés pour l'apprentissage sans écran
+              <p style={{ 
+                color: '#6c757d', 
+                fontSize: '0.9rem',
+                lineHeight: '1.6',
+                marginBottom: '0.5rem'
+              }}>
+                Des exercices personnalisés pour vos enfants, prêts en quelques clics.
+              </p>
+              <p style={{ 
+                color: '#adb5bd', 
+                fontSize: '0.85rem',
+                margin: 0
+              }}>
+                © 2025 ExoMinutes. Tous droits réservés.
               </p>
             </Col>
-            <Col md={6}>
-              <div className="d-flex flex-column flex-md-row gap-3 justify-content-md-end">
-                <Link href="/contact" className="text-decoration-none">Contact</Link>
-                <Link href="#" className="text-decoration-none">CGU</Link>
-                <Link href="#" className="text-decoration-none">Mentions légales</Link>
-              </div>
-              <div className="d-flex gap-3 justify-content-md-end mt-3">
-                <span>📧</span>
-                <span>📱</span>
-                <span>🌐</span>
+            
+            <Col md={6} className="d-flex flex-column align-items-md-end">
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: '0.75rem',
+                alignItems: 'flex-end'
+              }}>
+                <Link 
+                  href="/contact" 
+                  style={{ 
+                    color: '#6c757d', 
+                    textDecoration: 'none',
+                    fontSize: '0.9rem',
+                    transition: 'color 0.2s',
+                    textAlign: 'right'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#667eea'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#6c757d'}
+                >
+                  Contact
+                </Link>
+                <Link 
+                  href="/about" 
+                  style={{ 
+                    color: '#6c757d', 
+                    textDecoration: 'none',
+                    fontSize: '0.9rem',
+                    transition: 'color 0.2s',
+                    textAlign: 'right'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#667eea'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#6c757d'}
+                >
+                  À propos
+                </Link>
               </div>
             </Col>
           </Row>

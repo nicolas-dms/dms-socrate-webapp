@@ -1,13 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col, Badge, Dropdown } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { ExerciceModalite, getDefaultModalityForType, getAvailableModalitiesForType, formatModalityLabel } from '../types/exerciceTypes';
+import { formatExercisesForModal } from '../types/frenchExerciseNaming';
 
 export interface ConjugationParams {
   verbs: string;
   tenses: string;
-  modalities?: Record<string, ExerciceModalite>; // New: store modality for each tense
+  modalities?: Record<string, ExerciceModalite>; // Store modality for each tense
 }
 
 interface ConjugationModalProps {
@@ -18,61 +19,6 @@ interface ConjugationModalProps {
   level: string; // CE1, CE2, etc.
 }
 
-const VERB_GROUPS = {
-  CP: [
-    { key: "1er_groupe_simple", label: "1er groupe - verbes simples", examples: "être, avoir, aller..." },
-  ],
-  CE1: [
-    { key: "1er_groupe", label: "1er groupe (verbes en -er)", examples: "aimer, chanter, jouer..." },
-    { key: "verbes_frequents", label: "Verbes fréquents", examples: "être, avoir, aller, faire..." }
-  ],
-  CE2: [
-    { key: "1er_groupe", label: "1er groupe (verbes en -er)", examples: "aimer, chanter, jouer..." },
-    { key: "2eme_groupe", label: "2ème groupe (verbes en -ir)", examples: "finir, grandir, choisir..." },
-    { key: "verbes_frequents", label: "Verbes fréquents", examples: "être, avoir, aller, faire..." }
-  ],
-  CM1: [
-    { key: "1er_groupe", label: "1er groupe (verbes en -er)", examples: "aimer, chanter, jouer..." },
-    { key: "2eme_groupe", label: "2ème groupe (verbes en -ir)", examples: "finir, grandir, choisir..." },
-    { key: "3eme_groupe", label: "3ème groupe (verbes irréguliers)", examples: "être, avoir, aller, faire..." }
-  ],
-  CM2: [
-    { key: "1er_groupe", label: "1er groupe (verbes en -er)", examples: "aimer, chanter, jouer..." },
-    { key: "2eme_groupe", label: "2ème groupe (verbes en -ir)", examples: "finir, grandir, choisir..." },
-    { key: "3eme_groupe", label: "3ème groupe (verbes irréguliers)", examples: "être, avoir, aller, faire..." }
-  ]
-};
-
-const TENSES = {
-  CP: [
-    { key: "present", label: "Présent" },
-  ],
-  CE1: [
-    { key: "present", label: "Présent" },
-    { key: "futur", label: "Futur simple" },
-    { key: "imparfait", label: "Imparfait" },
-  ],
-  CE2: [
-    { key: "present", label: "Présent" },
-    { key: "imparfait", label: "Imparfait" },
-    { key: "futur", label: "Futur simple" },
-  ],
-  CM1: [
-    { key: "present", label: "Présent" },
-    { key: "imparfait", label: "Imparfait" },
-    { key: "futur", label: "Futur simple" },
-    { key: "passe_compose", label: "Passé composé" },
-  ],
-  CM2: [
-    { key: "present", label: "Présent" },
-    { key: "imparfait", label: "Imparfait" },
-    { key: "futur", label: "Futur simple" },
-    { key: "passe_compose", label: "Passé composé" },
-    { key: "passe_simple", label: "Passé simple" },
-    { key: "conditionnel", label: "Conditionnel" }
-  ]
-};
-
 export default function ConjugationModal({ 
   show, 
   onHide, 
@@ -82,20 +28,26 @@ export default function ConjugationModal({
 }: ConjugationModalProps) {
   const { t } = useTranslation();
   
+  // Load tenses and verb groups from configuration - memoized to prevent infinite loops
+  const availableTenses = useMemo(() => 
+    formatExercisesForModal('conjugaison', level),
+    [level]
+  );
+  const availableVerbGroups = useMemo(() => 
+    formatExercisesForModal('verb_groups', level),
+    [level]
+  );
+  
   // State for verb selection
-  const [selectedVerbGroups, setSelectedVerbGroups] = useState<string[]>(["1er_groupe"]);
+  const [selectedVerbGroups, setSelectedVerbGroups] = useState<string[]>([]);
   const [customVerbs, setCustomVerbs] = useState("");
   const [useCustomVerbs, setUseCustomVerbs] = useState(false);
   
   // State for tense selection
-  const [selectedTenses, setSelectedTenses] = useState<string[]>(["present"]);
+  const [selectedTenses, setSelectedTenses] = useState<string[]>([]);
   
   // State for modalities
   const [exerciseModalities, setExerciseModalities] = useState<Record<string, ExerciceModalite>>({});
-  
-  // Get level-specific options
-  const currentVerbGroups = VERB_GROUPS[level as keyof typeof VERB_GROUPS] || VERB_GROUPS.CE1;
-  const currentTenses = TENSES[level as keyof typeof TENSES] || TENSES.CE1;
   
   const handleModalityChange = (tenseKey: string, modality: ExerciceModalite) => {
     setExerciseModalities(prev => ({
@@ -115,29 +67,27 @@ export default function ConjugationModal({
       const tenses = initialParams.tenses.split(",");
       
       setSelectedTenses(tenses);
-      // setExerciseModalities(initialParams.modalities || {}); // DISABLED FOR NOW
       
       // Check if it's custom verbs or groups
-      if (verbs.includes(",") && !currentVerbGroups.some(g => verbs.includes(g.key))) {
+      if (verbs.includes(",") && !availableVerbGroups.some(g => verbs.includes(g.key))) {
         setUseCustomVerbs(true);
         setCustomVerbs(verbs);
         setSelectedVerbGroups([]);
       } else {
         setUseCustomVerbs(false);
         setCustomVerbs("");
-        const groups = currentVerbGroups.filter(g => verbs.includes(g.key)).map(g => g.key);
+        const groups = availableVerbGroups.filter(g => verbs.includes(g.key)).map(g => g.key);
         setSelectedVerbGroups(groups);
       }
     } else {
       // Set defaults based on level
-      const defaultGroups = level === "CP" ? ["1er_groupe_simple"] : ["1er_groupe"];
-      const defaultTenses = ["present"];
+      const defaultGroups = availableVerbGroups.length > 0 ? [availableVerbGroups[0].key] : [];
+      const defaultTenses = availableTenses.length > 0 ? [availableTenses[0].key] : [];
       
       setSelectedVerbGroups(defaultGroups);
       setSelectedTenses(defaultTenses);
-      // setExerciseModalities({}); // DISABLED FOR NOW
     }
-  }, [initialParams, level, currentVerbGroups]);
+  }, [initialParams, availableVerbGroups, availableTenses]);
 
   const toggleVerbGroup = (groupKey: string) => {
     if (useCustomVerbs) return;
@@ -159,7 +109,7 @@ export default function ConjugationModal({
 
   const handleSave = () => {
     if (selectedTenses.length === 0) {
-      alert("Veuillez sélectionner au moins un temps de conjugaison");
+      alert("Veuillez sélectionner au moins un exercice de conjugaison");
       return;
     }
 
@@ -181,7 +131,6 @@ export default function ConjugationModal({
     const params: ConjugationParams = {
       verbs: verbsValue,
       tenses: selectedTenses.join(",")
-      // modalities: exerciseModalities // DISABLED FOR NOW - always use default
     };
 
     onSave(params);
@@ -189,8 +138,8 @@ export default function ConjugationModal({
   };
 
   const handleReset = () => {
-    const defaultGroups = level === "CP" ? ["1er_groupe_simple"] : ["1er_groupe"];
-    const defaultTenses = ["present"];
+    const defaultGroups = availableVerbGroups.length > 0 ? [availableVerbGroups[0].key] : [];
+    const defaultTenses = availableTenses.length > 0 ? [availableTenses[0].key] : [];
     
     setSelectedVerbGroups(defaultGroups);
     setSelectedTenses(defaultTenses);
@@ -216,11 +165,96 @@ export default function ConjugationModal({
         </Modal.Title>
       </Modal.Header>
       
-      <Modal.Body>
+      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <Form>
+          {/* Tense Selection Section */}
+          <div className="mb-3">
+            <h6 className="fw-bold mb-2" style={{ fontSize: '0.95rem' }}>
+              <i className="fas fa-clock me-2"></i>
+              Exercices de conjugaison
+            </h6>
+            
+            <Row>
+              {availableTenses.map(tense => (
+                <Col md={6} key={tense.key} className="mb-2">
+                  <div 
+                    className={`selector-card p-2 border rounded ${
+                        selectedTenses.includes(tense.key) 
+                          ? 'border-warning-subtle bg-warning-subtle text-dark' 
+                          : 'border-secondary bg-light'
+                      }`}
+                      style={{ 
+                        border: selectedTenses.includes(tense.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                      }}
+                    >
+                      <div 
+                        className="d-flex align-items-center justify-content-between"
+                        onClick={() => toggleTense(tense.key)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <span className="fw-medium" style={{ fontSize: '0.9rem' }}>{tense.label}</span>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedTenses.includes(tense.key)}
+                          onChange={() => toggleTense(tense.key)}
+                          className="ms-2"
+                        />
+                      </div>
+                      
+                      {/* Modality selector - HIDDEN FOR NOW but structure kept for future use */}
+                      {false && selectedTenses.includes(tense.key) && (
+                        <div className="mt-2 pt-2 border-top">
+                          <small className="text-muted mb-1 d-block">Format :</small>
+                          <Dropdown className="w-100">
+                            <Dropdown.Toggle 
+                              variant="outline-secondary"
+                              size="sm"
+                              className="w-100 text-start d-flex justify-content-between align-items-center"
+                            >
+                              <span>{formatModalityLabel(getCurrentModality(tense.key))}</span>
+                              {getCurrentModality(tense.key) === getDefaultModalityForType('conjugaison', level) && (
+                                <small className="text-primary ms-1">(recommandé)</small>
+                              )}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu className="w-100">
+                              {getAvailableModalitiesForType('conjugaison').map((modality) => (
+                                <Dropdown.Item
+                                  key={modality}
+                                  onClick={() => handleModalityChange(tense.key, modality)}
+                                  active={modality === getCurrentModality(tense.key)}
+                                  className="d-flex justify-content-between align-items-center"
+                                >
+                                  <span>{formatModalityLabel(modality)}</span>
+                                  {modality === getDefaultModalityForType('conjugaison', level) && (
+                                    <small className="text-primary">
+                                      <i className="bi bi-star-fill"></i>
+                                    </small>
+                                  )}
+                                </Dropdown.Item>
+                              ))}
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </div>
+                      )}
+                    </div>
+                  </Col>
+              ))}
+            </Row>
+            
+            <div className="mt-1">
+              <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+                Sélectionnés: {selectedTenses.length > 0 
+                  ? availableTenses.filter(t => selectedTenses.includes(t.key)).map(t => t.label).join(", ")
+                  : "Aucun"
+                }
+              </small>
+            </div>
+          </div>
+
           {/* Verb Selection Section */}
-          <div className="mb-4">
-            <h6 className="fw-bold mb-3">
+          <div className="mb-3">
+            <h6 className="fw-bold mb-2" style={{ fontSize: '0.95rem' }}>
               <i className="fas fa-list-ul me-2"></i>
               Sélection des verbes
             </h6>
@@ -232,15 +266,15 @@ export default function ConjugationModal({
               label="Choisir par groupes de verbes"
               checked={!useCustomVerbs}
               onChange={() => setUseCustomVerbs(false)}
-              className="mb-3"
+              className="mb-2"
             />
             
             {!useCustomVerbs && (
-              <Row className="mb-3">
-                {currentVerbGroups.map(group => (
+              <Row className="mb-2">
+                {availableVerbGroups.map(group => (
                   <Col md={12} key={group.key} className="mb-2">
                     <div 
-                      className={`selector-card p-3 border rounded ${
+                      className={`selector-card p-2 border rounded ${
                         selectedVerbGroups.includes(group.key) 
                           ? 'border-warning-subtle bg-warning-subtle' 
                           : 'border-secondary bg-light'
@@ -254,8 +288,8 @@ export default function ConjugationModal({
                     >
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          <strong>{group.label}</strong>
-                          <div className="text-muted small">{group.examples}</div>
+                          <strong style={{ fontSize: '0.9rem' }}>{group.label}</strong>
+                          <div className="text-muted" style={{ fontSize: '0.8rem' }}>{group.examples}</div>
                         </div>
                       </div>
                     </div>
@@ -271,114 +305,27 @@ export default function ConjugationModal({
               label="Verbes personnalisés"
               checked={useCustomVerbs}
               onChange={() => setUseCustomVerbs(true)}
-              className="mb-3"
+              className="mb-2"
             />
             
             {useCustomVerbs && (
-              <Form.Group className="mb-3">
-                <Form.Label>Verbes (séparés par des virgules)</Form.Label>
+              <Form.Group className="mb-2">
                 <Form.Control
                   as="textarea"
-                  rows={3}
+                  rows={2}
                   placeholder="être, avoir, aller, faire, dire, voir, venir..."
                   value={customVerbs}
                   onChange={(e) => setCustomVerbs(e.target.value)}
+                  style={{ fontSize: '0.9rem' }}
                 />
-                <Form.Text className="text-muted">
+                <Form.Text className="text-muted" style={{ fontSize: '0.8rem' }}>
                   Saisissez les verbes à l'infinitif, séparés par des virgules
                 </Form.Text>
               </Form.Group>
             )}
           </div>
-
-          {/* Tense Selection Section */}
-          <div className="mb-4">
-            <h6 className="fw-bold mb-3">
-              <i className="fas fa-clock me-2"></i>
-              Temps de conjugaison
-            </h6>
-            
-            <Row>
-              {currentTenses.map(tense => (
-                <Col md={6} key={tense.key} className="mb-3">
-                  <div 
-                    className={`selector-card p-3 border rounded ${
-                      selectedTenses.includes(tense.key) 
-                        ? 'border-warning-subtle bg-warning-subtle text-dark' 
-                        : 'border-secondary bg-light'
-                    }`}
-                    style={{ 
-                      border: selectedTenses.includes(tense.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-                    }}
-                  >
-                    <div 
-                      className="d-flex align-items-center justify-content-between mb-2"
-                      onClick={() => toggleTense(tense.key)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <span className="fw-medium">{tense.label}</span>
-                      <input 
-                        type="checkbox" 
-                        checked={selectedTenses.includes(tense.key)}
-                        onChange={() => toggleTense(tense.key)}
-                        className="ms-2"
-                      />
-                    </div>
-                    
-                    {/* Modality selector - HIDDEN FOR NOW but structure kept for future use */}
-                    {false && selectedTenses.includes(tense.key) && (
-                      <div className="mt-2 pt-2 border-top">
-                        <small className="text-muted mb-1 d-block">Format :</small>
-                        <Dropdown className="w-100">
-                          <Dropdown.Toggle 
-                            variant="outline-secondary"
-                            size="sm"
-                            className="w-100 text-start d-flex justify-content-between align-items-center"
-                          >
-                            <span>{formatModalityLabel(getCurrentModality(tense.key))}</span>
-                            {getCurrentModality(tense.key) === getDefaultModalityForType('conjugaison', level) && (
-                              <small className="text-primary ms-1">(recommandé)</small>
-                            )}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu className="w-100">
-                            {getAvailableModalitiesForType('conjugaison').map((modality) => (
-                              <Dropdown.Item
-                                key={modality}
-                                onClick={() => handleModalityChange(tense.key, modality)}
-                                active={modality === getCurrentModality(tense.key)}
-                                className="d-flex justify-content-between align-items-center"
-                              >
-                                <span>{formatModalityLabel(modality)}</span>
-                                {modality === getDefaultModalityForType('conjugaison', level) && (
-                                  <small className="text-primary">
-                                    <i className="bi bi-star-fill"></i>
-                                  </small>
-                                )}
-                              </Dropdown.Item>
-                            ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </div>
-                    )}
-                  </div>
-                </Col>
-              ))}
-            </Row>
-            
-            <div className="mt-2">
-              <small className="text-muted">
-                Sélectionnés: {selectedTenses.length > 0 
-                  ? currentTenses.filter(t => selectedTenses.includes(t.key)).map(t => t.label).join(", ")
-                  : "Aucun"
-                }
-              </small>
-            </div>
-          </div>
         </Form>
-      </Modal.Body>
-      
-      <Modal.Footer>
+      </Modal.Body>      <Modal.Footer>
         <Button variant="outline-secondary" onClick={handleReset}>
           <i className="fas fa-undo me-2"></i>
           Réinitialiser

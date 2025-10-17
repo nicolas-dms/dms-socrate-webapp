@@ -28,15 +28,6 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
   // Always show navigation now
   const isHomePage = pathname === '/';
 
-  // Debug effect for tracking feedback state changes
-  useEffect(() => {
-    console.log('Feedback state changed:', feedback);
-  }, [feedback]);
-
-  useEffect(() => {
-    console.log('Hovered rating changed:', hoveredRating);
-  }, [hoveredRating]);
-
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -80,13 +71,13 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
           {/* Logo */}
           <Navbar.Brand as={Link} href="/" className="d-flex align-items-center">
             <Image
-              src="/pen-icon.svg"
+              src="/ExoMinutesIncon.png"
               alt="ExoMinutes"
-              width={32}
-              height={32}
+              width={40}
+              height={40}
               className="me-2"
             />
-            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>
+            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c3e50', letterSpacing: '-0.5px' }}>
               ExoMinutes
             </span>
           </Navbar.Brand>
@@ -98,22 +89,19 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                 <>
                   {/* Authenticated Menu Items */}
                   <Nav.Link as={Link} href="/generate" className="d-flex align-items-center mx-2">
-                    <Image src="/pen-icon.svg" alt="" width={18} height={18} className="me-1" />
+                    <i className="bi bi-pencil-square me-2" style={{ fontSize: '1rem' }}></i>
                     Générer
                   </Nav.Link>
 
                   <Nav.Link as={Link} href="/sessions" className="d-flex align-items-center mx-2">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="me-1">
-                      <rect x="3" y="4" width="18" height="18" rx="2"/>
-                      <path d="M16 2v4M8 2v4M3 10h18"/>
-                    </svg>
+                    <i className="bi bi-folder2-open me-2" style={{ fontSize: '1rem' }}></i>
                     Mes fiches
                   </Nav.Link>
 
                   {/* Feedback Link */}
                   <Nav.Link 
                     href="#" 
-                    className="d-flex align-items-center mx-2 text-primary"
+                    className="d-flex align-items-center mx-2"
                     onClick={(e) => {
                       e.preventDefault();
                       // Reset feedback state when opening modal
@@ -123,15 +111,13 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                     }}
                     title="Donner votre avis"
                   >
-                    💬 Votre Avis
+                    <i className="bi bi-chat-dots me-2" style={{ fontSize: '1rem' }}></i>
+                    Votre Avis
                   </Nav.Link>
 
                   {/* Account Button with User Email */}
                   <Nav.Link as={Link} href="/account" className="d-flex align-items-center mx-2 account-link">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="me-2">
-                      <circle cx="12" cy="8" r="4"/>
-                      <path d="M4 21v-2a4 4 0 014-4h8a4 4 0 714 4v2"/>
-                    </svg>
+                    <i className="bi bi-person-circle me-2" style={{ fontSize: '1rem' }}></i>
                     <div className="d-flex flex-column align-items-start">
                       <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Mon compte</span>
                       <small className="text-muted" style={{ fontSize: '0.75rem', lineHeight: '1' }}>
@@ -165,9 +151,10 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
 
       {/* Feedback Modal */}
       <Modal show={showFeedbackModal} onHide={() => setShowFeedbackModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            💬 Votre avis nous intéresse
+        <Modal.Header closeButton style={{ borderBottom: 'none', paddingBottom: '0' }}>
+          <Modal.Title style={{ display: 'flex', alignItems: 'center', color: '#2c3e50' }}>
+            <i className="bi bi-chat-dots me-2" style={{ fontSize: '1.5rem', color: '#3b82f6' }}></i>
+            Votre avis nous intéresse
           </Modal.Title>
         </Modal.Header>
         
@@ -189,10 +176,11 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
 
             <Row className="mb-3">
               <Col md={6}>
-                <Form.Label>Type de retour</Form.Label>
+                <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Type de retour</Form.Label>
                 <Form.Select
                   value={feedback.type}
                   onChange={(e) => setFeedback({ ...feedback, type: e.target.value as FeedbackSubmission['type'] })}
+                  style={{ borderColor: '#dee2e6', borderRadius: '8px' }}
                 >
                   <option value="general">Commentaire général</option>
                   <option value="bug">Signaler un bug</option>
@@ -202,7 +190,7 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
               </Col>
               
               <Col md={6}>
-                <Form.Label>Note (1-5 étoiles)</Form.Label>
+                <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Note (1-5 étoiles)</Form.Label>
                 <div className="d-flex gap-1 mt-2">
                   {[1, 2, 3, 4, 5].map((star) => {
                     const currentRating = hoveredRating !== null ? hoveredRating : (feedback.rating || 0);
@@ -212,28 +200,20 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                       <Button
                         key={star}
                         variant="link"
-                        className="p-0 star-rating-btn"
+                        className="p-0"
                         style={{
-                          fontSize: '1.5rem',
+                          fontSize: '1.8rem',
                           color: isActive ? '#ffc107' : '#dee2e6',
                           textDecoration: 'none',
                           cursor: 'pointer',
-                          transition: 'color 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                          textShadow: isActive ? '0 2px 4px rgba(255, 193, 7, 0.3)' : 'none',
+                          filter: isActive ? 'none' : 'grayscale(1) brightness(1.5)'
                         }}
-                        onMouseEnter={() => {
-                          console.log('Mouse enter star:', star);
-                          setHoveredRating(star);
-                        }}
-                        onMouseLeave={() => {
-                          console.log('Mouse leave star:', star);
-                          setHoveredRating(null);
-                        }}
-                        onClick={() => {
-                          console.log('Star clicked:', star, 'Previous rating:', feedback.rating);
-                          const newFeedback = { ...feedback, rating: star };
-                          setFeedback(newFeedback);
-                          console.log('New feedback:', newFeedback);
-                        }}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(null)}
+                        onClick={() => setFeedback({ ...feedback, rating: star })}
                         type="button"
                         title={`${star} étoile${star > 1 ? 's' : ''}`}
                       >
@@ -242,19 +222,12 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                     );
                   })}
                 </div>
-                <small className="text-muted">
-                  Note: {feedback.rating || 0}/5
-                  {process.env.NODE_ENV === 'development' && (
-                    <span className="ms-2 text-info">
-                      (Debug: rating={feedback.rating}, hovered={hoveredRating})
-                    </span>
-                  )}
-                </small>
+                <small className="text-muted">Note: {feedback.rating || 0}/5</small>
               </Col>
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label>Votre message</Form.Label>
+              <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Votre message</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={4}
@@ -262,6 +235,7 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                 value={feedback.message}
                 onChange={(e) => setFeedback({ ...feedback, message: e.target.value })}
                 required
+                style={{ borderColor: '#dee2e6', borderRadius: '8px' }}
               />
             </Form.Group>
 
@@ -271,20 +245,38 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
             </small>
           </Modal.Body>
           
-          <Modal.Footer>
+          <Modal.Footer style={{ borderTop: 'none', paddingTop: '0' }}>
             <Button 
               variant="outline-secondary" 
               onClick={() => {
                 setHoveredRating(null);
                 setShowFeedbackModal(false);
               }}
+              style={{ borderRadius: '8px' }}
             >
               Annuler
             </Button>
             <Button 
-              variant="primary" 
               type="submit"
               disabled={isSubmitting || !feedback.message?.trim()}
+              style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '8px',
+                padding: '8px 20px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting && feedback.message?.trim()) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               {isSubmitting ? (
                 <>
@@ -295,7 +287,7 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                 </>
               ) : (
                 <>
-                  <i className="fas fa-paper-plane me-2"></i>
+                  <i className="bi bi-send me-2"></i>
                   Envoyer
                 </>
               )}

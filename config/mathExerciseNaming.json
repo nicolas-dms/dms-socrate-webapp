@@ -1,0 +1,390 @@
+{
+  "nombres": [
+    {
+      "id": "lire_ecrire_decomposer_10",
+      "label": "Lire, écrire, décomposer jusqu'à 10",
+      "levels": ["CP"],
+      "description": "Lire, écrire et décomposer les nombres jusqu'à 10. Introduction aux dizaines et unités."
+    },
+    {
+      "id": "ranger_comparer_10",
+      "label": "Ranger, comparer jusqu'à 10",
+      "levels": ["CP"],
+      "description": "Ranger et comparer les nombres jusqu'à 10. Ordonner de petites collections."
+    },
+    {
+      "id": "lire_ecrire_decomposer_100",
+      "label": "Lire, écrire, décomposer jusqu'à 100",
+      "levels": ["CP", "CE1"],
+      "description": "Lire, écrire et décomposer les nombres jusqu'à 100"
+    },
+    {
+      "id": "ranger_comparer_100",
+      "label": "Ranger, comparer jusqu'à 100",
+      "levels": ["CP", "CE1"],
+      "description": "Ranger et comparer les nombres jusqu'à 100"
+    },
+    {
+      "id": "lire_ecrire_decomposer_1000",
+      "label": "Lire, écrire, décomposer jusqu'à 1000",
+      "levels": ["CE1", "CE2"],
+      "description": "Lire, écrire et décomposer les nombres jusqu'à 1000"
+    },
+    {
+      "id": "ranger_comparer_1000",
+      "label": "Ranger, comparer jusqu'à 1000",
+      "levels": ["CE1", "CE2"],
+      "description": "Ranger et comparer les nombres jusqu'à 1000"
+    },
+    {
+      "id": "lire_ecrire_decomposer_10000",
+      "label": "Lire, écrire, décomposer jusqu'à 10 000",
+      "levels": ["CE2"],
+      "description": "Lire, écrire et décomposer les nombres jusqu'à 10 000"
+    },
+    {
+      "id": "ranger_comparer_10000",
+      "label": "Ranger, comparer jusqu'à 10 000",
+      "levels": ["CE2"],
+      "description": "Ranger et comparer les nombres jusqu'à 10 000"
+    },
+    {
+      "id": "grands_nombres_lire_ecrire",
+      "label": "Grands nombres - Lire et écrire",
+      "levels": ["CM1"],
+      "description": "Lire, écrire et décomposer des nombres jusqu'aux milliards"
+    },
+    {
+      "id": "grands_nombres_comparer_encadrer",
+      "label": "Grands nombres - Comparer et encadrer",
+      "levels": ["CM1"],
+      "description": "Comparer, encadrer et ordonner des nombres jusqu'aux milliards"
+    },
+    {
+      "id": "fractions",
+      "label": "Fractions",
+      "levels": ["CM1", "CM2"],
+      "description": "Nommer, représenter, placer, comparer et ranger des fractions"
+    },
+    {
+      "id": "decimaux_lire_ecrire",
+      "label": "Décimaux - Lire et écrire",
+      "levels": ["CM1"],
+      "description": "Relier fractions et décimaux, lire et écrire des nombres décimaux"
+    },
+    {
+      "id": "decimaux_comparer_ranger",
+      "label": "Décimaux - Comparer et ranger",
+      "levels": ["CM1"],
+      "description": "Comparer, ranger et encadrer des nombres décimaux"
+    },
+    {
+      "id": "grands_nombres_lire_decomposer",
+      "label": "Grands nombres - Lire et décomposer",
+      "levels": ["CM2"],
+      "description": "Lire, écrire et décomposer des nombres jusqu'aux milliards"
+    },
+    {
+      "id": "grands_nombres_comparer_ordonner",
+      "label": "Grands nombres - Comparer et ordonner",
+      "levels": ["CM2"],
+      "description": "Encadrer, comparer et ordonner des nombres jusqu'aux milliards"
+    },
+    {
+      "id": "decimaux_lire_decomposer",
+      "label": "Décimaux - Lire et décomposer",
+      "levels": ["CM2"],
+      "description": "Lire, écrire et décomposer des nombres décimaux"
+    },
+    {
+      "id": "decimaux_comparer_encadrer",
+      "label": "Décimaux - Comparer et encadrer",
+      "levels": ["CM2"],
+      "description": "Comparer, ranger et encadrer des nombres décimaux"
+    }
+  ],
+  "calculs": [
+    {
+      "id": "addition",
+      "label": "Addition",
+      "levels": ["CP", "CE1"],
+      "description": "Additions en ligne et posées, avec ou sans retenue"
+    },
+    {
+      "id": "soustraction",
+      "label": "Soustraction",
+      "levels": ["CP", "CE1"],
+      "description": "Soustractions en ligne et posées, avec ou sans retenue"
+    },
+    {
+      "id": "multiplication",
+      "label": "Multiplication",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Tables de multiplication et multiplications posées"
+    },
+    {
+      "id": "partage",
+      "label": "Partage",
+      "levels": ["CP"],
+      "description": "Découvrir la notion de partage équitable et de division simple"
+    },
+    {
+      "id": "division",
+      "label": "Division",
+      "levels": ["CE1", "CE2"],
+      "description": "Premiers partages, moitiés et divisions simples"
+    },
+    {
+      "id": "addition_soustraction",
+      "label": "Addition et soustraction",
+      "levels": ["CE2"],
+      "description": "Additions et soustractions en ligne et posées, compléments"
+    },
+    {
+      "id": "tableaux_graphiques",
+      "label": "Tableaux et graphiques",
+      "levels": ["CE2"],
+      "description": "Lire et calculer avec des tableaux et graphiques"
+    },
+    {
+      "id": "additions_soustractions",
+      "label": "Additions et soustractions",
+      "levels": ["CM1"],
+      "description": "Techniques d'addition et soustraction avec des entiers"
+    },
+    {
+      "id": "multiplication_cm1",
+      "label": "Multiplication",
+      "levels": ["CM1"],
+      "description": "Multiplications par 1 chiffre, 10, 100, 25, 50; décompositions"
+    },
+    {
+      "id": "division_cm1",
+      "label": "Division",
+      "levels": ["CM1"],
+      "description": "Multiples et diviseurs; divisions en ligne; divisions par 1 chiffre"
+    },
+    {
+      "id": "decimaux_addition_soustraction",
+      "label": "Décimaux - Addition et soustraction",
+      "levels": ["CM1", "CM2"],
+      "description": "Additions et soustractions avec des nombres décimaux"
+    },
+    {
+      "id": "decimaux_multiplication",
+      "label": "Décimaux - Multiplication",
+      "levels": ["CM1"],
+      "description": "Multiplications avec des nombres décimaux"
+    },
+    {
+      "id": "proportionnalite",
+      "label": "Proportionnalité",
+      "levels": ["CM1", "CM2"],
+      "description": "Problèmes de proportionnalité, tableaux, graphiques, pourcentages"
+    },
+    {
+      "id": "operations_entieres",
+      "label": "Opérations entières",
+      "levels": ["CM2"],
+      "description": "Additions, soustractions, multiplications et divisions avec des entiers"
+    },
+    {
+      "id": "decimaux_multiplication_division",
+      "label": "Décimaux - Multiplication et division",
+      "levels": ["CM2"],
+      "description": "Multiplications et divisions avec des nombres décimaux"
+    }
+  ],
+  "grandeurs": [
+    {
+      "id": "monnaie",
+      "label": "Monnaie",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Reconnaître et utiliser les pièces et billets en euros"
+    },
+    {
+      "id": "temps",
+      "label": "Temps",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Se repérer dans le temps, lire l'heure"
+    },
+    {
+      "id": "longueurs",
+      "label": "Longueurs",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Comparer, mesurer et tracer des longueurs"
+    },
+    {
+      "id": "masses",
+      "label": "Masses",
+      "levels": ["CP"],
+      "description": "Comparer des objets selon leur masse"
+    },
+    {
+      "id": "masses_contenances",
+      "label": "Masses et contenances",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "description": "Mesurer et comparer masses et contenances"
+    },
+    {
+      "id": "durees",
+      "label": "Durées",
+      "levels": ["CM1", "CM2"],
+      "description": "Conversions et calculs avec les durées"
+    },
+    {
+      "id": "longueurs_perimetres",
+      "label": "Longueurs et périmètres",
+      "levels": ["CM1", "CM2"],
+      "description": "Conversions et calculs de longueurs et périmètres"
+    },
+    {
+      "id": "angles_aires",
+      "label": "Angles et aires",
+      "levels": ["CM1", "CM2"],
+      "description": "Identifier et construire des angles, calculer des aires"
+    }
+  ],
+  "geometrie": [
+    {
+      "id": "reperage",
+      "label": "Repérage",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Se repérer dans l'espace, sur un plan ou un quadrillage"
+    },
+    {
+      "id": "quadrillage",
+      "label": "Quadrillage",
+      "levels": ["CP"],
+      "description": "Se repérer dans un quadrillage et sur un plan, coder des déplacements"
+    },
+    {
+      "id": "symetrie",
+      "label": "Symétrie",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Reconnaître et compléter des figures symétriques"
+    },
+    {
+      "id": "figures",
+      "label": "Figures",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Identifier et tracer polygones, carrés, rectangles, triangles, cercles"
+    },
+    {
+      "id": "solides",
+      "label": "Solides",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Reconnaître, nommer et décrire des solides"
+    },
+    {
+      "id": "droites_angles",
+      "label": "Droites et angles",
+      "levels": ["CE1"],
+      "description": "Tracer des droites et segments, repérer un angle droit"
+    },
+    {
+      "id": "instruments",
+      "label": "Instruments",
+      "levels": ["CE2"],
+      "description": "Utiliser règle, équerre et compas"
+    },
+    {
+      "id": "droites_symetrie",
+      "label": "Droites et symétrie",
+      "levels": ["CM1", "CM2"],
+      "description": "Tracer droites perpendiculaires et parallèles, axes de symétrie"
+    },
+    {
+      "id": "programmes",
+      "label": "Programmes",
+      "levels": ["CM1", "CM2"],
+      "description": "Suivre et rédiger des programmes de construction"
+    }
+  ],
+  "problemes": [
+    {
+      "id": "addition_simple",
+      "label": "Problèmes d'addition",
+      "levels": ["CP"],
+      "description": "Jean a 3 billes, Marie lui en donne 2..."
+    },
+    {
+      "id": "soustraction_simple",
+      "label": "Problèmes de soustraction",
+      "levels": ["CP"],
+      "description": "Il y avait 5 oiseaux, 2 s'envolent..."
+    },
+    {
+      "id": "addition",
+      "label": "Problèmes d'addition",
+      "levels": ["CE1"],
+      "description": "Calculs avec des nombres plus grands"
+    },
+    {
+      "id": "soustraction",
+      "label": "Problèmes de soustraction",
+      "levels": ["CE1"],
+      "description": "Situations de retrait, différence"
+    },
+    {
+      "id": "monnaie",
+      "label": "Problèmes de monnaie",
+      "levels": ["CE1"],
+      "description": "Achats, rendu de monnaie"
+    },
+    {
+      "id": "addition_soustraction",
+      "label": "Addition et soustraction",
+      "levels": ["CE2"],
+      "description": "Problèmes à plusieurs étapes"
+    },
+    {
+      "id": "multiplication",
+      "label": "Problèmes de multiplication",
+      "levels": ["CE2"],
+      "description": "Situations de groupements"
+    },
+    {
+      "id": "mesures",
+      "label": "Problèmes de mesures",
+      "levels": ["CE2"],
+      "description": "Longueurs, masses, durées"
+    },
+    {
+      "id": "quatre_operations",
+      "label": "Quatre opérations",
+      "levels": ["CM1"],
+      "description": "Problèmes complexes multi-étapes"
+    },
+    {
+      "id": "proportionnalite",
+      "label": "Proportionnalité",
+      "levels": ["CM1"],
+      "description": "Règle de trois, pourcentages"
+    },
+    {
+      "id": "geometrie",
+      "label": "Problèmes géométriques",
+      "levels": ["CM1"],
+      "description": "Périmètres, aires"
+    },
+    {
+      "id": "operations_complexes",
+      "label": "Opérations complexes",
+      "levels": ["CM2"],
+      "description": "Problèmes avec fractions, décimaux"
+    },
+    {
+      "id": "proportionnalite_avancee",
+      "label": "Proportionnalité avancée",
+      "levels": ["CM2"],
+      "description": "Échelles, vitesses, pourcentages"
+    },
+    {
+      "id": "geometrie_avancee",
+      "label": "Géométrie avancée",
+      "levels": ["CM2"],
+      "description": "Volumes, constructions"
+    }
+  ]
+}

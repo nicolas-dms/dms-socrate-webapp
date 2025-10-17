@@ -162,6 +162,8 @@ export interface ExerciceGenerationRequest {
   exercice_types: ExerciceType[];
   exercices_by_type?: ExercicesByType;
   specific_requirements?: string;
+  exercice_title?: string;
+  exercice_tags?: string[];
 }
 
 // Helper functions to convert UI values to backend enums
@@ -214,7 +216,9 @@ export const buildExerciceGenerationRequest = (
   domain: ExerciceDomain,
   exercice_type_params: ExerciceTypeParam = {},
   specificRequirements?: string,
-  exercices_by_type?: ExercicesByType
+  exercices_by_type?: ExercicesByType,
+  exercice_title?: string,
+  exercice_tags?: string[]
 ): ExerciceGenerationRequest => {
   
   // Debug: Log the input params
@@ -227,6 +231,8 @@ export const buildExerciceGenerationRequest = (
     exercice_time: convertTimeToBackend(duration),
     exercice_types: convertTypesToBackend(selectedTypes),
     exercices_by_type: exercices_by_type,
-    specific_requirements: specificRequirements
+    specific_requirements: specificRequirements,
+    exercice_title: exercice_title,
+    exercice_tags: exercice_tags
   };
 };

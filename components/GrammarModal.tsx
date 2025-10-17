@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col, Dropdown } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { ExerciceModalite, getDefaultModalityForType, getAvailableModalitiesForType, formatModalityLabel } from '../types/exerciceTypes';
+import { formatExercisesForModal } from '../types/frenchExerciseNaming';
 
 export interface GrammarParams {
   types: string;
@@ -17,40 +18,6 @@ interface GrammarModalProps {
   level: string; // CE1, CE2, etc.
 }
 
-const GRAMMAR_TYPES = {
-  CP: [
-    { key: "majuscules", label: "Majuscules et points" },
-    { key: "genre", label: "Masculin/Féminin" },
-    { key: "singulier_pluriel", label: "Singulier/Pluriel" }
-  ],
-  CE1: [
-    { key: "sujet_verbe", label: "Sujet-Verbe" },
-    { key: "actif_passif", label: "Actif/Passif" },
-    { key: "nombre", label: "Singulier-Pluriel" },
-    { key: "genre", label: "Masculin/Féminin" },
-    { key: "noms_propre_commun", label: "Noms Propres/Communs" },
-    { key: "determinants", label: "Les déterminants" }
-  ],
-  CE2: [
-    { key: "sujet_verbe", label: "Sujet-Verbe" },
-    { key: "nombre", label: "Singulier-Pluriel" },
-    { key: "accord_adjectif", label: "Accord des adjectifs" },
-    { key: "complement", label: "Compléments" }
-  ],
-  CM1: [
-    { key: "sujet_verbe", label: "Sujet-Verbe" },
-    { key: "accord_adjectif", label: "Accord des adjectifs" },
-    { key: "complement", label: "Compléments du verbe" },
-    { key: "propositions", label: "Propositions" }
-  ],
-  CM2: [
-    { key: "accord_adjectif", label: "Accord des adjectifs" },
-    { key: "complement", label: "Compléments" },
-    { key: "propositions", label: "Propositions indépendantes" },
-    { key: "voix", label: "Voix active/passive" }
-  ]
-};
-
 export default function GrammarModal({ 
   show, 
   onHide, 
@@ -60,6 +27,9 @@ export default function GrammarModal({
 }: GrammarModalProps) {
   const { t } = useTranslation();
   
+  // Load grammar types from configuration - memoized to prevent infinite loops
+  const grammarTypes = useMemo(() => formatExercisesForModal('grammaire', level), [level]);
+  
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [exerciseModalities, setExerciseModalities] = useState<Record<string, ExerciceModalite>>({});
   
@@ -68,11 +38,12 @@ export default function GrammarModal({
       setSelectedTypes(initialParams.types.split(","));
       // setExerciseModalities(initialParams.modalities || {}); // DISABLED FOR NOW
     } else {
-      // Set defaults based on level
-      setSelectedTypes(["sujet_verbe"]);
+      // Set default to first available grammar type for this level
+      const defaultType = grammarTypes.length > 0 ? grammarTypes[0].key : "";
+      setSelectedTypes(defaultType ? [defaultType] : []);
       // setExerciseModalities({}); // DISABLED FOR NOW
     }
-  }, [initialParams, level]);
+  }, [initialParams, grammarTypes]);
 
   const toggleType = (typeKey: string) => {
     setSelectedTypes(prev => 
@@ -109,10 +80,9 @@ export default function GrammarModal({
   };
 
   const handleReset = () => {
-    setSelectedTypes(["sujet_verbe"]);
+    const defaultType = grammarTypes.length > 0 ? grammarTypes[0].key : "";
+    setSelectedTypes(defaultType ? [defaultType] : []);
   };
-
-  const currentTypes = GRAMMAR_TYPES[level as keyof typeof GRAMMAR_TYPES] || GRAMMAR_TYPES.CE1;
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
@@ -142,7 +112,7 @@ export default function GrammarModal({
             </h6>
             
             <Row>
-              {currentTypes.map(type => (
+              {grammarTypes.map(type => (
                 <Col md={6} key={type.key} className="mb-3">
                   <div 
                     className={`selector-card p-3 border rounded ${
@@ -212,7 +182,7 @@ export default function GrammarModal({
             <div className="mt-2">
               <small className="text-muted">
                 Sélectionnés: {selectedTypes.length > 0 
-                  ? currentTypes.filter(t => selectedTypes.includes(t.key)).map(t => t.label).join(", ")
+                  ? grammarTypes.filter(t => selectedTypes.includes(t.key)).map(t => t.label).join(", ")
                   : "Aucun"
                 }
               </small>
