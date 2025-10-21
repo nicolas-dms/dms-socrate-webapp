@@ -150,101 +150,101 @@ export default function ConjugationModal({
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
       <style jsx>{`
-        .selector-card {
+        .conjugation-card {
           transition: all 0.3s ease;
+          border-radius: 12px;
+          cursor: pointer;
         }
-        .selector-card:hover {
+        .conjugation-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+          box-shadow: 0 6px 20px rgba(251, 191, 36, 0.15) !important;
+        }
+        .conjugation-card.selected {
+          border-color: #fbbf24 !important;
+          border-width: 2px !important;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+        }
+        .form-check-input {
+          border-radius: 50% !important;
+          width: 1.2em;
+          height: 1.2em;
+          border: 2px solid #d1d5db;
+          cursor: pointer;
+        }
+        .form-check-input:checked {
+          background-color: #fbbf24;
+          border-color: #fbbf24;
+        }
+        .form-check-input:focus {
+          border-color: #fbbf24;
+          box-shadow: 0 0 0 0.25rem rgba(251, 191, 36, 0.25);
         }
       `}</style>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          <i className="fas fa-cog me-2 text-primary"></i>
-          Configuration de l'exercice de conjugaison - {level}
+      <Modal.Header closeButton style={{ borderBottom: '2px solid #fbbf24' }}>
+        <Modal.Title style={{ color: '#d97706', fontWeight: '600' }}>
+          Configuration Conjugaison - {level}
         </Modal.Title>
       </Modal.Header>
       
-      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white' }}>
         <Form>
           {/* Tense Selection Section */}
-          <div className="mb-3">
-            <h6 className="fw-bold mb-2" style={{ fontSize: '0.95rem' }}>
-              <i className="fas fa-clock me-2"></i>
-              Exercices de conjugaison
+          <div className="mb-4">
+            <h6 className="fw-bold mb-3" style={{ color: '#374151' }}>
+              <i className="bi bi-clock-history me-2" style={{ color: '#fbbf24' }}></i>
+              Temps de conjugaison
             </h6>
             
-            <Row>
+            <Row className="g-2">
               {availableTenses.map(tense => (
-                <Col md={6} key={tense.key} className="mb-2">
+                <Col md={6} key={tense.key}>
                   <div 
-                    className={`selector-card p-2 border rounded ${
-                        selectedTenses.includes(tense.key) 
-                          ? 'border-warning-subtle bg-warning-subtle text-dark' 
-                          : 'border-secondary bg-light'
-                      }`}
-                      style={{ 
-                        border: selectedTenses.includes(tense.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-                      }}
-                    >
+                    className={`conjugation-card p-3 border ${selectedTenses.includes(tense.key) ? 'selected' : ''}`}
+                    style={{ 
+                      border: selectedTenses.includes(tense.key) ? '2px solid #fbbf24' : '1px solid #e5e7eb'
+                    }}
+                    onClick={() => toggleTense(tense.key)}
+                  >
+                    <div className="d-flex align-items-center">
                       <div 
-                        className="d-flex align-items-center justify-content-between"
-                        onClick={() => toggleTense(tense.key)}
-                        style={{ cursor: 'pointer' }}
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          border: selectedTenses.includes(tense.key) ? '2px solid #fbbf24' : '2px solid #d1d5db',
+                          background: selectedTenses.includes(tense.key) ? '#fbbf24' : 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.3s ease',
+                          marginRight: '0.75rem',
+                          flexShrink: 0
+                        }}
                       >
-                        <span className="fw-medium" style={{ fontSize: '0.9rem' }}>{tense.label}</span>
-                        <input 
-                          type="checkbox" 
-                          checked={selectedTenses.includes(tense.key)}
-                          onChange={() => toggleTense(tense.key)}
-                          className="ms-2"
-                        />
+                        {selectedTenses.includes(tense.key) && (
+                          <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
+                        )}
                       </div>
-                      
-                      {/* Modality selector - HIDDEN FOR NOW but structure kept for future use */}
-                      {false && selectedTenses.includes(tense.key) && (
-                        <div className="mt-2 pt-2 border-top">
-                          <small className="text-muted mb-1 d-block">Format :</small>
-                          <Dropdown className="w-100">
-                            <Dropdown.Toggle 
-                              variant="outline-secondary"
-                              size="sm"
-                              className="w-100 text-start d-flex justify-content-between align-items-center"
-                            >
-                              <span>{formatModalityLabel(getCurrentModality(tense.key))}</span>
-                              {getCurrentModality(tense.key) === getDefaultModalityForType('conjugaison', level) && (
-                                <small className="text-primary ms-1">(recommandé)</small>
-                              )}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu className="w-100">
-                              {getAvailableModalitiesForType('conjugaison').map((modality) => (
-                                <Dropdown.Item
-                                  key={modality}
-                                  onClick={() => handleModalityChange(tense.key, modality)}
-                                  active={modality === getCurrentModality(tense.key)}
-                                  className="d-flex justify-content-between align-items-center"
-                                >
-                                  <span>{formatModalityLabel(modality)}</span>
-                                  {modality === getDefaultModalityForType('conjugaison', level) && (
-                                    <small className="text-primary">
-                                      <i className="bi bi-star-fill"></i>
-                                    </small>
-                                  )}
-                                </Dropdown.Item>
-                              ))}
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </div>
-                      )}
+                      <span className="fw-medium" style={{ 
+                        color: selectedTenses.includes(tense.key) ? '#d97706' : '#374151',
+                        fontSize: '0.9rem'
+                      }}>
+                        {tense.label}
+                      </span>
                     </div>
-                  </Col>
+                  </div>
+                </Col>
               ))}
             </Row>
             
-            <div className="mt-1">
-              <small className="text-muted" style={{ fontSize: '0.8rem' }}>
-                Sélectionnés: {selectedTenses.length > 0 
+            <div className="mt-3 p-2" style={{ 
+              backgroundColor: '#fef3c7',
+              borderRadius: '8px',
+              border: '1px solid #fcd34d'
+            }}>
+              <small style={{ color: '#92400e' }}>
+                <i className="bi bi-list-check me-1"></i>
+                <strong>Temps sélectionnés:</strong> {selectedTenses.length > 0 
                   ? availableTenses.filter(t => selectedTenses.includes(t.key)).map(t => t.label).join(", ")
                   : "Aucun"
                 }
@@ -254,87 +254,147 @@ export default function ConjugationModal({
 
           {/* Verb Selection Section */}
           <div className="mb-3">
-            <h6 className="fw-bold mb-2" style={{ fontSize: '0.95rem' }}>
-              <i className="fas fa-list-ul me-2"></i>
+            <h6 className="fw-bold mb-3" style={{ color: '#374151' }}>
+              <i className="bi bi-list-ul me-2" style={{ color: '#fbbf24' }}></i>
               Sélection des verbes
             </h6>
             
-            <Form.Check
-              type="radio"
-              name="verbChoice"
-              id="groups"
-              label="Choisir par groupes de verbes"
-              checked={!useCustomVerbs}
-              onChange={() => setUseCustomVerbs(false)}
-              className="mb-2"
-            />
-            
-            {!useCustomVerbs && (
-              <Row className="mb-2">
-                {availableVerbGroups.map(group => (
-                  <Col md={12} key={group.key} className="mb-2">
+            <div className="mb-3 p-3" style={{ 
+              backgroundColor: '#fff',
+              borderRadius: '10px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <Form.Check
+                type="radio"
+                name="verbChoice"
+                id="groups"
+                label={<span style={{ fontWeight: '500', color: '#374151' }}>Choisir par groupes de verbes</span>}
+                checked={!useCustomVerbs}
+                onChange={() => setUseCustomVerbs(false)}
+                className="mb-3"
+              />
+              
+              {!useCustomVerbs && (
+                <div className="ps-4">
+                  {availableVerbGroups.map(group => (
                     <div 
-                      className={`selector-card p-2 border rounded ${
-                        selectedVerbGroups.includes(group.key) 
-                          ? 'border-warning-subtle bg-warning-subtle' 
-                          : 'border-secondary bg-light'
-                      }`}
-                      onClick={() => toggleVerbGroup(group.key)}
+                      key={group.key}
+                      className={`conjugation-card p-3 border mb-2 ${selectedVerbGroups.includes(group.key) ? 'selected' : ''}`}
                       style={{ 
-                        cursor: 'pointer',
-                        border: selectedVerbGroups.includes(group.key) ? '2px solid #ffc107' : '1px solid #dee2e6',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                        border: selectedVerbGroups.includes(group.key) ? '2px solid #fbbf24' : '1px solid #e5e7eb'
                       }}
+                      onClick={() => toggleVerbGroup(group.key)}
                     >
-                      <div className="d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-start">
+                        <div 
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            border: selectedVerbGroups.includes(group.key) ? '2px solid #fbbf24' : '2px solid #d1d5db',
+                            background: selectedVerbGroups.includes(group.key) ? '#fbbf24' : 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease',
+                            marginRight: '0.75rem',
+                            marginTop: '0.1rem',
+                            flexShrink: 0
+                          }}
+                        >
+                          {selectedVerbGroups.includes(group.key) && (
+                            <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.75rem', fontWeight: 'bold' }}></i>
+                          )}
+                        </div>
                         <div>
-                          <strong style={{ fontSize: '0.9rem' }}>{group.label}</strong>
+                          <div className="fw-semibold mb-1" style={{ 
+                            color: selectedVerbGroups.includes(group.key) ? '#d97706' : '#374151',
+                            fontSize: '0.9rem'
+                          }}>
+                            {group.label}
+                          </div>
                           <div className="text-muted" style={{ fontSize: '0.8rem' }}>{group.examples}</div>
                         </div>
                       </div>
                     </div>
-                  </Col>
-                ))}
-              </Row>
-            )}
-            
-            <Form.Check
-              type="radio"
-              name="verbChoice"
-              id="custom"
-              label="Verbes personnalisés"
-              checked={useCustomVerbs}
-              onChange={() => setUseCustomVerbs(true)}
-              className="mb-2"
-            />
-            
-            {useCustomVerbs && (
-              <Form.Group className="mb-2">
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  placeholder="être, avoir, aller, faire, dire, voir, venir..."
-                  value={customVerbs}
-                  onChange={(e) => setCustomVerbs(e.target.value)}
-                  style={{ fontSize: '0.9rem' }}
-                />
-                <Form.Text className="text-muted" style={{ fontSize: '0.8rem' }}>
-                  Saisissez les verbes à l'infinitif, séparés par des virgules
-                </Form.Text>
-              </Form.Group>
-            )}
+                  ))}
+                </div>
+              )}
+              
+              <Form.Check
+                type="radio"
+                name="verbChoice"
+                id="custom"
+                label={<span style={{ fontWeight: '500', color: '#374151' }}>Verbes personnalisés</span>}
+                checked={useCustomVerbs}
+                onChange={() => setUseCustomVerbs(true)}
+                className="mb-2 mt-3"
+              />
+              
+              {useCustomVerbs && (
+                <div className="ps-4">
+                  <Form.Group className="mb-2">
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      placeholder="être, avoir, aller, faire, dire, voir, venir..."
+                      value={customVerbs}
+                      onChange={(e) => setCustomVerbs(e.target.value)}
+                      style={{ 
+                        fontSize: '0.9rem',
+                        borderRadius: '8px',
+                        borderColor: '#fed7aa',
+                        backgroundColor: '#fffbeb'
+                      }}
+                    />
+                    <Form.Text className="text-muted" style={{ fontSize: '0.8rem' }}>
+                      <i className="bi bi-pencil me-1"></i>
+                      Saisissez les verbes à l'infinitif, séparés par des virgules
+                    </Form.Text>
+                  </Form.Group>
+                </div>
+              )}
+            </div>
           </div>
         </Form>
-      </Modal.Body>      <Modal.Footer>
-        <Button variant="outline-secondary" onClick={handleReset}>
-          <i className="fas fa-undo me-2"></i>
+      </Modal.Body>
+      
+      <Modal.Footer style={{ borderTop: '1px solid #e5e7eb', backgroundColor: 'white' }}>
+        <Button 
+          variant="outline-secondary" 
+          onClick={handleReset}
+          style={{
+            borderRadius: '8px',
+            fontWeight: '500'
+          }}
+        >
+          <i className="bi bi-arrow-clockwise me-2"></i>
           Réinitialiser
         </Button>
-        <Button variant="secondary" onClick={onHide}>
+        <Button 
+          variant="outline-secondary" 
+          onClick={onHide}
+          style={{
+            borderRadius: '8px',
+            fontWeight: '500'
+          }}
+        >
           Annuler
         </Button>
-        <Button variant="primary" onClick={handleSave}>
-          <i className="fas fa-save me-2"></i>
+        <Button 
+          onClick={handleSave}
+          disabled={selectedTenses.length === 0}
+          style={{
+            background: selectedTenses.length > 0 ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : undefined,
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: '600',
+            color: 'white',
+            padding: '0.5rem 1.5rem',
+            boxShadow: selectedTenses.length > 0 ? '0 4px 15px rgba(251, 191, 36, 0.3)' : undefined
+          }}
+        >
+          <i className="bi bi-check-circle me-2"></i>
           Valider les paramètres
         </Button>
       </Modal.Footer>

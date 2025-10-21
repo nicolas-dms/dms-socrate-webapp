@@ -73,8 +73,8 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
             <Image
               src="/ExoMinutesIncon.png"
               alt="ExoMinutes"
-              width={40}
-              height={40}
+              width={60}
+              height={60}
               className="me-2"
             />
             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c3e50', letterSpacing: '-0.5px' }}>

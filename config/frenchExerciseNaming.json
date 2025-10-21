@@ -278,212 +278,240 @@
       "isCustom": true
     }
   ],
-  "comprehension": [
+  "lecture": [
     {
-      "id": "questions_generales",
-      "label": "Questions générales",
+      "id": "lecture_theme",
+      "label": "Lecture thématique",
       "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
-      "description": "Questions de compréhension générale"
+      "description": "Textes de lecture organisés par thèmes adaptés à chaque niveau",
+      "themes_par_niveau": {
+        "CP": [
+          "Les animaux de la ferme",
+          "L'école",
+          "Les saisons",
+          "La famille",
+          "Les couleurs",
+          "Les émotions",
+          "Les fêtes",
+          "Les animaux sauvages",
+          "Le corps humain",
+          "Les contes classiques"
+        ],
+        "CE1": [
+          "Les métiers",
+          "Le temps qu'il fait",
+          "Les animaux d'Afrique",
+          "Les contes et fables",
+          "L'amitié",
+          "Les transports",
+          "La mer et les océans",
+          "Les plantes",
+          "Les chevaliers et princesses",
+          "La journée de l'enfant"
+        ],
+        "CE2": [
+          "Les grandes découvertes",
+          "La préhistoire",
+          "Les volcans",
+          "La Terre et le ciel",
+          "Les contes du monde",
+          "Les animaux en danger",
+          "L'eau et la nature",
+          "Le cirque",
+          "La ville et la campagne",
+          "Les inventions"
+        ],
+        "CM1": [
+          "Les Gaulois et les Romains",
+          "Les châteaux forts",
+          "Les grandes explorations",
+          "La Révolution française",
+          "L'énergie et l'électricité",
+          "Le système solaire",
+          "La liberté et les droits",
+          "Les animaux marins",
+          "Le sport et l'effort",
+          "Les grandes inventions"
+        ],
+        "CM2": [
+          "La Seconde Guerre mondiale",
+          "L'espace et les planètes",
+          "Les grandes découvertes scientifiques",
+          "Les droits de l'enfant",
+          "La mythologie grecque",
+          "Le développement durable",
+          "Les écrivains célèbres",
+          "L'évolution du monde",
+          "La solidarité",
+          "Le futur et les robots"
+        ]
+      }
     },
     {
-      "id": "info_explicit",
-      "label": "Trouver les infos du texte",
+      "id": "lecture_histoire",
+      "label": "Histoire (récit narratif)",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Textes narratifs avec une structure histoire : début, développement, fin",
+      "text_type": "histoire"
+    },
+    {
+      "id": "lecture_dialogue",
+      "label": "Dialogue (échanges)",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Textes sous forme de dialogues entre personnages",
+      "text_type": "dialogue"
+    },
+    {
+      "id": "lecture_poeme",
+      "label": "Poème (texte rimé)",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Textes poétiques avec rimes et rythme",
+      "text_type": "poeme"
+    },
+    {
+      "id": "lecture_culture",
+      "label": "Culture (texte informatif)",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "description": "Textes documentaires et informatifs sur divers sujets culturels",
+      "text_type": "culture"
+    },
+    {
+      "id": "lecture_syllabique",
+      "label": "Lecture syllabique",
       "levels": ["CP"],
-      "description": "Informations explicites"
-    },
-    {
-      "id": "ordonner_evenements",
-      "label": "Remettre l'histoire en ordre",
-      "levels": ["CP"],
-      "description": "Chronologie des événements"
-    },
-    {
-      "id": "vrai_faux",
-      "label": "Vrai ou faux",
-      "levels": ["CE1"],
-      "description": "Affirmations à vérifier"
-    },
-    {
-      "id": "repere_inference",
-      "label": "Repérer et déduire",
-      "levels": ["CE2"],
-      "description": "Inférences simples"
-    },
-    {
-      "id": "personnage_action",
-      "label": "Associer personnage et action",
-      "levels": ["CE2"],
-      "description": "Relations personnages-actions"
-    },
-    {
-      "id": "inference",
-      "label": "Deviner sentiments ou intentions",
-      "levels": ["CM1"],
-      "description": "Inférences sur les personnages"
-    },
-    {
-      "id": "theme_morale",
-      "label": "Trouver le thème ou la morale",
-      "levels": ["CM1"],
-      "description": "Message du texte"
-    },
-    {
-      "id": "point_de_vue",
-      "label": "Analyser le point de vue",
-      "levels": ["CM2"],
-      "description": "Point de vue narratif"
-    },
-    {
-      "id": "comparer_passages",
-      "label": "Comparer deux passages",
-      "levels": ["CM2"],
-      "description": "Analyse comparative"
-    },
-    {
-      "id": "implicite",
-      "label": "Comprendre l'implicite",
-      "levels": ["CM2"],
-      "description": "Sens implicite du texte"
+      "description": "Lecture décomposée en syllabes pour l'apprentissage initial",
+      "text_type": "syllabique"
     }
   ],
-  "vocabulaire": [
-    {
-      "id": "animaux",
-      "label": "Les animaux",
-      "levels": ["CP", "CE1"],
-      "description": "Vocabulaire des animaux"
-    },
-    {
-      "id": "couleurs",
-      "label": "Les couleurs",
-      "levels": ["CP"],
-      "description": "Noms des couleurs"
-    },
-    {
-      "id": "famille",
-      "label": "La famille",
-      "levels": ["CP"],
-      "description": "Membres de la famille"
-    },
-    {
-      "id": "corps",
-      "label": "Le corps humain",
-      "levels": ["CP"],
-      "description": "Parties du corps"
-    },
-    {
-      "id": "ecole",
-      "label": "L'école",
-      "levels": ["CE1"],
-      "description": "Vocabulaire scolaire"
-    },
-    {
-      "id": "maison",
-      "label": "La maison",
-      "levels": ["CE1"],
-      "description": "Pièces et objets de la maison"
-    },
-    {
-      "id": "nourriture",
-      "label": "La nourriture",
-      "levels": ["CE1"],
-      "description": "Aliments et repas"
-    },
-    {
-      "id": "vetements",
-      "label": "Les vêtements",
-      "levels": ["CE1"],
-      "description": "Habits et accessoires"
-    },
-    {
-      "id": "nature",
-      "label": "La nature",
-      "levels": ["CE2"],
-      "description": "Éléments naturels"
-    },
-    {
-      "id": "ville",
-      "label": "La ville",
-      "levels": ["CE2"],
-      "description": "Lieux urbains"
-    },
-    {
-      "id": "metiers",
-      "label": "Les métiers",
-      "levels": ["CE2"],
-      "description": "Professions"
-    },
-    {
-      "id": "transport",
-      "label": "Les transports",
-      "levels": ["CE2"],
-      "description": "Moyens de transport"
-    },
-    {
-      "id": "emotions",
-      "label": "Les émotions",
-      "levels": ["CE2"],
-      "description": "Sentiments et émotions"
-    },
-    {
-      "id": "sciences",
-      "label": "Les sciences",
-      "levels": ["CM1"],
-      "description": "Vocabulaire scientifique"
-    },
-    {
-      "id": "histoire",
-      "label": "L'histoire",
-      "levels": ["CM1"],
-      "description": "Vocabulaire historique"
-    },
-    {
-      "id": "geographie",
-      "label": "La géographie",
-      "levels": ["CM1"],
-      "description": "Vocabulaire géographique"
-    },
-    {
-      "id": "arts",
-      "label": "Les arts",
-      "levels": ["CM1"],
-      "description": "Vocabulaire artistique"
-    },
-    {
-      "id": "sport",
-      "label": "Le sport",
-      "levels": ["CM1"],
-      "description": "Vocabulaire sportif"
-    },
-    {
-      "id": "litterature",
-      "label": "La littérature",
-      "levels": ["CM2"],
-      "description": "Vocabulaire littéraire"
-    },
-    {
-      "id": "philosophie",
-      "label": "La philosophie",
-      "levels": ["CM2"],
-      "description": "Concepts philosophiques"
-    },
-    {
-      "id": "societe",
-      "label": "La société",
-      "levels": ["CM2"],
-      "description": "Vocabulaire social"
-    },
-    {
-      "id": "environnement",
-      "label": "L'environnement",
-      "levels": ["CM2"],
-      "description": "Écologie et environnement"
-    },
-    {
-      "id": "technologie",
-      "label": "La technologie",
-      "levels": ["CM2"],
-      "description": "Vocabulaire technologique"
-    }
-  ]
+  "comprehension": [
+  {
+    "id": "sens_global",
+    "label": "Comprendre le sens global",
+    "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+    "description": "Questions générales pour vérifier la compréhension du sens global du texte.",
+    "text_types": ["histoire", "dialogue", "poesie", "culture"],
+    "examples": [
+      "De quoi parle ce texte ?",
+      "Qui sont les personnages principaux ?",
+      "Quel est le sujet principal ?"
+    ]
+  },
+  {
+    "id": "info_explicit",
+    "label": "Trouver les informations du texte",
+    "levels": ["CP", "CE1", "CE2", "CM1"],
+    "description": "Repérer les informations clairement exprimées dans le texte.",
+    "text_types": ["histoire", "dialogue", "culture"],
+    "examples": [
+      "Où se passe la scène ?",
+      "Que fait le personnage principal ?",
+      "Quels faits sont mentionnés dans le texte ?"
+    ]
+  },
+  {
+    "id": "ordonner_evenements",
+    "label": "Remettre l'histoire en ordre",
+    "levels": ["CP", "CE1"],
+    "description": "Ranger les événements d'une histoire dans l'ordre chronologique.",
+    "text_types": ["histoire"],
+    "examples": [
+      "Replace ces phrases dans le bon ordre.",
+      "Quelle action vient en premier ?"
+    ]
+  },
+  {
+    "id": "vrai_faux",
+    "label": "Vrai ou faux",
+    "levels": ["CE1", "CE2", "CM1"],
+    "description": "Décider si des affirmations sont vraies ou fausses d’après le texte.",
+    "text_types": ["histoire", "dialogue", "culture"],
+    "examples": [
+      "Le personnage habite à la campagne. (Vrai/Faux)",
+      "L’auteur parle d’un animal. (Vrai/Faux)"
+    ]
+  },
+  {
+    "id": "personnage_action",
+    "label": "Associer personnage et action",
+    "levels": ["CE1", "CE2"],
+    "description": "Relier les personnages aux actions qu’ils accomplissent ou aux paroles qu’ils prononcent.",
+    "text_types": ["histoire", "dialogue"],
+    "examples": [
+      "Qui dit cette phrase ?",
+      "Que fait Léa dans cette scène ?"
+    ]
+  },
+  {
+    "id": "repere_inference",
+    "label": "Repérer et déduire",
+    "levels": ["CE2", "CM1", "CM2"],
+    "description": "Faire des inférences simples à partir d'indices présents dans le texte.",
+    "text_types": ["histoire", "dialogue", "culture"],
+    "examples": [
+      "Pourquoi le personnage est-il triste ?",
+      "Comment sait-on qu’il a peur ?",
+      "Que peut-on déduire de cette information ?"
+    ]
+  },
+  {
+    "id": "emotion_intention",
+    "label": "Deviner les sentiments ou intentions",
+    "levels": ["CM1", "CM2"],
+    "description": "Comprendre les émotions ou intentions implicites des personnages.",
+    "text_types": ["histoire", "dialogue", "poesie"],
+    "examples": [
+      "Que ressent le personnage à la fin ?",
+      "Pourquoi ne dit-il pas la vérité ?",
+      "Que veut exprimer l’auteur dans ce passage ?"
+    ]
+  },
+  {
+    "id": "theme_morale",
+    "label": "Identifier le thème ou la morale",
+    "levels": ["CM1", "CM2"],
+    "description": "Comprendre le message principal, la morale ou le thème du texte.",
+    "text_types": ["histoire", "poesie", "culture"],
+    "examples": [
+      "Quelle est la morale de cette histoire ?",
+      "Que veut nous apprendre ce texte ?",
+      "Quel est le message principal ?"
+    ]
+  },
+  {
+    "id": "point_de_vue",
+    "label": "Analyser le point de vue",
+    "levels": ["CM2"],
+    "description": "Identifier le narrateur, son rôle et son point de vue sur l’histoire.",
+    "text_types": ["histoire", "dialogue"],
+    "examples": [
+      "Qui raconte l’histoire ?",
+      "Est-ce que le narrateur est un personnage ?",
+      "Comment le narrateur voit-il les événements ?"
+    ]
+  },
+  {
+    "id": "comparer_passages",
+    "label": "Comparer deux passages",
+    "levels": ["CM2"],
+    "description": "Comparer deux textes ou extraits pour repérer ressemblances, différences ou évolutions.",
+    "text_types": ["histoire", "poesie", "culture"],
+    "examples": [
+      "Ces deux poèmes parlent-ils du même sujet ?",
+      "Comment évolue le personnage d’un passage à l’autre ?",
+      "Qu’est-ce qui change entre ces deux descriptions ?"
+    ]
+  },
+  {
+    "id": "implicite",
+    "label": "Comprendre l'implicite",
+    "levels": ["CM2"],
+    "description": "Déduire le sens non dit à partir des indices du texte.",
+    "text_types": ["histoire", "dialogue", "poesie"],
+    "examples": [
+      "Que veut dire l’auteur sans le dire vraiment ?",
+      "Qu’est-ce qu’on comprend sans que ce soit écrit ?",
+      "Quelle idée se cache derrière cette expression ?"
+    ]
+  }
+]
 }

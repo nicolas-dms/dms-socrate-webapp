@@ -9,9 +9,10 @@ export enum ExerciceLevel {
 }
 
 export enum ExerciceTime {
+  TEN_MIN = "10 minutes",
   TWENTY_MIN = "20 minutes",
   THIRTY_MIN = "30 minutes", 
-  FORTY_MIN = "40 minutes"
+  FORTY_MIN = "40 minutes" // Keep for backward compatibility with existing files
 }
 
 export enum ExerciceDomain {
@@ -180,9 +181,10 @@ export const convertLevelToBackend = (uiLevel: string): string => {
 
 export const convertTimeToBackend = (uiTime: string): ExerciceTime => {
   const mapping: Record<string, ExerciceTime> = {
+    "10 min": ExerciceTime.TEN_MIN,
     "20 min": ExerciceTime.TWENTY_MIN,
     "30 min": ExerciceTime.THIRTY_MIN,
-    "40 min": ExerciceTime.FORTY_MIN
+    "40 min": ExerciceTime.FORTY_MIN // Keep for backward compatibility
   };
   return mapping[uiTime] || ExerciceTime.THIRTY_MIN;
 };

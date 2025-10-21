@@ -646,9 +646,9 @@ export default function AccountPage() {
                   <Form.Group className="mb-3">
                     <Form.Label>Durée de séance par défaut</Form.Label>
                     <Form.Select defaultValue="30 min">
+                      <option value="10 min">10 minutes</option>
                       <option value="20 min">20 minutes</option>
                       <option value="30 min">30 minutes</option>
-                      <option value="40 min">40 minutes</option>
                     </Form.Select>
                   </Form.Group>
 

@@ -1,5 +1,216 @@
 /* Sessions Page - Infinite Scroll & Timeline Styles */
 
+/* ===================================
+   Phase 7: Visual Polish & Animations
+   =================================== */
+
+/* File card fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* File card container with staggered animation */
+.file-card {
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+/* Stagger delay for sequential cards */
+.file-card:nth-child(1) { animation-delay: 0.05s; }
+.file-card:nth-child(2) { animation-delay: 0.1s; }
+.file-card:nth-child(3) { animation-delay: 0.15s; }
+.file-card:nth-child(4) { animation-delay: 0.2s; }
+.file-card:nth-child(5) { animation-delay: 0.25s; }
+.file-card:nth-child(6) { animation-delay: 0.3s; }
+.file-card:nth-child(7) { animation-delay: 0.35s; }
+.file-card:nth-child(8) { animation-delay: 0.4s; }
+.file-card:nth-child(9) { animation-delay: 0.45s; }
+.file-card:nth-child(10) { animation-delay: 0.5s; }
+
+/* Premium hover effect on file cards */
+.file-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+  border-color: #5dade2 !important;
+}
+
+/* Shimmer effect for skeleton loaders (enhanced) */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 20%,
+    #f0f0f0 40%,
+    #f0f0f0 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite linear;
+}
+
+/* Filter buttons active state animation */
+.filter-btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(93, 173, 226, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.filter-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.filter-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Special hover for "Tout effacer" button (red) */
+.filter-btn[style*="color: rgb(220, 53, 69)"]:hover,
+.filter-btn[style*="color:#dc3545"]:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* Tag chips animation */
+.tag-chip {
+  animation: scaleIn 0.2s ease;
+  transition: all 0.15s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tag-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced spinner for load more button */
+.load-more-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(93, 173, 226, 0.3);
+  border-top-color: #5dade2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Counter badge animation */
+.counter-badge {
+  animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Active filters chip removal animation */
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.chip-removing {
+  animation: slideOut 0.2s ease forwards;
+}
+
+/* Smooth transition for filter panel */
+.filters-panel {
+  transition: all 0.3s ease;
+}
+
+.filters-panel.collapsed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.filters-panel.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* ===================================
+   Original Styles (Enhanced)
+   =================================== */
+
 /* Badge styles for exercise types */
 .badge-level {
   background-color: #0d6efd;
@@ -33,11 +244,34 @@
 
 /* Infinite scroll loading animation */
 .infinite-scroll-loader {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.infinite-scroll-loader::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
 }
 
 .infinite-scroll-loader:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.infinite-scroll-loader:hover::after {
+  left: 100%;
 }
 
 /* Timeline navigation button */
@@ -134,13 +368,15 @@
 
 /* Session row hover effect */
 .session-row {
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 3px solid transparent;
 }
 
 .session-row:hover {
   background-color: #f8f9fa;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-left-color: #5dade2;
 }
 
 /* End of results indicator */

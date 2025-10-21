@@ -6,10 +6,97 @@ import ProtectedPage from "../../components/ProtectedPage";
 import { useAuth } from "../../context/AuthContext";
 import { filesService, GeneratedFile } from "../../services/filesService";
 import api from "../../services/api";
+import SkeletonFileCard from "../../components/SkeletonFileCard";
+import EmptyState from "../../components/EmptyState";
+import { useDebounce } from "../../hooks/useDebounce";
+import styles from './sessions.module.css';
+
+// Phase 6: localStorage key for filter persistence
+const FILTERS_STORAGE_KEY = 'mesFiches_lastFilters_v1';
+
+// Phase 6: Interface for saved filters
+interface SavedFilters {
+  selectedDomain: string;
+  selectedLevel: string;
+  selectedTimeRange: string;
+  selectedTags: string[];
+  searchInput: string;
+}
+
+// Phase 6: Get default filters
+const getDefaultFilters = (): SavedFilters => ({
+  selectedDomain: '',
+  selectedLevel: '',
+  selectedTimeRange: 'week', // Default to week
+  selectedTags: [],
+  searchInput: ''
+});
+
+// Phase 6: Load saved filters from localStorage
+const loadSavedFilters = (): SavedFilters => {
+  try {
+    if (typeof window === 'undefined') return getDefaultFilters();
+    
+    const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!saved) return getDefaultFilters();
+    
+    const parsed = JSON.parse(saved) as SavedFilters;
+    
+    // Validate parsed data
+    if (typeof parsed !== 'object' || parsed === null) {
+      console.warn('⚠️ Invalid saved filters format, using defaults');
+      return getDefaultFilters();
+    }
+    
+    console.log('✅ Filtres chargés depuis localStorage:', parsed);
+    return {
+      selectedDomain: typeof parsed.selectedDomain === 'string' ? parsed.selectedDomain : '',
+      selectedLevel: typeof parsed.selectedLevel === 'string' ? parsed.selectedLevel : '',
+      selectedTimeRange: typeof parsed.selectedTimeRange === 'string' ? parsed.selectedTimeRange : 'week',
+      selectedTags: Array.isArray(parsed.selectedTags) ? parsed.selectedTags : [],
+      searchInput: typeof parsed.searchInput === 'string' ? parsed.searchInput : ''
+    };
+  } catch (error) {
+    console.warn('⚠️ Erreur lors du chargement des filtres sauvegardés:', error);
+    return getDefaultFilters();
+  }
+};
+
+// Phase 6: Save filters to localStorage
+const saveFiltersToStorage = (filters: SavedFilters): void => {
+  try {
+    if (typeof window === 'undefined') return;
+    
+    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    console.log('💾 Filtres sauvegardés dans localStorage');
+  } catch (error) {
+    // Handle quota exceeded or localStorage disabled
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
+      console.warn('⚠️ localStorage quota dépassé, impossible de sauvegarder les filtres');
+    } else {
+      console.warn('⚠️ Erreur lors de la sauvegarde des filtres:', error);
+    }
+  }
+};
 
 export default function SessionsPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  
+  // Phase 6: Load saved filters on initialization (before early return, safe because it only reads localStorage)
+  const savedFilters = loadSavedFilters();
+  
+  // Early return if auth is loading or no user - must be before any state hooks
+  if (authLoading || !user) {
+    return (
+      <ProtectedPage>
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+          <Spinner animation="border" />
+        </div>
+      </ProtectedPage>
+    );
+  }
+  
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<GeneratedFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,18 +112,209 @@ export default function SessionsPage() {
   const [newTag, setNewTag] = useState<string>('');
   const [savingTags, setSavingTags] = useState(false);
   
-  // Filter states
-  const [selectedDomain, setSelectedDomain] = useState<string>('');
-  const [selectedLevel, setSelectedLevel] = useState<string>('');
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string>('');
+  // Phase 6: Track if filters were restored from localStorage
+  const [filtersRestored, setFiltersRestored] = useState(false);
+  const [showRestoredNotification, setShowRestoredNotification] = useState(false);
+  
+  // Filter states - Phase 6: Initialize from localStorage
+  const [selectedDomain, setSelectedDomain] = useState<string>(savedFilters.selectedDomain);
+  const [selectedLevel, setSelectedLevel] = useState<string>(savedFilters.selectedLevel);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>(savedFilters.selectedTimeRange);
   const [selectedTag, setSelectedTag] = useState<string>(''); // Keep for backwards compatibility
   
-  // Enhanced tag filtering states
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  // Enhanced tag filtering states - Phase 6: Initialize from localStorage
+  const [selectedTags, setSelectedTags] = useState<string[]>(savedFilters.selectedTags);
   const [tagInput, setTagInput] = useState<string>('');
   const [showTagSuggestions, setShowTagSuggestions] = useState<boolean>(false);
+  
+  // Phase 4: Available tags from backend
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
 
-  // Récupérer les fichiers PDF de l'utilisateur
+  // Phase 3: Search input state with debounce - Phase 6: Initialize from localStorage
+  const [searchInput, setSearchInput] = useState<string>(savedFilters.searchInput);
+  const [isSearching, setIsSearching] = useState(false); // Visual indicator for debounced search
+
+  // Phase 2: Backend pagination states (remplace displayedCount)
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const PAGE_SIZE = 20; // 20 items per page
+
+  // Phase 1: Chargement optimisé - nouveaux states
+  const [totalCount, setTotalCount] = useState(0); // Compteur total de fiches
+  const [showingPeriod, setShowingPeriod] = useState<'week' | 'all'>('week'); // Période affichée
+
+  // Phase 3: Debounced values (300ms delay)
+  const debouncedSearchInput = useDebounce(searchInput, 300);
+  const debouncedSelectedDomain = useDebounce(selectedDomain, 300);
+  const debouncedSelectedLevel = useDebounce(selectedLevel, 300);
+  const debouncedSelectedTimeRange = useDebounce(selectedTimeRange, 300);
+  const debouncedSelectedTags = useDebounce(selectedTags, 300);
+
+  // Helper: Dédupliquer et trier les fichiers (plus récents en premier)
+  const deduplicateAndSortFiles = (files: GeneratedFile[]): GeneratedFile[] => {
+    const originalCount = files.length;
+    
+    // Dédupliquer par file_id
+    const uniqueFiles = Array.from(
+      new Map(files.map(file => [file.file_id, file])).values()
+    );
+    
+    if (uniqueFiles.length < originalCount) {
+      console.log(`🔧 Déduplication: ${originalCount} → ${uniqueFiles.length} fiches (${originalCount - uniqueFiles.length} doublons supprimés)`);
+    }
+    
+    // Trier par date (plus récents en premier)
+    const sortedFiles = uniqueFiles.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA; // Décroissant (plus récent en premier)
+    });
+    
+    console.log(`📅 Tri: ${sortedFiles.length} fiches triées (plus récent: ${sortedFiles[0]?.created_at})`);
+    
+    return sortedFiles;
+  };
+
+  // Helper: Get period label based on selected time range
+  const getPeriodLabel = (): string => {
+    if (!selectedTimeRange) return 'Toutes les fiches';
+    
+    switch (selectedTimeRange) {
+      case 'today':
+        return "Aujourd'hui";
+      case 'week':
+        return '7 derniers jours';
+      case 'month':
+        return 'Ce mois';
+      case '3months':
+        return '3 derniers mois';
+      default:
+        return 'Toutes les fiches';
+    }
+  };
+
+  // Phase 5: Helper - Get domain label
+  const getDomainLabel = (domain: string): string => {
+    const labels: Record<string, string> = {
+      'francais': 'Français',
+      'math': 'Mathématiques',
+      'anglais': 'Anglais'
+    };
+    return labels[domain] || domain;
+  };
+
+  // Phase 5: Helper - Get level label
+  const getLevelLabel = (level: string): string => {
+    return level.toUpperCase(); // CP, CE1, CE2, CM1, CM2
+  };
+
+  // Phase 5: Helper - Check if any filter is active
+  const hasActiveFilters = (): boolean => {
+    return !!(
+      selectedDomain ||
+      selectedLevel ||
+      (selectedTimeRange && selectedTimeRange !== 'week') || // Exclude default 'week'
+      searchInput ||
+      selectedTags.length > 0
+    );
+  };
+
+  // Phase 5: Helper - Count active filters
+  const getActiveFiltersCount = (): number => {
+    let count = 0;
+    if (selectedDomain) count++;
+    if (selectedLevel) count++;
+    if (selectedTimeRange && selectedTimeRange !== 'week') count++; // Exclude default
+    if (searchInput) count++;
+    count += selectedTags.length;
+    return count;
+  };
+
+  // Phase 2: Fonction de recherche avec pagination backend
+  const searchFiles = async (pageNum: number, resetFiles = false) => {
+    if (!user?.user_id) return;
+
+    try {
+      if (resetFiles) {
+        setLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+      setError(null);
+
+      // Construire les filtres pour la requête
+      const searchBody: any = {
+        page: pageNum,
+        page_size: PAGE_SIZE,
+        active_only: false
+      };
+
+      // Phase 3: Ajouter les filtres actifs (avec debounce)
+      if (debouncedSelectedDomain) searchBody.exercice_domain = debouncedSelectedDomain;
+      if (debouncedSelectedLevel) searchBody.class_level = debouncedSelectedLevel;
+      if (debouncedSelectedTimeRange) searchBody.time_period = debouncedSelectedTimeRange;
+      if (debouncedSearchInput) searchBody.custom_name = debouncedSearchInput;
+      if (debouncedSelectedTags.length > 0) {
+        searchBody.tags = debouncedSelectedTags;
+        searchBody.match_all_tags = true; // AND logic
+      }
+
+      console.log('🔍 Recherche avec filtres (debounced):', searchBody);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/search`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(searchBody)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la recherche de fiches');
+      }
+
+      const data = await response.json();
+
+      console.log('✅ Résultats pagination:', {
+        page: data.page,
+        items: data.items.length,
+        total: data.total_count,
+        hasMore: data.has_more
+      });
+
+      // Mettre à jour les states avec déduplication et tri
+      let updatedFiles: GeneratedFile[];
+      if (resetFiles) {
+        // Première page: remplacer les fiches
+        updatedFiles = deduplicateAndSortFiles(data.items);
+      } else {
+        // Page suivante: ajouter aux fiches existantes (dédupliquer et trier)
+        updatedFiles = deduplicateAndSortFiles([...files, ...data.items]);
+      }
+
+      setFiles(updatedFiles);
+      setFilteredFiles(updatedFiles);
+      setTotalCount(data.total_count);
+      setHasMore(data.has_more);
+      setTotalPages(data.total_pages);
+      setPage(pageNum);
+
+    } catch (err: any) {
+      console.error('Erreur lors de la recherche:', err);
+      setError(err.message || 'Erreur lors de la recherche de fiches');
+    } finally {
+      setLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Phase 1: Récupérer les fichiers PDF de l'utilisateur - VERSION OPTIMISÉE
   const fetchUserFiles = async () => {
     if (!user?.user_id) return;
 
@@ -44,15 +322,39 @@ export default function SessionsPage() {
       setLoading(true);
       setError(null);
       
-      // Utiliser le service dédié
-      const data = await filesService.getUserFiles(user.user_id);
-      setFiles(data);
-      setFilteredFiles(data); // Initialize filtered files
+      // Phase 1: Chargement parallèle optimisé
+      // Charger le compteur total ET les fiches récentes (7 derniers jours) en parallèle
+      const [countData, recentFiles] = await Promise.all([
+        // Compteur total
+        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/count?active_only=false`)
+          .then(res => {
+            if (!res.ok) throw new Error('Erreur lors de la récupération du compteur');
+            return res.json();
+          }),
+        // Fiches récentes (7 derniers jours)
+        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/by-period/week?active_only=false`)
+          .then(res => {
+            if (!res.ok) throw new Error('Erreur lors de la récupération des fiches récentes');
+            return res.json();
+          })
+      ]);
+
+      // Dédupliquer et trier les fiches récentes
+      const sortedRecentFiles = deduplicateAndSortFiles(recentFiles);
+
+      setTotalCount(countData.total_count);
+      setFiles(sortedRecentFiles);
+      setFilteredFiles(sortedRecentFiles); // Initialize filtered files
+      setShowingPeriod('week');
+      setPage(1);
+      setHasMore(sortedRecentFiles.length < countData.total_count);
     } catch (err: any) {
       console.error('Erreur lors de la récupération des fichiers:', err);
       
       // Gestion d'erreur plus précise
-      if (err.response?.status === 404) {
+      if (err.message?.includes('compteur')) {
+        setError('Impossible de charger le compteur de fiches');
+      } else if (err.response?.status === 404) {
         setError('Aucune fiche trouvée pour cet utilisateur');
       } else if (err.response?.status === 403) {
         setError('Accès non autorisé');
@@ -64,8 +366,71 @@ export default function SessionsPage() {
     }
   };
 
+  // Phase 1: Fonction pour charger toutes les fiches
+  const loadAllFiles = async () => {
+    if (!user?.user_id || showingPeriod === 'all') return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setShowingPeriod('all');
+      
+      // Charger toutes les fiches
+      const allFiles = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/by-period/all?active_only=false`
+      ).then(res => {
+        if (!res.ok) throw new Error('Erreur lors de la récupération de toutes les fiches');
+        return res.json();
+      });
+
+      // Dédupliquer et trier toutes les fiches
+      const sortedAllFiles = deduplicateAndSortFiles(allFiles);
+
+      setFiles(sortedAllFiles);
+      setFilteredFiles(sortedAllFiles);
+    } catch (err: any) {
+      console.error('Erreur lors du chargement de toutes les fiches:', err);
+      setError(err.message || 'Erreur lors du chargement de toutes les fiches');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Phase 4: Load available tags from backend
+  const loadAvailableTags = async () => {
+    if (!user?.user_id) return;
+
+    try {
+      setLoadingTags(true);
+      console.log('🏷️ Chargement des tags disponibles depuis le backend...');
+      
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/available-tags?active_only=false`
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des tags');
+      }
+
+      const tags = await response.json();
+      console.log('✅ Tags backend chargés:', tags.length, 'tags disponibles');
+      
+      setAvailableTags(tags);
+    } catch (err: any) {
+      console.error('❌ Erreur chargement tags backend:', err);
+      // Don't set error state, just log it - tags are not critical
+      // Fallback: try to extract tags from loaded files
+      console.log('⚠️ Fallback: extraction tags depuis les fiches chargées');
+      setAvailableTags([]);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
   useEffect(() => {
     fetchUserFiles();
+    // Don't load tags at mount - let users type freely
+    // Tags will be loaded on first focus of tag input (lazy loading)
   }, [user?.user_id]);
 
   // Close tag suggestions when clicking outside
@@ -83,85 +448,124 @@ export default function SessionsPage() {
     }
   }, [showTagSuggestions]);
 
-  // Filter files based on selected criteria
+  // Phase 3: Appliquer les filtres via backend avec debounce
   useEffect(() => {
-    let filtered = [...files];
-    
-    if (selectedDomain) {
-      filtered = filtered.filter(file => file.exercice_domain === selectedDomain);
-    }
-    
-    if (selectedLevel) {
-      filtered = filtered.filter(file => file.class_level.toLowerCase() === selectedLevel.toLowerCase());
-    }
-    
-    if (selectedTimeRange) {
-      const now = new Date();
-      const fileDate = (file: GeneratedFile) => new Date(file.created_at);
-      
-      switch (selectedTimeRange) {
-        case 'today':
-          filtered = filtered.filter(file => {
-            const fDate = fileDate(file);
-            return fDate.toDateString() === now.toDateString();
-          });
-          break;
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          filtered = filtered.filter(file => fileDate(file) >= weekAgo);
-          break;
-        case 'month':
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          filtered = filtered.filter(file => fileDate(file) >= monthAgo);
-          break;
-        case '3months':
-          const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          filtered = filtered.filter(file => fileDate(file) >= threeMonthsAgo);
-          break;
-      }
-    }
-    
-    if (selectedTag) {
-      filtered = filtered.filter(file => 
-        file.tags && file.tags.some(tag => 
-          tag.toLowerCase().includes(selectedTag.toLowerCase())
-        )
-      );
+    // Skip si on est en mode "week" initial sans autres filtres (géré par fetchUserFiles)
+    if (showingPeriod === 'week' && 
+        !debouncedSelectedDomain && 
+        !debouncedSelectedLevel && 
+        debouncedSelectedTimeRange === 'week' && // Default initial state
+        !debouncedSearchInput &&
+        debouncedSelectedTags.length === 0) {
+      setIsSearching(false);
+      return; // Garder les fiches initiales chargées par fetchUserFiles
     }
 
-    // Enhanced tag filtering with multiple tags (AND logic)
-    if (selectedTags.length > 0) {
-      filtered = filtered.filter(file => {
-        if (!file.tags || file.tags.length === 0) return false;
-        
-        // All selected tags must be present in the file's tags (AND logic)
-        return selectedTags.every(selectedTag => 
-          file.tags!.some(fileTag => 
-            fileTag.toLowerCase().includes(selectedTag.toLowerCase())
-          )
-        );
-      });
+    // Si des filtres sont actifs (ou période changée), utiliser la recherche backend
+    if (debouncedSelectedDomain || 
+        debouncedSelectedLevel || 
+        (debouncedSelectedTimeRange && debouncedSelectedTimeRange !== 'week') || // Période différente de l'initial
+        debouncedSearchInput ||
+        debouncedSelectedTags.length > 0) {
+      console.log('🔄 Filtres debouncés appliqués, nouvelle recherche backend');
+      setIsSearching(true);
+      searchFiles(1, true).finally(() => setIsSearching(false)); // Reset à la page 1
     }
+  }, [debouncedSelectedDomain, debouncedSelectedLevel, debouncedSelectedTimeRange, debouncedSearchInput, debouncedSelectedTags]);
+
+  // Phase 3: Indicateur visuel pendant le debounce
+  useEffect(() => {
+    // Si les valeurs immédiates diffèrent des valeurs debouncées, on est en train de debouncer
+    const isDifferent = 
+      selectedDomain !== debouncedSelectedDomain ||
+      selectedLevel !== debouncedSelectedLevel ||
+      selectedTimeRange !== debouncedSelectedTimeRange ||
+      searchInput !== debouncedSearchInput ||
+      JSON.stringify(selectedTags) !== JSON.stringify(debouncedSelectedTags);
     
-    // Sort files by newest first (always)
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime();
-      const dateB = new Date(b.created_at).getTime();
-      return dateB - dateA; // Always newest first
-    });
+    if (isDifferent) {
+      setIsSearching(true);
+    } else {
+      setIsSearching(false);
+    }
+  }, [selectedDomain, selectedLevel, selectedTimeRange, searchInput, selectedTags, 
+      debouncedSelectedDomain, debouncedSelectedLevel, debouncedSelectedTimeRange, debouncedSearchInput, debouncedSelectedTags]);
+
+  // Phase 6: Save filters to localStorage whenever they change
+  useEffect(() => {
+    const filtersToSave: SavedFilters = {
+      selectedDomain,
+      selectedLevel,
+      selectedTimeRange,
+      selectedTags,
+      searchInput
+    };
     
-    setFilteredFiles(filtered);
-  }, [files, selectedDomain, selectedLevel, selectedTimeRange, selectedTag, selectedTags]);
+    saveFiltersToStorage(filtersToSave);
+  }, [selectedDomain, selectedLevel, selectedTimeRange, selectedTags, searchInput]);
+
+  // Phase 6: Check if filters were restored on mount
+  useEffect(() => {
+    const hasNonDefaultFilters = 
+      savedFilters.selectedDomain !== '' ||
+      savedFilters.selectedLevel !== '' ||
+      savedFilters.selectedTimeRange !== 'week' ||
+      savedFilters.selectedTags.length > 0 ||
+      savedFilters.searchInput !== '';
+    
+    if (hasNonDefaultFilters) {
+      setFiltersRestored(true);
+      setShowRestoredNotification(true);
+      
+      // Auto-hide notification after 4 seconds
+      const timer = setTimeout(() => {
+        setShowRestoredNotification(false);
+      }, 4000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []); // Run once on mount
+
+  // Phase 2: Charger la page suivante
+  const loadMoreFiles = () => {
+    if (!hasMore || isLoadingMore) return;
+    
+    console.log(`📄 Chargement page ${page + 1}/${totalPages}`);
+    searchFiles(page + 1, false); // Page suivante
+  };
+
+  // Phase 2: Intersection Observer pour infinite scroll avec backend pagination
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (firstEntry.isIntersecting && hasMore && !isLoadingMore) {
+          loadMoreFiles();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [hasMore, isLoadingMore, page]);
 
   // Get unique domains and levels for filter options
+  // Use static options to ensure filters are always available (even when files not loaded yet)
   const getUniqueDomains = (): string[] => {
-    const domains = files.map(file => file.exercice_domain);
-    return [...new Set(domains)].sort();
+    return ['francais', 'math', 'anglais'];
   };
 
   const getUniqueLevels = (): string[] => {
-    const levels = files.map(file => file.class_level);
-    return [...new Set(levels)].sort();
+    return ['CP', 'CE1', 'CE2', 'CM1', 'CM2'];
   };
 
   const getUniqueTags = (): string[] => {
@@ -170,16 +574,19 @@ export default function SessionsPage() {
   };
 
   // Get filtered tag suggestions based on input
+  // Phase 4: Now uses backend availableTags instead of frontend extraction
   const getTagSuggestions = (): string[] => {
     if (!tagInput.trim()) return [];
     
-    const allTags = getUniqueTags();
-    const filteredTags = allTags.filter(tag => 
+    // Use backend tags if available, fallback to frontend extraction
+    const tagsSource = availableTags.length > 0 ? availableTags : getUniqueTags();
+    
+    const filteredTags = tagsSource.filter(tag => 
       tag.toLowerCase().includes(tagInput.toLowerCase()) &&
       !selectedTags.includes(tag)
     );
     
-    return filteredTags.slice(0, 5); // Limit to 5 suggestions
+    return filteredTags.slice(0, 8); // Increased to 8 suggestions for better UX
   };
 
   // Add a tag to the selected tags
@@ -207,9 +614,13 @@ export default function SessionsPage() {
   const clearFilters = () => {
     setSelectedDomain('');
     setSelectedLevel('');
-    setSelectedTimeRange('');
+    setSelectedTimeRange('week'); // Reset to initial state (last week)
     setSelectedTag('');
+    setSearchInput(''); // Phase 3: Clear search input
     clearAllTagFilters();
+    
+    // Reload initial data (last week)
+    fetchUserFiles();
   };
 
   // Formater la date
@@ -393,14 +804,15 @@ export default function SessionsPage() {
       
       console.log('✅ Tags saved successfully');
       
-      // Update the file in our local state
-      setFiles(prevFiles => 
-        prevFiles.map(file => 
+      // Update the file in our local state (keep sorted)
+      setFiles(prevFiles => {
+        const updatedFiles = prevFiles.map(file => 
           file.file_id === selectedFile.file_id 
             ? { ...file, tags: editingTags }
             : file
-        )
-      );
+        );
+        return deduplicateAndSortFiles(updatedFiles);
+      });
       
       setShowTagsModal(false);
       setSelectedFile(null);
@@ -446,10 +858,28 @@ export default function SessionsPage() {
                   borderRadius: '10px'
                 }}>
                   <Card.Body className="p-3">
-                    <h6 className="mb-3 fw-semibold" style={{ color: '#495057', fontSize: '0.9rem' }}>
-                      <i className="bi bi-funnel me-2"></i>
-                      Filtres
-                    </h6>
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <h6 className="mb-0 fw-semibold" style={{ color: '#495057', fontSize: '0.9rem' }}>
+                        <i className="bi bi-funnel me-2"></i>
+                        Filtres
+                      </h6>
+                      {/* Phase 6: Notification de restauration des filtres */}
+                      {showRestoredNotification && (
+                        <div 
+                          className="d-flex align-items-center gap-2 px-3 py-1 rounded"
+                          style={{
+                            backgroundColor: '#e7f3ff',
+                            border: '1px solid #b3d9ff',
+                            fontSize: '0.85rem',
+                            color: '#0056b3',
+                            animation: 'fadeIn 0.3s ease-in'
+                          }}
+                        >
+                          <i className="bi bi-clock-history"></i>
+                          <span>Filtres restaurés</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="d-flex flex-column gap-3">
                       {/* First line: Domain, Level, Timeline filters */}
                       <div className="d-flex align-items-center gap-3 flex-wrap">
@@ -460,12 +890,12 @@ export default function SessionsPage() {
                             className="form-select form-select-sm"
                             value={selectedDomain}
                             onChange={(e) => setSelectedDomain(e.target.value)}
-                            style={{ width: '120px' }}
+                            style={{ width: '140px' }}
                           >
                             <option value="">Tous</option>
-                            {getUniqueDomains().map(domain => (
-                              <option key={domain} value={domain}>{domain}</option>
-                            ))}
+                            <option value="francais">Français</option>
+                            <option value="math">Mathématiques</option>
+                            <option value="anglais">Anglais</option>
                           </select>
                         </div>
 
@@ -479,9 +909,11 @@ export default function SessionsPage() {
                             style={{ width: '90px' }}
                           >
                             <option value="">Tous</option>
-                            {getUniqueLevels().map(level => (
-                              <option key={level} value={level}>{level}</option>
-                            ))}
+                            <option value="CP">CP</option>
+                            <option value="CE1">CE1</option>
+                            <option value="CE2">CE2</option>
+                            <option value="CM1">CM1</option>
+                            <option value="CM2">CM2</option>
                           </select>
                         </div>
 
@@ -492,124 +924,579 @@ export default function SessionsPage() {
                             className="form-select form-select-sm"
                             value={selectedTimeRange}
                             onChange={(e) => setSelectedTimeRange(e.target.value)}
-                            style={{ width: '120px' }}
+                            style={{ width: '130px' }}
                           >
                             <option value="">Toutes</option>
                             <option value="today">Aujourd'hui</option>
-                            <option value="week">Cette semaine</option>
+                            <option value="week">7 derniers jours</option>
                             <option value="month">Ce mois</option>
                             <option value="3months">3 derniers mois</option>
                           </select>
                         </div>
+                      </div>
 
-                        {/* Clear Filters */}
-                        {(selectedDomain || selectedLevel || selectedTimeRange || selectedTag || selectedTags.length > 0) && (
-                          <button
-                            onClick={clearFilters}
-                            style={{
-                              backgroundColor: 'white',
-                              color: '#6c757d',
-                              border: '1px solid #dee2e6',
-                              padding: '4px 12px',
-                              borderRadius: '6px',
-                              fontSize: '0.85rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f8f9fa';
-                              e.currentTarget.style.borderColor = '#adb5bd';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'white';
-                              e.currentTarget.style.borderColor = '#dee2e6';
-                            }}
-                          >
-                            <i className="bi bi-x-circle me-1"></i>
-                            Effacer
-                          </button>
+                      {/* Phase 3: Search Input with Debounce */}
+                      <div className="d-flex align-items-center gap-2">
+                        <label className="form-label mb-0 fw-semibold" style={{ fontSize: '0.9rem' }}>
+                          <i className="bi bi-search me-1"></i>
+                          Rechercher:
+                        </label>
+                        <div className="position-relative flex-grow-1" style={{ maxWidth: '400px' }}>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            placeholder="Nom de la fiche..."
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            style={{ paddingRight: '30px' }}
+                          />
+                          {searchInput && (
+                            <button
+                              onClick={() => setSearchInput('')}
+                              style={{
+                                position: 'absolute',
+                                right: '8px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '2px 6px',
+                                color: '#6c757d',
+                                fontSize: '1.1rem'
+                              }}
+                              title="Effacer la recherche"
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          )}
+                        </div>
+                        {isSearching && (
+                          <small className="text-muted" style={{ fontSize: '0.8rem' }}>
+                            <Spinner animation="border" size="sm" style={{ width: '12px', height: '12px', marginRight: '4px' }} />
+                            Recherche en cours...
+                          </small>
                         )}
                       </div>
 
                       {/* Second line: Tags Filter */}
                       <div className="d-flex align-items-center gap-2 flex-wrap">
-                        <label className="form-label mb-0 fw-semibold" style={{ fontSize: '0.9rem' }}>Tags:</label>
+                        <label className="form-label mb-0 fw-semibold" style={{ fontSize: '0.9rem' }}>
+                          <i className="bi bi-tags me-1"></i>
+                          Tags:
+                        </label>
                         
-                        {/* Tag input with autocomplete */}
-                        <div className="position-relative" style={{ minWidth: '200px' }}>
+                        {/* Phase 4: Enhanced tag input with backend autocomplete */}
+                        <div className="position-relative" style={{ minWidth: '250px', flexGrow: 1, maxWidth: '400px' }}>
                           <input
                             type="text"
                             className="form-control form-control-sm"
-                            placeholder="Tapez pour filtrer par tags..."
+                            placeholder={loadingTags ? "Chargement des tags..." : "Tapez pour filtrer par tags..."}
                             value={tagInput}
+                            disabled={loadingTags}
                             onChange={(e) => {
                               setTagInput(e.target.value);
                               setShowTagSuggestions(true);
                             }}
-                            onFocus={() => setShowTagSuggestions(true)}
+                            onFocus={() => {
+                              setShowTagSuggestions(true);
+                              // Lazy load tags on first focus
+                              if (availableTags.length === 0 && !loadingTags) {
+                                loadAvailableTags();
+                              }
+                            }}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' && tagInput.trim()) {
+                              if (e.key === 'Enter') {
                                 e.preventDefault();
                                 const suggestions = getTagSuggestions();
                                 if (suggestions.length > 0) {
                                   addTagToFilter(suggestions[0]);
+                                } else if (tagInput.trim()) {
+                                  // Allow adding custom tag if it doesn't exist
+                                  addTagToFilter(tagInput.trim());
                                 }
                               }
                               if (e.key === 'Escape') {
                                 setShowTagSuggestions(false);
                               }
                             }}
+                            style={{ paddingRight: '30px' }}
                           />
                           
-                          {/* Tag suggestions dropdown */}
-                          {showTagSuggestions && tagInput.trim() && (
-                            <div className="position-absolute top-100 start-0 w-100 bg-white border rounded-2 shadow-sm z-3" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                              {getTagSuggestions().map(tag => (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  className="btn btn-link text-start w-100 text-decoration-none py-1 px-2 border-0"
-                                  style={{ fontSize: '0.85rem' }}
-                                  onClick={() => addTagToFilter(tag)}
-                                  onMouseDown={(e) => e.preventDefault()} // Prevent input blur
-                                >
-                                  {tag}
-                                </button>
-                              ))}
-                              {getTagSuggestions().length === 0 && (
-                                <div className="text-muted p-2" style={{ fontSize: '0.8rem' }}>
-                                  Aucun tag trouvé
-                                </div>
-                              )}
+                          {/* Clear tag input button */}
+                          {tagInput && !loadingTags && (
+                            <button
+                              onClick={() => {
+                                setTagInput('');
+                                setShowTagSuggestions(false);
+                              }}
+                              style={{
+                                position: 'absolute',
+                                right: '8px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '2px 6px',
+                                color: '#6c757d',
+                                fontSize: '1rem'
+                              }}
+                              title="Effacer"
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          )}
+                          
+                          {/* Loading spinner in input */}
+                          {loadingTags && (
+                            <div style={{
+                              position: 'absolute',
+                              right: '8px',
+                              top: '50%',
+                              transform: 'translateY(-50%)'
+                            }}>
+                              <Spinner animation="border" size="sm" style={{ width: '14px', height: '14px' }} />
+                            </div>
+                          )}
+                          
+                          {/* Tag suggestions dropdown - Phase 4: Enhanced with backend data */}
+                          {showTagSuggestions && !loadingTags && (
+                            <div 
+                              className="position-absolute top-100 start-0 w-100 bg-white border rounded-2 shadow-sm z-3 mt-1" 
+                              style={{ maxHeight: '200px', overflowY: 'auto' }}
+                            >
+                              {(() => {
+                                const suggestions = getTagSuggestions();
+                                const allAvailableTags = availableTags.filter(tag => !selectedTags.includes(tag));
+                                
+                                // If user is typing, show filtered suggestions
+                                if (tagInput.trim()) {
+                                  if (suggestions.length > 0) {
+                                    return suggestions.map((tag, index) => (
+                                      <button
+                                        key={tag}
+                                        type="button"
+                                        className="btn btn-link text-start w-100 text-decoration-none py-2 px-3 border-0 d-flex align-items-center gap-2"
+                                        style={{ 
+                                          fontSize: '0.85rem',
+                                          borderBottom: index < suggestions.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                          color: '#212529',
+                                          transition: 'background-color 0.15s ease'
+                                        }}
+                                        onClick={() => addTagToFilter(tag)}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                      >
+                                        <i className="bi bi-tag" style={{ color: '#6c757d' }}></i>
+                                        {tag}
+                                      </button>
+                                    ));
+                                  } else {
+                                    return (
+                                      <div className="p-3 text-center">
+                                        <small className="text-muted">
+                                          <i className="bi bi-info-circle me-1"></i>
+                                          Aucun tag trouvé pour "{tagInput}"
+                                        </small>
+                                        <div className="mt-2">
+                                          <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-primary"
+                                            onClick={() => {
+                                              if (tagInput.trim()) {
+                                                addTagToFilter(tagInput.trim());
+                                              }
+                                            }}
+                                          >
+                                            <i className="bi bi-plus-circle me-1"></i>
+                                            Ajouter "{tagInput}"
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                } else {
+                                  // Show all available tags when focused without typing
+                                  if (allAvailableTags.length > 0) {
+                                    return (
+                                      <>
+                                        <div className="px-3 py-2 bg-light border-bottom">
+                                          <small className="text-muted fw-semibold">
+                                            <i className="bi bi-tags me-1"></i>
+                                            Tags disponibles ({allAvailableTags.length})
+                                          </small>
+                                        </div>
+                                        {allAvailableTags.slice(0, 10).map((tag, index) => (
+                                          <button
+                                            key={tag}
+                                            type="button"
+                                            className="btn btn-link text-start w-100 text-decoration-none py-2 px-3 border-0 d-flex align-items-center gap-2"
+                                            style={{ 
+                                              fontSize: '0.85rem',
+                                              color: '#212529',
+                                              transition: 'background-color 0.15s ease'
+                                            }}
+                                            onClick={() => addTagToFilter(tag)}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                          >
+                                            <i className="bi bi-tag" style={{ color: '#6c757d' }}></i>
+                                            {tag}
+                                          </button>
+                                        ))}
+                                        {allAvailableTags.length > 10 && (
+                                          <div className="px-3 py-2 bg-light text-center border-top">
+                                            <small className="text-muted">
+                                              Tapez pour rechercher parmi {allAvailableTags.length - 10} autres tags...
+                                            </small>
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  } else if (availableTags.length === 0 && !loadingTags) {
+                                    return (
+                                      <div className="p-3 text-center text-muted">
+                                        <i className="bi bi-tags me-1"></i>
+                                        <small>Aucun tag disponible</small>
+                                      </div>
+                                    );
+                                  }
+                                }
+                              })()}
                             </div>
                           )}
                         </div>
-
-                        {/* Selected tags display inline */}
-                        {selectedTags.map(tag => (
-                          <span key={tag} className="badge d-flex align-items-center gap-1" style={{ fontSize: '0.8rem', backgroundColor: '#b3d9ff', color: '#1a5490' }}>
-                            {tag}
-                            <button
-                              type="button"
-                              className="btn-close"
-                              style={{ fontSize: '0.6rem', filter: 'invert(1)' }}
-                              onClick={() => removeTagFromFilter(tag)}
-                              aria-label={`Remove ${tag} filter`}
-                            ></button>
-                          </span>
-                        ))}
+                        
+                        {/* Phase 4: Show available tags count */}
+                        {!loadingTags && availableTags.length > 0 && selectedTags.length === 0 && !tagInput && (
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                            <i className="bi bi-info-circle me-1"></i>
+                            {availableTags.length} tag{availableTags.length > 1 ? 's' : ''} disponible{availableTags.length > 1 ? 's' : ''}
+                          </small>
+                        )}
                       </div>
                     </div>
                   </Card.Body>
                 </Card>
             
-                {loading && (
-                  <div className="text-center py-5">
-                    <Spinner animation="border" variant="primary" className="mb-3" />
-                    <p className="text-muted">Chargement de vos fiches...</p>
-                  </div>
+                {/* Phase 5: Active Filters Bar */}
+                {!loading && hasActiveFilters() && (
+                  <Card 
+                    className="mb-3" 
+                    style={{ 
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '8px',
+                      boxShadow: 'none'
+                    }}
+                  >
+                    <Card.Body className="py-2 px-3">
+                      <div className="d-flex align-items-center flex-wrap gap-2">
+                        {/* Header */}
+                        <small className="text-muted fw-semibold me-2" style={{ fontSize: '0.8rem' }}>
+                          <i className="bi bi-funnel-fill me-1"></i>
+                          Filtres actifs ({getActiveFiltersCount()}):
+                        </small>
+
+                        {/* Domain Chip */}
+                        {selectedDomain && (
+                          <span 
+                            className={`badge d-flex align-items-center gap-1 ${styles['tag-chip']}`}
+                            style={{
+                              backgroundColor: '#e7f3ff',
+                              color: '#0056b3',
+                              border: '1px solid #b3d9ff',
+                              fontSize: '0.8rem',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <i className="bi bi-book" style={{ fontSize: '0.75rem' }}></i>
+                            <span>Domaine: {getDomainLabel(selectedDomain)}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDomain('')}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0 2px',
+                                marginLeft: '4px',
+                                color: '#0056b3',
+                                fontSize: '1rem',
+                                lineHeight: '1',
+                                opacity: 0.7,
+                                transition: 'opacity 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                              aria-label={`Retirer filtre ${getDomainLabel(selectedDomain)}`}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </span>
+                        )}
+
+                        {/* Level Chip */}
+                        {selectedLevel && (
+                          <span 
+                            className={`badge d-flex align-items-center gap-1 ${styles['tag-chip']}`}
+                            style={{
+                              backgroundColor: '#fff3cd',
+                              color: '#856404',
+                              border: '1px solid #ffc107',
+                              fontSize: '0.8rem',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <i className="bi bi-mortarboard" style={{ fontSize: '0.75rem' }}></i>
+                            <span>Niveau: {getLevelLabel(selectedLevel)}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLevel('')}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0 2px',
+                                marginLeft: '4px',
+                                color: '#856404',
+                                fontSize: '1rem',
+                                lineHeight: '1',
+                                opacity: 0.7,
+                                transition: 'opacity 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                              aria-label={`Retirer filtre ${getLevelLabel(selectedLevel)}`}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </span>
+                        )}
+
+                        {/* Period Chip (only if not default 'week') */}
+                        {selectedTimeRange && selectedTimeRange !== 'week' && (
+                          <span 
+                            className={`badge d-flex align-items-center gap-1 ${styles['tag-chip']}`}
+                            style={{
+                              backgroundColor: '#d1ecf1',
+                              color: '#0c5460',
+                              border: '1px solid #bee5eb',
+                              fontSize: '0.8rem',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <i className="bi bi-calendar-week" style={{ fontSize: '0.75rem' }}></i>
+                            <span>Période: {getPeriodLabel()}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedTimeRange('week')} // Reset to default
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0 2px',
+                                marginLeft: '4px',
+                                color: '#0c5460',
+                                fontSize: '1rem',
+                                lineHeight: '1',
+                                opacity: 0.7,
+                                transition: 'opacity 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                              aria-label={`Retirer filtre ${getPeriodLabel()}`}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </span>
+                        )}
+
+                        {/* Search Chip */}
+                        {searchInput && (
+                          <span 
+                            className={`badge d-flex align-items-center gap-1 ${styles['tag-chip']}`}
+                            style={{
+                              backgroundColor: '#f8d7da',
+                              color: '#721c24',
+                              border: '1px solid #f5c6cb',
+                              fontSize: '0.8rem',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              maxWidth: '250px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                            title={`Recherche: "${searchInput}"`}
+                          >
+                            <i className="bi bi-search" style={{ fontSize: '0.75rem' }}></i>
+                            <span>Recherche: "{searchInput}"</span>
+                            <button
+                              type="button"
+                              onClick={() => setSearchInput('')}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0 2px',
+                                marginLeft: '4px',
+                                color: '#721c24',
+                                fontSize: '1rem',
+                                lineHeight: '1',
+                                opacity: 0.7,
+                                transition: 'opacity 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                              aria-label="Retirer recherche"
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </span>
+                        )}
+
+                        {/* Tag Chips */}
+                        {selectedTags.map(tag => (
+                          <span 
+                            key={tag}
+                            className={`badge d-flex align-items-center gap-1 ${styles['tag-chip']}`}
+                            style={{
+                              backgroundColor: '#d4edda',
+                              color: '#155724',
+                              border: '1px solid #c3e6cb',
+                              fontSize: '0.8rem',
+                              padding: '5px 10px',
+                              borderRadius: '6px',
+                              fontWeight: '500',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <i className="bi bi-tag-fill" style={{ fontSize: '0.7rem' }}></i>
+                            <span>Tag: {tag}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeTagFromFilter(tag)}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                padding: '0 2px',
+                                marginLeft: '4px',
+                                color: '#155724',
+                                fontSize: '1rem',
+                                lineHeight: '1',
+                                opacity: 0.7,
+                                transition: 'opacity 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                              aria-label={`Retirer tag ${tag}`}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </span>
+                        ))}
+
+                        {/* Clear All Button */}
+                        <button
+                          onClick={clearFilters}
+                          className="btn btn-sm"
+                          style={{
+                            backgroundColor: 'white',
+                            color: '#dc3545',
+                            border: '1px solid #dc3545',
+                            fontSize: '0.8rem',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            fontWeight: '500',
+                            marginLeft: 'auto'
+                          }}
+                          className={styles['filter-btn']}
+                        >
+                          <i className="bi bi-x-circle me-1"></i>
+                          Tout effacer
+                        </button>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                )}
+            
+                {/* Loading state with active filters summary */}
+                {loading && hasActiveFilters() && (
+                  <Card 
+                    className="mb-3" 
+                    style={{ 
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '8px',
+                      boxShadow: 'none'
+                    }}
+                  >
+                    <Card.Body className="py-2 px-3">
+                      <div className="d-flex align-items-center flex-wrap gap-2">
+                        <small className="text-muted fw-semibold me-2" style={{ fontSize: '0.8rem' }}>
+                          <i className="bi bi-funnel-fill me-1"></i>
+                          Recherche en cours avec les filtres:
+                        </small>
+
+                        {selectedDomain && (
+                          <span className="badge" style={{ backgroundColor: '#e7f3ff', color: '#0056b3', fontSize: '0.75rem', fontWeight: '500' }}>
+                            <i className="bi bi-journals me-1"></i>
+                            {getDomainLabel(selectedDomain)}
+                          </span>
+                        )}
+
+                        {selectedLevel && (
+                          <span className="badge" style={{ backgroundColor: '#fff3cd', color: '#856404', fontSize: '0.75rem', fontWeight: '500' }}>
+                            <i className="bi bi-bar-chart-steps me-1"></i>
+                            {getLevelLabel(selectedLevel)}
+                          </span>
+                        )}
+
+                        {selectedTimeRange && selectedTimeRange !== 'week' && (
+                          <span className="badge" style={{ backgroundColor: '#d1ecf1', color: '#0c5460', fontSize: '0.75rem', fontWeight: '500' }}>
+                            <i className="bi bi-calendar-week me-1"></i>
+                            {getPeriodLabel()}
+                          </span>
+                        )}
+
+                        {searchInput && (
+                          <span className="badge" style={{ backgroundColor: '#f8d7da', color: '#721c24', fontSize: '0.75rem', fontWeight: '500' }}>
+                            <i className="bi bi-search me-1"></i>
+                            "{searchInput}"
+                          </span>
+                        )}
+
+                        {selectedTags.map(tag => (
+                          <span key={tag} className="badge" style={{ backgroundColor: '#d4edda', color: '#155724', fontSize: '0.75rem', fontWeight: '500' }}>
+                            <i className="bi bi-tag-fill me-1"></i>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </Card.Body>
+                  </Card>
                 )}
 
+                {/* Phase 1.2: Skeleton Loader */}
+                {loading && <SkeletonFileCard count={3} />}
+
+                {/* Phase 1.3: Error State */}
                 {error && (
                   <Alert variant="danger">
                     <h6>Erreur de chargement</h6>
@@ -621,105 +1508,73 @@ export default function SessionsPage() {
                   </Alert>
                 )}
 
-                {!loading && !error && filteredFiles.length === 0 && files.length === 0 && (
-                  <div className="text-center py-5">
-                    <div className="mb-4">
-                      <i className="bi bi-file-earmark-pdf" style={{ fontSize: '4rem', color: '#adb5bd' }}></i>
-                    </div>
-                    <h4 className="mb-3" style={{ color: '#495057', fontWeight: '600' }}>Aucune fiche générée</h4>
-                    <p className="text-muted mb-4" style={{ fontSize: '0.95rem' }}>
-                      Vous n'avez pas encore généré de fiches d'exercices.
-                    </p>
-                    <button
-                      onClick={() => window.location.href = '/generate/french'}
-                      style={{
-                        backgroundColor: '#0d6efd',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0b5ed7'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0d6efd'}
-                    >
-                      <i className="bi bi-plus-circle me-2"></i>
-                      Créer ma première fiche
-                    </button>
-                  </div>
+                {/* Phase 1.3: Empty States with Context */}
+                {!loading && !error && filteredFiles.length === 0 && files.length === 0 && showingPeriod === 'week' && (
+                  <EmptyState 
+                    type="no-recent-files" 
+                    onShowAll={loadAllFiles}
+                  />
+                )}
+
+                {!loading && !error && filteredFiles.length === 0 && files.length === 0 && showingPeriod === 'all' && (
+                  <EmptyState type="new-user" />
                 )}
 
                 {!loading && !error && files.length > 0 && filteredFiles.length === 0 && (selectedDomain || selectedLevel || selectedTimeRange || selectedTag || selectedTags.length > 0) && (
-                  <div className="text-center py-5">
-                    <div className="mb-4">
-                      <i className="bi bi-funnel" style={{ fontSize: '3rem', color: '#adb5bd' }}></i>
-                    </div>
-                    <h4 className="mb-3" style={{ color: '#495057', fontWeight: '600' }}>Aucun résultat</h4>
-                    <p className="text-muted mb-4" style={{ fontSize: '0.95rem' }}>
-                      Aucune fiche ne correspond aux filtres sélectionnés.
-                    </p>
-                    <button
-                      onClick={clearFilters}
-                      style={{
-                        backgroundColor: 'white',
-                        color: '#6c757d',
-                        border: '2px solid #dee2e6',
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8f9fa';
-                        e.currentTarget.style.borderColor = '#adb5bd';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'white';
-                        e.currentTarget.style.borderColor = '#dee2e6';
-                      }}
-                    >
-                      <i className="bi bi-x-circle me-2"></i>
-                      Effacer les filtres
-                    </button>
-                  </div>
+                  <EmptyState 
+                    type="no-filtered-results" 
+                    onClearFilters={clearFilters}
+                    onShowAll={showingPeriod === 'week' ? loadAllFiles : undefined}
+                  />
                 )}
 
+                {/* Phase 1.1: Context-aware file counter */}
                 {!loading && !error && filteredFiles.length > 0 && (
                   <>
-                    <div className="mb-3 d-flex justify-content-between align-items-center">
-                      <small className="text-muted">
-                        {filteredFiles.length} fiche{filteredFiles.length > 1 ? 's' : ''} trouvée{filteredFiles.length > 1 ? 's' : ''}
-                        {(selectedDomain || selectedLevel || selectedTimeRange || selectedTag || selectedTags.length > 0) && files.length !== filteredFiles.length && (
-                          <span> sur {files.length}</span>
+                    <div className="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                      <div className="d-flex flex-column">
+                        <small className="text-muted">
+                          <strong className={styles['counter-badge']}>{totalCount}</strong> fiche{totalCount > 1 ? 's' : ''} générée{totalCount > 1 ? 's' : ''}
+                          {(showingPeriod === 'week' || selectedTimeRange) && (
+                            <span className="ms-2" style={{ color: '#6c757d' }}>
+                              · <i className="bi bi-calendar-week me-1"></i>
+                              {getPeriodLabel()}
+                            </span>
+                          )}
+                        </small>
+                        {(selectedDomain || selectedLevel || selectedTimeRange || selectedTag || selectedTags.length > 0) && (
+                          <small className="text-muted mt-1">
+                            <span className={styles['counter-badge']}>{filteredFiles.length}</span> résultat{filteredFiles.length > 1 ? 's' : ''} correspondant{filteredFiles.length > 1 ? 's' : ''} aux filtres
+                          </small>
                         )}
-                      </small>
+                      </div>
+                      
+                      {showingPeriod === 'week' && totalCount > files.length && (
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={loadAllFiles}
+                          style={{
+                            borderRadius: '8px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          <i className="bi bi-clock-history me-2"></i>
+                          Afficher tout ({totalCount})
+                        </Button>
+                      )}
                     </div>
 
                     {/* List View - One file per row */}
                     <div className="d-flex flex-column gap-3">
                       {filteredFiles.map((file) => (
                         <Card 
-                          key={file.file_id} 
+                          key={file.file_id}
+                          className={styles['file-card']}
                           style={{ 
                             border: '2px solid #e9ecef',
                             borderRadius: '10px',
-                            transition: 'all 0.2s ease',
                             boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                            e.currentTarget.style.borderColor = '#dee2e6';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                            e.currentTarget.style.borderColor = '#e9ecef';
                           }}
                         >
                           <Card.Body className="p-3">
@@ -746,6 +1601,24 @@ export default function SessionsPage() {
                                       </span>
                                       <small className="text-muted" style={{ fontSize: '0.85rem' }}>• {file.exercice_time}</small>
                                     </div>
+                                    
+                                    {/* Display custom name if available */}
+                                    {file.custom_name && (
+                                      <div className="mb-2">
+                                        <span style={{ 
+                                          fontSize: '0.9rem',
+                                          color: '#495057',
+                                          fontStyle: 'italic',
+                                          backgroundColor: '#e7f3ff',
+                                          padding: '2px 8px',
+                                          borderRadius: '4px',
+                                          border: '1px solid #b3d9ff'
+                                        }}>
+                                          <i className="bi bi-pencil-square me-1" style={{ fontSize: '0.8rem' }}></i>
+                                          {file.custom_name}
+                                        </span>
+                                      </div>
+                                    )}
                                     
                                     <div className="d-flex flex-wrap gap-1 mb-2">
                                       {file.exercice_types.map((type) => (
@@ -906,6 +1779,44 @@ export default function SessionsPage() {
                         </Card>
                       ))}
                     </div>
+
+                    {/* Phase 2: Backend Pagination - Loading Indicator */}
+                    {hasMore && (
+                      <div className="text-center mt-4 mb-3">
+                        {isLoadingMore ? (
+                          <div className="d-flex flex-column align-items-center gap-2">
+                            <div className={styles['load-more-spinner']}></div>
+                            <small className="text-muted">
+                              <span className={styles.pulse}>Chargement page {page + 1}/{totalPages}...</span>
+                            </small>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={loadMoreFiles}
+                            className={styles['infinite-scroll-loader']}
+                            style={{ fontSize: '0.85rem', position: 'relative' }}
+                          >
+                            <i className="bi bi-arrow-down-circle me-2"></i>
+                            Charger plus de fiches ({files.length}/{totalCount})
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Sentinel element for intersection observer */}
+                    <div id="scroll-sentinel" style={{ height: '20px' }}></div>
+
+                    {/* Phase 2: All files loaded message */}
+                    {!hasMore && files.length > 0 && (
+                      <div className={`text-center mt-3 mb-3 ${styles['end-indicator']}`}>
+                        <small className="text-muted">
+                          <i className="bi bi-check-circle me-1"></i>
+                          Toutes les fiches sont affichées ({files.length}/{totalCount})
+                        </small>
+                      </div>
+                    )}
                   </>
                 )}
               </Card.Body>

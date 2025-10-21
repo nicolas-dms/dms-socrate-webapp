@@ -585,3 +585,15 @@ div[style*="position: fixed"][style*="bottom"][style*="right"] button {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
   margin: 1px !important;
 }
+
+/* Phase 6: Animation for restored filters notification */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

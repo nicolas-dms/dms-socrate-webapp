@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { validators } from "../../utils/validators";
@@ -10,9 +10,11 @@ import Form from "react-bootstrap/Form";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const { login, sendMagicCode, loading } = useAuth();
+  const { user, login, sendMagicCode, loading } = useAuth();
   const { t } = useTranslation();
   const router = useRouter();
+
+  // All useState hooks MUST come before any conditional returns
   const [email, setEmail] = useState("");
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [code, setCode] = useState("");
@@ -20,6 +22,21 @@ export default function LoginPage() {
   const [success, setSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
   const [showTempError, setShowTempError] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false); // Loading state for sending magic code
+  const [verifyingCode, setVerifyingCode] = useState(false); // Loading state for verifying code
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      console.log('User already authenticated, redirecting to /generate');
+      router.push("/generate");
+    }
+  }, [user, loading, router]);
+
+  // Don't render login form if user is authenticated (silent redirect)
+  if (user) {
+    return null;
+  }
   // Email validation function
   const isValidEmail = (email: string): boolean => {
     return validators.isValidEmail(email);
@@ -54,6 +71,7 @@ export default function LoginPage() {
     }
     
     try {
+      setSendingCode(true);
       const result = await sendMagicCode(email);
       if (result.success) {
         setSuccess(result.message || "Code sent successfully! Check your email.");
@@ -63,6 +81,8 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError("Failed to send code. Please check your email address.");
+    } finally {
+      setSendingCode(false);
     }
   };
   // Step 2: Verify code and login
@@ -79,6 +99,7 @@ export default function LoginPage() {
     }
     
     try {
+      setVerifyingCode(true);
       const result = await login(email, code);
       if (result.success) {
         setShowCodeModal(false);
@@ -124,6 +145,8 @@ export default function LoginPage() {
         setShowTempError(false);
         setError("");
       }, 3000);
+    } finally {
+      setVerifyingCode(false);
     }
   };
 
@@ -189,7 +212,7 @@ export default function LoginPage() {
                     onChange={handleEmailChange}
                     placeholder="example@domain.com"
                     required
-                    disabled={loading}
+                    disabled={sendingCode}
                     style={{ borderRadius: '10px' }}
                   />
                   {emailError && (
@@ -209,13 +232,13 @@ export default function LoginPage() {
                 
                 <Button 
                   type="submit" 
-                  disabled={loading || !email || !isValidEmail(email) || !!emailError} 
+                  disabled={sendingCode || !email || !isValidEmail(email) || !!emailError} 
                   className="w-100 py-3"
                   variant={email && isValidEmail(email) ? "primary" : "secondary"}
                   size="lg"
                   style={{ borderRadius: '10px', fontWeight: '600' }}
                 >
-                  {loading ? (
+                  {sendingCode ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                       {t('auth.sending')}
@@ -257,11 +280,18 @@ export default function LoginPage() {
             )}
             <Button 
               type="submit" 
-              disabled={loading || !validators.isValidVerificationCode(code)} 
+              disabled={verifyingCode || !validators.isValidVerificationCode(code)} 
               className="w-100 mt-3"
               variant={validators.isValidVerificationCode(code) ? "primary" : "secondary"}
             >
-              {loading ? t('auth.verifying') : t('auth.verifyCodeLogin')}
+              {verifyingCode ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {t('auth.verifying')}
+                </>
+              ) : (
+                t('auth.verifyCodeLogin')
+              )}
             </Button>
             
             {/* Code validation feedback */}

@@ -42,19 +42,19 @@ export const EXERCISE_CONTENT_CALCULATOR = {
       switch (type) {
         case "lecture":
           content.readingTexts = 1;
-          content.comprehensionQuestions = Math.round((durationMinutes >= 40 ? 6 : durationMinutes >= 30 ? 5 : 3) * levelMultiplier);
+          content.comprehensionQuestions = Math.round((durationMinutes >= 40 ? 6 : durationMinutes >= 30 ? 5 : durationMinutes >= 20 ? 3 : 2) * levelMultiplier);
           break;
         case "grammaire":
-          content.grammarExercises = Math.round((durationMinutes >= 40 ? 6 : durationMinutes >= 30 ? 4 : 3) * levelMultiplier);
+          content.grammarExercises = Math.round((durationMinutes >= 40 ? 6 : durationMinutes >= 30 ? 4 : durationMinutes >= 20 ? 3 : 2) * levelMultiplier);
           break;
         case "conjugaison":
-          content.conjugationExercises = Math.round((durationMinutes >= 40 ? 5 : durationMinutes >= 30 ? 4 : 3) * levelMultiplier);
+          content.conjugationExercises = Math.round((durationMinutes >= 40 ? 5 : durationMinutes >= 30 ? 4 : durationMinutes >= 20 ? 3 : 2) * levelMultiplier);
           break;
         case "vocabulaire":
-          content.vocabularyExercises = Math.round((durationMinutes >= 40 ? 5 : durationMinutes >= 30 ? 4 : 3) * levelMultiplier);
+          content.vocabularyExercises = Math.round((durationMinutes >= 40 ? 5 : durationMinutes >= 30 ? 4 : durationMinutes >= 20 ? 3 : 2) * levelMultiplier);
           break;
         case "orthographe":
-          content.spellingExercises = Math.round((durationMinutes >= 40 ? 6 : durationMinutes >= 30 ? 4 : 3) * levelMultiplier);
+          content.spellingExercises = Math.round((durationMinutes >= 40 ? 6 : durationMinutes >= 30 ? 4 : durationMinutes >= 20 ? 3 : 2) * levelMultiplier);
           break;
       }
     });

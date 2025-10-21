@@ -673,6 +673,257 @@
         }
       }
     },
+    "/api/education/exercises/files/{user_id}/count": {
+      "get": {
+        "summary": "Get User Files Count",
+        "description": "Get total count of user's exercise files\n\nReturns the total number of exercise files for the user.\nUseful for displaying \"X fiches générées\" in the UI.\n\nResponse format:\n{\n    \"total_count\": 192,\n    \"user_id\": \"user123\",\n    \"active_only\": true\n}",
+        "operationId": "get_user_files_count_api_education_exercises_files__user_id__count_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only count active files",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Only count active files"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilesCountResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/available-tags": {
+      "get": {
+        "summary": "Get Available Tags For User",
+        "description": "Get all unique tags used by the user for auto-suggestion\n\nReturns a sorted list of all unique tags that the user has used across their exercise files.\nThis is useful for implementing tag auto-completion in the frontend.\n\nExample response: [\"conjugaison\", \"dictée\", \"multiplication\", \"revision\", \"sacha\"]",
+        "operationId": "get_available_tags_for_user_api_education_exercises_files__user_id__available_tags_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only consider tags from active files",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Only consider tags from active files"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Available Tags For User Api Education Exercises Files  User Id  Available Tags Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/by-period/{period}": {
+      "get": {
+        "summary": "Get User Exercise Files By Time Period",
+        "description": "Get exercise files for a specific user filtered by time period\n\nTime periods:\n- today: Files created today\n- week: Files from last 7 days\n- month: Files from last 30 days\n- 3months: Files from last 90 days\n- all: All files",
+        "operationId": "get_user_exercise_files_by_time_period_api_education_exercises_files__user_id__by_period__period__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "period",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TimePeriod"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only return active files",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Only return active files"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceFile"
+                  },
+                  "title": "Response Get User Exercise Files By Time Period Api Education Exercises Files  User Id  By Period  Period  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/education/exercises/files/{user_id}/filter-by-tags": {
+      "get": {
+        "summary": "Get User Exercise Files Filtered By Tags",
+        "description": "Get exercise files for a specific user filtered by tags with advanced options\n\nThis endpoint uses the DAL method for efficient tag filtering with match options:\n- match_all=false (default): Files with ANY of the tags\n- match_all=true: Files with ALL of the tags",
+        "operationId": "get_user_exercise_files_filtered_by_tags_api_education_exercises_files__user_id__filter_by_tags_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated tags",
+              "title": "Tags"
+            },
+            "description": "Comma-separated tags"
+          },
+          {
+            "name": "match_all",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, must match ALL tags (default: ANY)",
+              "default": false,
+              "title": "Match All"
+            },
+            "description": "If true, must match ALL tags (default: ANY)"
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only return active files",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Only return active files"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceFile"
+                  },
+                  "title": "Response Get User Exercise Files Filtered By Tags Api Education Exercises Files  User Id  Filter By Tags Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/education/exercises/files/{user_id}/{file_id}": {
       "get": {
         "summary": "Get Exercise File By Id",
@@ -1038,6 +1289,56 @@
         }
       }
     },
+    "/api/education/exercises/files/{user_id}/search": {
+      "post": {
+        "summary": "Search Exercise Files Advanced",
+        "description": "Advanced search for exercise files with multiple filters and pagination\n\nSupports filtering by:\n- class_level: Education level (CP, CE1, CE2, CM1, CM2)\n- exercice_domain: Subject domain (francais, math, anglais)\n- exercice_types: Exercise types (files with ANY of these types)\n- tags: Tags (files with ANY or ALL based on match_all_tags)\n- time_period: Time range (today, week, month, 3months, all)\n- custom_name: Custom name (partial match, case-insensitive)\n- active_only: Only active files (default: true)\n\nPagination:\n- page: Page number (1-indexed, default: 1)\n- page_size: Items per page (1-100, default: 20)\n\nReturns paginated results with metadata about total count and pages.",
+        "operationId": "search_exercise_files_advanced_api_education_exercises_files__user_id__search_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvancedSearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedExerciceFilesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -1074,13 +1375,123 @@
   },
   "components": {
     "schemas": {
+      "AdvancedSearchRequest": {
+        "properties": {
+          "class_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExerciceLevel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by class level"
+          },
+          "exercice_domain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExerciceDomain"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by domain"
+          },
+          "exercice_types": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExerciceType"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercice Types",
+            "description": "Filter by exercise types (ANY match)"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags",
+            "description": "Filter by tags"
+          },
+          "match_all_tags": {
+            "type": "boolean",
+            "title": "Match All Tags",
+            "description": "If true, must match ALL tags (default: ANY)",
+            "default": false
+          },
+          "time_period": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimePeriod"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by time period"
+          },
+          "custom_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Name",
+            "description": "Filter by custom name (partial match)"
+          },
+          "active_only": {
+            "type": "boolean",
+            "title": "Active Only",
+            "description": "Only return active files",
+            "default": true
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Page",
+            "description": "Page number (1-indexed)",
+            "default": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Page Size",
+            "description": "Items per page (max 100)",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "title": "AdvancedSearchRequest",
+        "description": "Request model for advanced search with multiple filters"
+      },
       "ExerciceDomain": {
         "type": "string",
         "enum": [
           "mathematiques",
           "francais"
         ],
-        "title": "ExerciceDomain"
+        "title": "ExerciceDomain",
+        "description": "Educational domains available"
       },
       "ExerciceFile": {
         "properties": {
@@ -1205,22 +1616,29 @@
       "ExerciceGenerationRequest": {
         "properties": {
           "theme": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Theme",
-            "description": "Thème des exercices à générer"
+            "description": "Exercise theme (optional for mathematics)"
           },
-          "class_level": {
+          "niveau": {
             "$ref": "#/components/schemas/ExerciceLevel",
-            "description": "Niveau de classe",
+            "description": "Class level",
             "default": "ce1"
           },
-          "exercice_domain": {
+          "domain": {
             "$ref": "#/components/schemas/ExerciceDomain",
-            "description": "Domaine des exercices"
+            "description": "Exercise domain"
           },
-          "exercice_time": {
+          "duration": {
             "$ref": "#/components/schemas/ExerciceTime",
-            "description": "Temps estimé pour la feuille d'exercice"
+            "description": "Estimated time for exercise sheet"
           },
           "exercice_types": {
             "items": {
@@ -1233,15 +1651,14 @@
               "comprehension"
             ]
           },
-          "exercice_type_params": {
+          "exercises": {
             "anyOf": [
               {
                 "additionalProperties": {
-                  "additionalProperties": true,
-                  "type": "object"
-                },
-                "propertyNames": {
-                  "$ref": "#/components/schemas/ExerciceType"
+                  "items": {
+                    "$ref": "#/components/schemas/ExerciceSpec"
+                  },
+                  "type": "array"
                 },
                 "type": "object"
               },
@@ -1249,8 +1666,8 @@
                 "type": "null"
               }
             ],
-            "title": "Exercice Type Params",
-            "description": "Paramètres spécifiques à chaque type d'exercice. Exemple : {'conjugaison': {'verbes': ['être', 'avoir'], 'temps': ['présent']}}"
+            "title": "Exercises",
+            "description": "Structured exercise configuration by type with specific exercise list"
           },
           "specific_requirements": {
             "anyOf": [
@@ -1262,16 +1679,36 @@
               }
             ],
             "title": "Specific Requirements",
-            "description": "Exigences spécifiques"
+            "description": "Specific requirements"
+          },
+          "exercice_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exercice Title",
+            "description": "Custom title for the exercise sheet"
+          },
+          "exercice_tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exercice Tags",
+            "description": "Tags to categorize the exercise sheet"
           }
         },
         "type": "object",
         "required": [
-          "theme",
-          "exercice_domain",
-          "exercice_time"
+          "domain",
+          "duration"
         ],
-        "title": "ExerciceGenerationRequest"
+        "title": "ExerciceGenerationRequest",
+        "description": "Base exercise generation request"
       },
       "ExerciceLevel": {
         "type": "string",
@@ -1282,14 +1719,15 @@
           "cm1",
           "cm2"
         ],
-        "title": "ExerciceLevel"
+        "title": "ExerciceLevel",
+        "description": "Academic levels supported across all domains"
       },
       "ExerciceResponse": {
         "properties": {
           "success": {
             "type": "boolean",
             "title": "Success",
-            "description": "Indique si la génération a réussi"
+            "description": "Indicates if generation succeeded"
           },
           "error_message": {
             "anyOf": [
@@ -1301,7 +1739,7 @@
               }
             ],
             "title": "Error Message",
-            "description": "Message d'erreur en cas d'échec"
+            "description": "Error message if failed"
           },
           "pdf_path": {
             "anyOf": [
@@ -1313,7 +1751,7 @@
               }
             ],
             "title": "Pdf Path",
-            "description": "URL de téléchargement du PDF (Azure Blob Storage ou chemin local en fallback)"
+            "description": "PDF download URL (Azure Blob Storage or local path fallback)"
           },
           "pdf_base64": {
             "anyOf": [
@@ -1325,14 +1763,68 @@
               }
             ],
             "title": "Pdf Base64",
-            "description": "Contenu du PDF encodé en base64 pour affichage direct"
+            "description": "PDF content encoded in base64 for direct display"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id",
+            "description": "File identifier for tracking"
           }
         },
         "type": "object",
         "required": [
           "success"
         ],
-        "title": "ExerciceResponse"
+        "title": "ExerciceResponse",
+        "description": "Standard exercise generation response"
+      },
+      "ExerciceSpec": {
+        "properties": {
+          "exercice_id": {
+            "type": "string",
+            "title": "Exercice Id",
+            "description": "Specific exercise identifier (will be normalized internally)"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params",
+            "description": "Exercise-specific parameters"
+          },
+          "original_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Title",
+            "description": "Original title from frontend for PDF display"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exercice_id"
+        ],
+        "title": "ExerciceSpec",
+        "description": "Specification for a specific exercise within a type",
+        "example": {
+          "exercice_id": "culture",
+          "original_title": "Culture générale",
+          "params": {
+            "text_size": "moyen",
+            "theme": "louis XVI"
+          }
+        }
       },
       "ExerciceTime": {
         "type": "string",
@@ -1341,7 +1833,8 @@
           "30 minutes",
           "40 minutes"
         ],
-        "title": "ExerciceTime"
+        "title": "ExerciceTime",
+        "description": "Exercise duration options"
       },
       "ExerciceType": {
         "type": "string",
@@ -1353,10 +1846,40 @@
           "conjugaison",
           "orthographe",
           "vocabulaire",
-          "calcul"
+          "calculs",
+          "nombres",
+          "grandeurs",
+          "geometrie"
         ],
         "title": "ExerciceType",
-        "description": "Types of exercises"
+        "description": "Types of exercises - shared across domains but domain-specific usage"
+      },
+      "FilesCountResponse": {
+        "properties": {
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of files"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "User identifier"
+          },
+          "active_only": {
+            "type": "boolean",
+            "title": "Active Only",
+            "description": "Whether only active files were counted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_count",
+          "user_id",
+          "active_only"
+        ],
+        "title": "FilesCountResponse",
+        "description": "Response model for files count endpoint"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1437,6 +1960,54 @@
         ],
         "title": "LogoutResponse"
       },
+      "PaginatedExerciceFilesResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExerciceFile"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of exercise files"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "Total number of items matching the filters"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "description": "Current page number"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of items per page"
+          },
+          "total_pages": {
+            "type": "integer",
+            "title": "Total Pages",
+            "description": "Total number of pages"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "description": "Whether there are more pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_count",
+          "page",
+          "page_size",
+          "total_pages",
+          "has_more"
+        ],
+        "title": "PaginatedExerciceFilesResponse",
+        "description": "Response model for paginated exercise files"
+      },
       "RefreshRequest": {
         "properties": {
           "refresh_token": {
@@ -1494,6 +2065,18 @@
           "message"
         ],
         "title": "SendCodeResponse"
+      },
+      "TimePeriod": {
+        "type": "string",
+        "enum": [
+          "today",
+          "week",
+          "month",
+          "3months",
+          "all"
+        ],
+        "title": "TimePeriod",
+        "description": "Time period options for filtering exercise files"
       },
       "UpdateCustomNameRequest": {
         "properties": {

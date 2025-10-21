@@ -20,6 +20,7 @@ export interface GeneratedFile {
   created_by: string | null;
   download_count: number;
   tags: string[];
+  custom_name?: string; // Optional custom name for the file
 }
 
 // Interface pour la réponse de téléchargement du backend

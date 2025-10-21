@@ -1,14 +1,76 @@
 "use client";
 import '../i18n/i18n';
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Container, Row, Col } from 'react-bootstrap';
 import styles from "./page.module.css";
 
+// Star particle interface
+interface StarParticle {
+  id: number;
+  emoji: string;
+  x: number;
+  y: number;
+  angle: number;
+  speed: number;
+  duration: number;
+}
+
 export default function Home() {
   const { t } = useTranslation();
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const [stars, setStars] = useState<StarParticle[]>([]);
+  const starIdCounter = useRef(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (buttonRef.current && isHovering) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      setMousePos({ x, y });
+      
+      // Create new star particles randomly (not on every move)
+      if (Math.random() > 0.85) { // 15% chance on each move (reduced from 30%)
+        createStarBurst(x, y);
+      }
+    }
+  };
+
+  const createStarBurst = (x: number, y: number) => {
+    const emojis = ['🌟', '✨'];
+    const numStars = 1; // Only 1 star per burst (reduced from 1-2)
+    
+    const newStars: StarParticle[] = [];
+    for (let i = 0; i < numStars; i++) {
+      const angle = Math.random() * Math.PI * 2; // Random direction (0-360 degrees)
+      const speed = 40 + Math.random() * 60; // 40-100px travel distance (reduced)
+      const duration = 0.4 + Math.random() * 0.2; // 0.4-0.6 seconds (~500ms average)
+      
+      newStars.push({
+        id: starIdCounter.current++,
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        x,
+        y,
+        angle,
+        speed,
+        duration
+      });
+    }
+    
+    setStars(prev => [...prev, ...newStars]);
+    
+    // Remove stars after their animation completes
+    newStars.forEach(star => {
+      setTimeout(() => {
+        setStars(prev => prev.filter(s => s.id !== star.id));
+      }, star.duration * 1000);
+    });
+  };
 
   return (
     <div className={styles.landingPage}>
@@ -35,33 +97,44 @@ export default function Home() {
                 Français et Mathématiques • CP à CM2 • Personnalisées, imprimables, sans écran.
               </p>
               <Link href="/generate">
-                <button
-                  style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 28px',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                <div 
+                  ref={buttonRef}
+                  className={`${styles.ctaButtonWrapper} ${isHovering ? styles.hovering : ''}`}
+                  onMouseEnter={() => setIsHovering(true)}
+                  onMouseLeave={() => {
+                    setIsHovering(false);
+                    setStars([]); // Clear stars when leaving
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.5)';
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
-                  }}
+                  onMouseMove={handleMouseMove}
                 >
-                  <i className="bi bi-pencil-square me-2"></i>
-                  Générer mes exercices maintenant
-                </button>
+                  {/* Render star particles that pop out */}
+                  {stars.map((star) => {
+                    const translateX = Math.cos(star.angle) * star.speed;
+                    const translateY = Math.sin(star.angle) * star.speed;
+                    
+                    return (
+                      <span 
+                        key={star.id}
+                        className={styles.starParticle} 
+                        style={{ 
+                          left: `${star.x}px`,
+                          top: `${star.y}px`,
+                          '--translate-x': `${translateX}px`,
+                          '--translate-y': `${translateY}px`,
+                          '--duration': `${star.duration}s`,
+                          animation: `starBurst ${star.duration}s ease-out forwards`
+                        } as React.CSSProperties}
+                      >
+                        {star.emoji}
+                      </span>
+                    );
+                  })}
+                  
+                  <button className={styles.ctaButton}>
+                    <i className="bi bi-pencil-square me-2"></i>
+                    Générer mes exercices maintenant
+                  </button>
+                </div>
               </Link>
             </Col>
             <Col lg={6}>

@@ -130,18 +130,47 @@ export default function ProblemesModal({
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          <i className="bi bi-lightbulb me-2"></i>
-          Configurer les problèmes - {level}
+      <style jsx>{`
+        .problemes-card {
+          transition: all 0.3s ease;
+          border-radius: 12px;
+          cursor: pointer;
+        }
+        .problemes-card:hover:not(.disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15) !important;
+        }
+        .problemes-card.selected {
+          border-color: #3b82f6 !important;
+          border-width: 2px !important;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+        .problemes-card.disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      `}</style>
+      <Modal.Header closeButton style={{ borderBottom: '2px solid #3b82f6' }}>
+        <Modal.Title style={{ color: '#1d4ed8', fontWeight: '600' }}>
+          Configuration Problèmes - {level}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body style={{ backgroundColor: 'white' }}>
         <div className="mb-4">
-          <h6 className="mb-3">Sélectionnez les types de problèmes à inclure</h6>
-          <p className="text-muted small">
-            Les problèmes seront adaptés au niveau {level}. Maximum 3 types peuvent être sélectionnés pour garder les exercices gérables.
-          </p>
+          <h6 className="fw-bold mb-3" style={{ color: '#374151' }}>
+            <i className="bi bi-check-circle me-2" style={{ color: '#3b82f6' }}></i>
+            Sélectionnez les types de problèmes à inclure
+          </h6>
+          <div className="p-3" style={{ 
+            backgroundColor: '#eff6ff',
+            borderRadius: '10px',
+            border: '1px solid #93c5fd'
+          }}>
+            <small style={{ color: '#1e3a8a' }}>
+              <i className="bi bi-info-circle me-1"></i>
+              Les problèmes seront adaptés au niveau {level}. Maximum 3 types peuvent être sélectionnés.
+            </small>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -154,12 +183,11 @@ export default function ProblemesModal({
               return (
                 <Col key={type.key} md={12}>
                   <div 
-                    className={`border rounded p-3 h-100 ${isSelected ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary-subtle'} ${isDisabled ? '' : 'cursor-pointer'}`}
+                    className={`problemes-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                     onClick={() => !isDisabled && toggleType(type.key)}
                     style={{ 
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                      opacity: isDisabled ? 0.7 : 1,
-                      transition: 'all 0.2s ease'
+                      border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                      backgroundColor: 'white'
                     }}
                     title={
                       isDisabled && isSelected && selectedTypes.length === 1 ? "Au moins un type doit être sélectionné" :
@@ -168,18 +196,30 @@ export default function ProblemesModal({
                     }
                   >
                     <div className="d-flex align-items-start gap-2">
-                      <div className="flex-shrink-0">
-                        <span style={{ fontSize: '1.2rem' }}>
-                          {getTypeIcon(type.key)}
-                        </span>
+                      <div 
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          border: isSelected ? '2px solid #3b82f6' : '2px solid #d1d5db',
+                          background: isSelected ? '#3b82f6' : 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.3s ease',
+                          flexShrink: 0
+                        }}
+                      >
+                        {isSelected && (
+                          <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
+                        )}
                       </div>
                       <div className="flex-grow-1">
                         <div className="d-flex align-items-center gap-2 mb-1">
-                          <span className="fw-semibold">{type.label}</span>
-                          {isSelected && <i className="bi bi-check-circle-fill text-primary"></i>}
+                          <span className="fw-semibold" style={{ color: isSelected ? '#1d4ed8' : '#374151' }}>{type.label}</span>
                           {isDisabled && isSelected && selectedTypes.length === 1 && <i className="bi bi-lock-fill text-muted"></i>}
                           {isDisabled && !isSelected && selectedTypes.length >= 3 && <i className="bi bi-x-circle-fill text-muted"></i>}
-                          {wouldExceedLimit && <i className="bi bi-exclamation-triangle-fill text-warning"></i>}
+                          {wouldExceedLimit && <i className="bi bi-exclamation-triangle-fill" style={{ color: '#f59e0b' }}></i>}
                         </div>
                         <div className="text-muted small">
                           {type.examples}
@@ -193,32 +233,69 @@ export default function ProblemesModal({
           </Row>
         </div>
 
-        <div className="border-top pt-3">
-          <h6 className="mb-2">Résumé de la sélection</h6>
-          <div className="d-flex flex-wrap gap-1">
+        <div 
+          style={{
+            backgroundColor: '#eff6ff',
+            border: '1px solid #93c5fd',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginTop: '1.5rem'
+          }}
+        >
+          <h6 className="mb-2" style={{ color: '#1e3a8a', fontWeight: 600 }}>Résumé de la sélection</h6>
+          <div className="d-flex flex-wrap gap-2">
             {selectedTypes.map((type) => {
               const typeData = currentTypes.find(t => t.key === type);
               return (
-                <Badge key={type} bg="primary" className="d-flex align-items-center gap-1">
-                  {getTypeIcon(type)}
+                <Badge 
+                  key={type} 
+                  className="d-flex align-items-center gap-1"
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: 500
+                  }}
+                >
+                  <span>{getTypeIcon(type)}</span>
                   {typeData?.label}
                 </Badge>
               );
             })}
           </div>
-          <small className="text-muted d-block mt-2">
+          <small style={{ color: '#1d4ed8', fontWeight: 500 }} className="d-block mt-2">
             {selectedTypes.length}/3 type{selectedTypes.length > 1 ? 's' : ''} sélectionné{selectedTypes.length > 1 ? 's' : ''}
           </small>
         </div>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer style={{ backgroundColor: 'white' }}>
         <Button variant="secondary" onClick={onHide}>
           Annuler
         </Button>
         <Button 
-          variant="primary" 
           onClick={handleSave}
           disabled={selectedTypes.length === 0}
+          style={{
+            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            border: 'none',
+            color: 'white',
+            fontWeight: 600,
+            padding: '0.5rem 1.5rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!e.currentTarget.disabled) {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)';
+          }}
         >
           <i className="bi bi-check me-2"></i>
           Valider la configuration

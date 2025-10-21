@@ -18,9 +18,10 @@ import GeometrieModal, { GeometrieParams } from "../../../components/GeometrieMo
 import MesuresModal, { MesuresParams } from "../../../components/MesuresModal";
 import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
 import { getMathExerciseLabel } from "../../../types/mathExerciseNaming";
+import mathExerciseNaming from "../../../config/mathExerciseNaming.json";
 
 const levels = ["CP", "CE1", "CE2", "CM1", "CM2"];
-const durations = ["20 min", "30 min", "40 min"];
+const durations = ["10 min", "20 min", "30 min"];
 
 export default function GenerateMathPage() {
   const { t } = useTranslation();
@@ -43,6 +44,9 @@ export default function GenerateMathPage() {
   const [showCalculModal, setShowCalculModal] = useState(false);
   const [showGeometrieModal, setShowGeometrieModal] = useState(false);
   const [showMesuresModal, setShowMesuresModal] = useState(false);
+  const [showExerciseGuideModal, setShowExerciseGuideModal] = useState(false);
+  const [exerciseGuideSearch, setExerciseGuideSearch] = useState("");
+  const [exerciseGuideLevel, setExerciseGuideLevel] = useState("");
   
   // Level change confirmation modal
   const [showLevelChangeModal, setShowLevelChangeModal] = useState(false);
@@ -291,10 +295,11 @@ export default function GenerateMathPage() {
   // Exercise limits based on duration (same as French generation)
   const getExerciseLimits = (duration: string): number => {
     switch (duration) {
-      case "20 min": return 2;  // 2 exercices pour 20 minutes
-      case "30 min": return 3;  // 3 exercices pour 30 minutes
-      case "40 min": return 4;  // 4 exercices pour 40 minutes
-      default: return 3;
+      case "10 min": return 3;  // 3 exercices max pour 10 minutes
+      case "20 min": return 5;  // 5 exercices max pour 20 minutes
+      case "30 min": return 7;  // 7 exercices max pour 30 minutes
+      case "40 min": return 4;  // 4 exercices pour 40 minutes (legacy support)
+      default: return 7;
     }
   };
 
@@ -739,15 +744,37 @@ export default function GenerateMathPage() {
       <Container className="mt-3">
         <Row className="justify-content-center">
           <Col lg={10}>
-            {/* Enhanced Main Title */}
-            <div className="text-center mb-3">
-              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
-                <i className="bi bi-calculator me-2" style={{ color: '#87ceeb' }}></i>
-                Exercices de Mathématiques
-              </h2>
-              <p className="text-muted" style={{ fontSize: '0.95rem' }}>
-                Configurez vos exercices de mathématiques personnalisés
-              </p>
+            {/* Enhanced Main Title with Clickable Calculator Icon */}
+            <div className="d-flex align-items-center justify-content-center mb-3">
+              <i 
+                className="bi bi-calculator" 
+                onClick={() => setShowExerciseGuideModal(true)}
+                style={{ 
+                  fontSize: '3rem',
+                  color: '#87ceeb',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  marginRight: '1.5rem',
+                  flexShrink: 0
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.15) rotate(-5deg)';
+                  e.currentTarget.style.color = '#5fa8d3';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                  e.currentTarget.style.color = '#87ceeb';
+                }}
+                title="Voir tous les exercices disponibles"
+              ></i>
+              <div className="text-center">
+                <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                  Exercices de Mathématiques
+                </h2>
+                <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
+                  Configurez vos exercices de mathématiques personnalisés
+                </p>
+              </div>
             </div>
             
             {/* Subscription info - only show when low */}
@@ -771,36 +798,39 @@ export default function GenerateMathPage() {
                   <div className="row g-3">
                     {/* Level Selection */}
                     <div className="col-12">
-                      <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Niveau</h6>
+                      <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#374151' }}>
+                        Niveau
+                      </h6>
                       <div className="d-flex gap-2 flex-wrap">
                         {levels.map((lvl) => (
                           <Card 
                             key={lvl}
-                            className={`border ${level === lvl ? 'border-primary' : 'border-secondary-subtle'} flex-fill`}
+                            className="flex-fill"
                             onClick={() => handleLevelChange(lvl)}
                             style={{ 
                               cursor: 'pointer', 
                               minWidth: '60px',
-                              borderRadius: '10px',
-                              backgroundColor: level === lvl ? '#e0f6ff' : 'white',
-                              transition: 'all 0.2s ease',
-                              borderWidth: '2px'
+                              borderRadius: '12px',
+                              backgroundColor: 'white',
+                              transition: 'all 0.3s ease',
+                              border: level === lvl ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                              boxShadow: level === lvl ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none'
                             }}
                             onMouseEnter={(e) => {
                               if (level !== lvl) {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#87ceeb';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.15)';
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (level !== lvl) {
-                                e.currentTarget.style.backgroundColor = 'white';
-                                e.currentTarget.style.borderColor = '#dee2e6';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
                               }
                             }}
                           >
                             <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
-                              <span className={`fw-bold ${level === lvl ? 'text-primary' : 'text-dark'}`} style={{ fontSize: '0.9rem' }}>
+                              <span className="fw-bold" style={{ fontSize: '0.9rem', color: level === lvl ? '#1d4ed8' : '#374151' }}>
                                 {lvl}
                               </span>
                             </Card.Body>
@@ -811,35 +841,38 @@ export default function GenerateMathPage() {
 
                     {/* Duration Selection */}
                     <div className="col-12">
-                      <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Durée de la séance</h6>
+                      <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#374151' }}>
+                        Durée de la séance
+                      </h6>
                       <div className="d-flex gap-2">
                         {durations.map((dur) => (
                           <div key={dur} className="flex-fill">
                             <Card 
-                              className={`border ${duration === dur ? 'border-primary' : 'border-secondary-subtle'}`}
+                              className=""
                               onClick={() => handleDurationChange(dur)}
                               style={{ 
                                 cursor: 'pointer',
-                                borderRadius: '10px',
-                                backgroundColor: duration === dur ? '#e0f6ff' : 'white',
-                                transition: 'all 0.2s ease',
-                                borderWidth: '2px'
+                                borderRadius: '12px',
+                                backgroundColor: 'white',
+                                transition: 'all 0.3s ease',
+                                border: duration === dur ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                                boxShadow: duration === dur ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none'
                               }}
                               onMouseEnter={(e) => {
                                 if (duration !== dur) {
-                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                  e.currentTarget.style.borderColor = '#87ceeb';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.15)';
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (duration !== dur) {
-                                  e.currentTarget.style.backgroundColor = 'white';
-                                  e.currentTarget.style.borderColor = '#dee2e6';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = 'none';
                                 }
                               }}
                             >
                               <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
-                                <span className={`fw-bold ${duration === dur ? 'text-primary' : 'text-dark'}`} style={{ fontSize: '0.9rem' }}>
+                                <span className="fw-bold" style={{ fontSize: '0.9rem', color: duration === dur ? '#1d4ed8' : '#374151' }}>
                                   {dur}
                                 </span>
                               </Card.Body>
@@ -852,7 +885,9 @@ export default function GenerateMathPage() {
                     {/* Exercise Domains Selection */}
                     <div className="col-12">
                       <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Domaines d'exercices</h6>
+                        <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#374151' }}>
+                          Domaines d'exercices
+                        </h6>
                         <div className="d-flex align-items-center gap-2">
                           <Badge 
                             bg={getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'light'}
@@ -886,16 +921,17 @@ export default function GenerateMathPage() {
                           return (
                             <Card 
                               key={domain.key}
-                              className={`border ${isSelected ? 'border-primary' : 'border-secondary-subtle'} flex-fill`}
+                              className="flex-fill"
                               onClick={() => !isDisabled && hasExercisesForLevel && toggleType(domain.key)}
                               style={{ 
                                 cursor: isDisabled ? 'not-allowed' : 'pointer',
                                 opacity: isDisabled ? 0.6 : 1,
                                 minWidth: '160px',
-                                borderRadius: '10px',
-                                backgroundColor: isSelected ? '#e0f6ff' : 'white',
-                                transition: 'all 0.2s ease',
-                                borderWidth: '2px'
+                                borderRadius: '12px',
+                                backgroundColor: 'white',
+                                transition: 'all 0.3s ease',
+                                border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                                boxShadow: isSelected ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none'
                               }}
                               title={
                                 !hasExercisesForLevel 
@@ -904,19 +940,19 @@ export default function GenerateMathPage() {
                               }
                               onMouseEnter={(e) => {
                                 if (!isDisabled && !isSelected) {
-                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                  e.currentTarget.style.borderColor = '#87ceeb';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.15)';
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (!isDisabled && !isSelected) {
-                                  e.currentTarget.style.backgroundColor = 'white';
-                                  e.currentTarget.style.borderColor = '#dee2e6';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = 'none';
                                 }
                               }}
                             >
                               <Card.Body className="p-2 text-center d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '70px' }}>
-                                <span className={`fw-semibold ${isSelected ? 'text-primary' : 'text-dark'}`} style={{ fontSize: '0.8rem', lineHeight: '1.2' }}>
+                                <span className="fw-semibold" style={{ fontSize: '0.8rem', lineHeight: '1.2', color: isSelected ? '#1d4ed8' : '#374151' }}>
                                   <i className={`${getDomainIcon(domain.key)} me-1`}></i>
                                   {domain.label}
                                 </span>
@@ -939,153 +975,163 @@ export default function GenerateMathPage() {
                   </div>
 
                   {/* Exercise Parameters Section */}
-                  <div className="mb-2">
+                  <div className="mb-2 mt-4">
                     {(selectedTypes.some(type => exerciceTypeParams[type])) && (
                       <div>
-                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.85rem', color: '#6c757d' }}>Paramètres configurés</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.85rem', color: '#374151' }}>
+                          Paramètres configurés
+                        </h6>
                         
                         <div className="d-flex gap-2 flex-wrap">
                           {/* Nombres parameters */}
                           {selectedTypes.includes("Nombres") && exerciceTypeParams["Nombres"] && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#f0f8ff', 
+                                backgroundColor: 'white',
+                                border: '1px solid #93c5fd',
                                 minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#87ceeb'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
                               }}
                               onClick={handleEditNombresParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e0f0ff';
-                                e.currentTarget.style.borderColor = '#5fa8d3';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+                                e.currentTarget.style.borderColor = '#3b82f6';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f0f8ff';
-                                e.currentTarget.style.borderColor = '#87ceeb';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.1)';
+                                e.currentTarget.style.borderColor = '#93c5fd';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-123 me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-123 me-1" style={{ color: '#3b82f6' }}></i>
                                   Nombres
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("Nombres")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
 
                           {/* Calculs parameters */}
                           {selectedTypes.includes("Calculs") && exerciceTypeParams["Calculs"] && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#f0f8ff', 
+                                backgroundColor: 'white',
+                                border: '1px solid #93c5fd',
                                 minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#87ceeb'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
                               }}
                               onClick={handleEditCalculParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e0f0ff';
-                                e.currentTarget.style.borderColor = '#5fa8d3';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+                                e.currentTarget.style.borderColor = '#3b82f6';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f0f8ff';
-                                e.currentTarget.style.borderColor = '#87ceeb';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.1)';
+                                e.currentTarget.style.borderColor = '#93c5fd';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-calculator me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-calculator me-1" style={{ color: '#3b82f6' }}></i>
                                   Calculs
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("Calculs")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
                           
                           {/* Grandeurs parameters */}
                           {selectedTypes.includes("Grandeurs") && exerciceTypeParams["Grandeurs"] && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#f0f8ff', 
+                                backgroundColor: 'white',
+                                border: '1px solid #93c5fd',
                                 minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#87ceeb'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
                               }}
                               onClick={handleEditMesuresParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e0f0ff';
-                                e.currentTarget.style.borderColor = '#5fa8d3';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+                                e.currentTarget.style.borderColor = '#3b82f6';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f0f8ff';
-                                e.currentTarget.style.borderColor = '#87ceeb';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.1)';
+                                e.currentTarget.style.borderColor = '#93c5fd';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-rulers me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-rulers me-1" style={{ color: '#3b82f6' }}></i>
                                   Grandeurs
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("Grandeurs")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
 
                           {/* Geometrie parameters */}
                           {selectedTypes.includes("Geometrie") && exerciceTypeParams["Geometrie"] && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#f0f8ff', 
+                                backgroundColor: 'white',
+                                border: '1px solid #93c5fd',
                                 minWidth: '180px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#87ceeb'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
                               }}
                               onClick={handleEditGeometrieParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e0f0ff';
-                                e.currentTarget.style.borderColor = '#5fa8d3';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+                                e.currentTarget.style.borderColor = '#3b82f6';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f0f8ff';
-                                e.currentTarget.style.borderColor = '#87ceeb';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.1)';
+                                e.currentTarget.style.borderColor = '#93c5fd';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-triangle me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-triangle me-1" style={{ color: '#3b82f6' }}></i>
                                   Géométrie
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("Geometrie")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#87ceeb' }}></i>
                             </div>
                           )}
                         </div>
@@ -1120,7 +1166,6 @@ export default function GenerateMathPage() {
                         </>
                       ) : (
                         <>
-                          <i className="bi bi-eye me-2"></i>
                           Aperçu de la fiche
                         </>
                       )}
@@ -1155,6 +1200,52 @@ export default function GenerateMathPage() {
           </Modal.Header>
           <Modal.Body style={{ padding: '1.5rem' }}>
             <div>
+              {/* Basic Information - Compact */}
+              <div className="d-flex gap-3 mb-3">
+                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                  <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
+                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                    {level}
+                  </Badge>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                  <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
+                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                    {duration}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Selected Exercises - Compact List with Labels */}
+              <div className="mb-3">
+                <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
+                  Exercices sélectionnés
+                </h6>
+                <div style={{ fontSize: '0.85rem' }}>
+                  {selectedTypes.map((type, index) => {
+                    const exerciseInfo = mathDomains.find(domain => domain.key === type);
+                    return (
+                      <div 
+                        key={type} 
+                        style={{ 
+                          padding: '0.5rem 0',
+                          borderBottom: index < selectedTypes.length - 1 ? '1px solid #f0f0f0' : 'none'
+                        }}
+                      >
+                        <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
+                          {exerciseInfo?.label}
+                        </div>
+                        <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
+                          {getConfiguredExerciseLabels(type)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
+
               {/* Fiche Title Input */}
               <div className="mb-3">
                 <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
@@ -1221,52 +1312,6 @@ export default function GenerateMathPage() {
                   </div>
                 )}
               </div>
-
-              <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
-
-              {/* Basic Information - Compact */}
-              <div className="d-flex gap-3 mb-3">
-                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                  <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
-                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                    {level}
-                  </Badge>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                  <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
-                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                    {duration}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Selected Exercises - Compact List with Labels */}
-              <div>
-                <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
-                  Exercices sélectionnés
-                </h6>
-                <div style={{ fontSize: '0.85rem' }}>
-                  {selectedTypes.map((type, index) => {
-                    const exerciseInfo = mathDomains.find(domain => domain.key === type);
-                    return (
-                      <div 
-                        key={type} 
-                        style={{ 
-                          padding: '0.5rem 0',
-                          borderBottom: index < selectedTypes.length - 1 ? '1px solid #f0f0f0' : 'none'
-                        }}
-                      >
-                        <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
-                          {exerciseInfo?.label}
-                        </div>
-                        <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
-                          {getConfiguredExerciseLabels(type)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           </Modal.Body>
           <Modal.Footer style={{ borderTop: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
@@ -1301,18 +1346,11 @@ export default function GenerateMathPage() {
           <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
             <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
               <span style={{ color: '#3b82f6', marginRight: '6px', fontSize: '1.2rem' }}>✓</span>
-              Fiche générée avec succès !
+              Votre fiche est prête !
             </Modal.Title>
           </Modal.Header>
           <Modal.Body style={{ padding: '1.5rem' }}>
             <div>
-              {/* Success Message */}
-              <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '1rem', textAlign: 'center' }}>
-                Votre fiche est prête !
-              </p>
-
-              <hr style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid #e9ecef' }} />
-
               {/* Level and Duration */}
               <div className="d-flex gap-3 mb-3">
                 <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
@@ -1359,14 +1397,16 @@ export default function GenerateMathPage() {
                       color: 'white'
                     }}
                   >
-                    📥 Télécharger le PDF
+                    <i className="bi bi-download me-2"></i>
+                    Télécharger le PDF
                   </Button>
                   <Button 
                     variant="outline-secondary"
                     onClick={handleViewPDF}
                     style={{ fontSize: '0.9rem', padding: '0.6rem' }}
                   >
-                    👁️ Visualiser et imprimer
+                    <i className="bi bi-eye me-2"></i>
+                    Visualiser et imprimer
                   </Button>
                 </div>
               )}
@@ -1504,6 +1544,388 @@ export default function GenerateMathPage() {
             </Button>
             <Button variant="outline-secondary" onClick={closePDFViewer}>
               Fermer
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Exercise Guide Modal */}
+        <Modal 
+          show={showExerciseGuideModal} 
+          onHide={() => setShowExerciseGuideModal(false)} 
+          size="lg" 
+          centered
+          scrollable
+        >
+          <Modal.Header 
+            closeButton 
+            style={{ 
+              background: 'linear-gradient(135deg, #dbeafe 0%, #87ceeb 100%)',
+              borderBottom: '3px solid #5fa8d3'
+            }}
+          >
+            <Modal.Title className="fw-bold d-flex align-items-center">
+              <i className="bi bi-calculator-fill me-2" style={{ color: '#0c4a6e', fontSize: '1.5rem' }}></i>
+              Guide des Exercices de Mathématiques
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ maxHeight: '70vh', backgroundColor: '#f0f9ff' }}>
+            <p className="text-muted mb-3">
+              Découvrez tous les types d'exercices disponibles par catégorie, avec leur description et les niveaux adaptés.
+            </p>
+
+            {/* Filters Row */}
+            <div className="row g-3 mb-4">
+              {/* Search Bar */}
+              <div className="col-md-8">
+                <div className="position-relative">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="🔍 Rechercher un exercice..."
+                    value={exerciseGuideSearch}
+                    onChange={(e) => setExerciseGuideSearch(e.target.value)}
+                    style={{
+                      paddingLeft: '2.5rem',
+                      borderRadius: '8px',
+                      border: '2px solid #87ceeb',
+                      fontSize: '0.95rem'
+                    }}
+                  />
+                  {exerciseGuideSearch && (
+                    <button
+                      className="btn btn-sm position-absolute"
+                      onClick={() => setExerciseGuideSearch('')}
+                      style={{
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        padding: '0.25rem 0.5rem',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      <i className="bi bi-x-circle"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Level Filter */}
+              <div className="col-md-4">
+                <select
+                  className="form-select"
+                  value={exerciseGuideLevel}
+                  onChange={(e) => setExerciseGuideLevel(e.target.value)}
+                  style={{
+                    borderRadius: '8px',
+                    border: '2px solid #87ceeb',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  <option value="">📚 Tous les niveaux</option>
+                  <option value="CP">CP</option>
+                  <option value="CE1">CE1</option>
+                  <option value="CE2">CE2</option>
+                  <option value="CM1">CM1</option>
+                  <option value="CM2">CM2</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Nombres */}
+            {mathExerciseNaming.nombres && mathExerciseNaming.nombres.filter((exercise: any) => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+            ).length > 0 && (
+              <div className="mb-4">
+                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#0c4a6e' }}>
+                  <i className="bi bi-123 me-2"></i>
+                  Nombres
+                  <Badge bg="primary" className="ms-2">
+                    {mathExerciseNaming.nombres.filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    ).length} exercices
+                  </Badge>
+                </h5>
+                <Row className="g-3">
+                  {mathExerciseNaming.nombres
+                    .filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    )
+                    .map((exercise: any) => (
+                    <Col md={6} key={exercise.id}>
+                      <Card className="h-100 border-primary shadow-sm" style={{ borderLeft: '4px solid #87ceeb' }}>
+                        <Card.Body>
+                          <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                            {exercise.label}
+                          </h6>
+                          <p className="small text-muted mb-2">{exercise.description}</p>
+                          <div className="d-flex flex-wrap gap-1">
+                            {exercise.levels?.map((lvl: string) => (
+                              <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                {lvl}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+
+            {/* Calculs */}
+            {mathExerciseNaming.calculs && mathExerciseNaming.calculs.filter((exercise: any) => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+            ).length > 0 && (
+              <div className="mb-4">
+                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#0c4a6e' }}>
+                  <i className="bi bi-plus-slash-minus me-2"></i>
+                  Calculs
+                  <Badge bg="primary" className="ms-2">
+                    {mathExerciseNaming.calculs.filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    ).length} exercices
+                  </Badge>
+                </h5>
+                <Row className="g-3">
+                  {mathExerciseNaming.calculs
+                    .filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    )
+                    .map((exercise: any) => (
+                    <Col md={6} key={exercise.id}>
+                      <Card className="h-100 border-primary shadow-sm" style={{ borderLeft: '4px solid #87ceeb' }}>
+                        <Card.Body>
+                          <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                            {exercise.label}
+                          </h6>
+                          <p className="small text-muted mb-2">{exercise.description}</p>
+                          <div className="d-flex flex-wrap gap-1">
+                            {exercise.levels?.map((lvl: string) => (
+                              <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                {lvl}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+
+            {/* Grandeurs (Mesures) */}
+            {mathExerciseNaming.grandeurs && mathExerciseNaming.grandeurs.filter((exercise: any) => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+            ).length > 0 && (
+              <div className="mb-4">
+                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#0c4a6e' }}>
+                  <i className="bi bi-rulers me-2"></i>
+                  Grandeurs et Mesures
+                  <Badge bg="primary" className="ms-2">
+                    {mathExerciseNaming.grandeurs.filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    ).length} exercices
+                  </Badge>
+                </h5>
+                <Row className="g-3">
+                  {mathExerciseNaming.grandeurs
+                    .filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    )
+                    .map((exercise: any) => (
+                    <Col md={6} key={exercise.id}>
+                      <Card className="h-100 border-primary shadow-sm" style={{ borderLeft: '4px solid #87ceeb' }}>
+                        <Card.Body>
+                          <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                            {exercise.label}
+                          </h6>
+                          <p className="small text-muted mb-2">{exercise.description}</p>
+                          <div className="d-flex flex-wrap gap-1">
+                            {exercise.levels?.map((lvl: string) => (
+                              <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                {lvl}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+
+            {/* Géométrie */}
+            {mathExerciseNaming.geometrie && mathExerciseNaming.geometrie.filter((exercise: any) => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+            ).length > 0 && (
+              <div className="mb-4">
+                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#0c4a6e' }}>
+                  <i className="bi bi-triangle me-2"></i>
+                  Géométrie
+                  <Badge bg="primary" className="ms-2">
+                    {mathExerciseNaming.geometrie.filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    ).length} exercices
+                  </Badge>
+                </h5>
+                <Row className="g-3">
+                  {mathExerciseNaming.geometrie
+                    .filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    )
+                    .map((exercise: any) => (
+                    <Col md={6} key={exercise.id}>
+                      <Card className="h-100 border-primary shadow-sm" style={{ borderLeft: '4px solid #87ceeb' }}>
+                        <Card.Body>
+                          <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                            {exercise.label}
+                          </h6>
+                          <p className="small text-muted mb-2">{exercise.description}</p>
+                          <div className="d-flex flex-wrap gap-1">
+                            {exercise.levels?.map((lvl: string) => (
+                              <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                {lvl}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+
+            {/* Problèmes */}
+            {mathExerciseNaming.problemes && mathExerciseNaming.problemes.filter((exercise: any) => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+            ).length > 0 && (
+              <div className="mb-4">
+                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#0c4a6e' }}>
+                  <i className="bi bi-lightbulb me-2"></i>
+                  Problèmes
+                  <Badge bg="primary" className="ms-2">
+                    {mathExerciseNaming.problemes.filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    ).length} exercices
+                  </Badge>
+                </h5>
+                <Row className="g-3">
+                  {mathExerciseNaming.problemes
+                    .filter((exercise: any) => 
+                      (exerciseGuideSearch === '' || 
+                       exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                       exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                      (exerciseGuideLevel === '' || exercise.levels?.includes(exerciseGuideLevel))
+                    )
+                    .map((exercise: any) => (
+                    <Col md={6} key={exercise.id}>
+                      <Card className="h-100 border-primary shadow-sm" style={{ borderLeft: '4px solid #87ceeb' }}>
+                        <Card.Body>
+                          <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                            {exercise.label}
+                          </h6>
+                          <p className="small text-muted mb-2">{exercise.description}</p>
+                          <div className="d-flex flex-wrap gap-1">
+                            {exercise.levels?.map((lvl: string) => (
+                              <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                {lvl}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+
+            {/* No Results Message */}
+            {exerciseGuideSearch && 
+             (!mathExerciseNaming.nombres || mathExerciseNaming.nombres.filter((exercise: any) => 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())
+             ).length === 0) &&
+             (!mathExerciseNaming.calculs || mathExerciseNaming.calculs.filter((exercise: any) => 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())
+             ).length === 0) &&
+             (!mathExerciseNaming.grandeurs || mathExerciseNaming.grandeurs.filter((exercise: any) => 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())
+             ).length === 0) &&
+             (!mathExerciseNaming.geometrie || mathExerciseNaming.geometrie.filter((exercise: any) => 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())
+             ).length === 0) &&
+             (!mathExerciseNaming.problemes || mathExerciseNaming.problemes.filter((exercise: any) => 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())
+             ).length === 0) && (
+              <div className="text-center py-5">
+                <i className="bi bi-search" style={{ fontSize: '3rem', color: '#87ceeb' }}></i>
+                <p className="text-muted mt-3">Aucun exercice trouvé pour "{exerciseGuideSearch}"</p>
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer style={{ backgroundColor: '#dbeafe', borderTop: '2px solid #87ceeb' }}>
+            <Button 
+              variant="primary" 
+              onClick={() => setShowExerciseGuideModal(false)}
+              style={{ 
+                fontWeight: '600',
+                background: 'linear-gradient(135deg, #87ceeb, #5fa8d3)',
+                border: 'none'
+              }}
+            >
+              <i className="bi bi-check-circle me-2"></i>
+              Compris !
             </Button>
           </Modal.Footer>
         </Modal>

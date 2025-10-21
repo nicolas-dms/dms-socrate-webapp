@@ -120,6 +120,35 @@ export default function VocabularyModal({
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
         }
+        .form-check-input {
+          border-radius: 50% !important;
+          width: 1.2em;
+          height: 1.2em;
+          border: 2px solid #d1d5db;
+          cursor: pointer;
+        }
+        .form-check-input:checked {
+          background-color: #fbbf24;
+          border-color: #fbbf24;
+        }
+        .form-check-input:focus {
+          border-color: #fbbf24;
+          box-shadow: 0 0 0 0.25rem rgba(251, 191, 36, 0.25);
+        }
+        input[type="radio"] {
+          width: 1.2em;
+          height: 1.2em;
+          border: 2px solid #d1d5db;
+          cursor: pointer;
+        }
+        input[type="radio"]:checked {
+          background-color: #fbbf24;
+          border-color: #fbbf24;
+        }
+        input[type="radio"]:focus {
+          border-color: #fbbf24;
+          box-shadow: 0 0 0 0.25rem rgba(251, 191, 36, 0.25);
+        }
       `}</style>
       <Modal.Header closeButton>
         <Modal.Title>

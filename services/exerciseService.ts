@@ -18,7 +18,7 @@ export interface ExerciseSession {
   subject: string;
   level: string;
   exercise_types: string[];
-  duration?: string; // Session duration (20 min, 30 min, 40 min)
+  duration?: string; // Session duration (10 min, 20 min, 30 min, or 40 min for legacy files)
   theme?: string; // Reading theme for French exercises
   created_at: string;
   pdf_url?: string;
@@ -135,7 +135,7 @@ export const exerciseService = {  // Generate exercises
       ];
       
       const levels = ['CP', 'CE1', 'CE2', 'CM1', 'CM2'];
-      const durations = ['20 min', '30 min', '40 min'];
+      const durations = ['10 min', '20 min', '30 min', '40 min']; // Keep 40 min for legacy mock data
       const subjects = ['french', 'math'];
 
       const mockSessions: ExerciseSession[] = [];

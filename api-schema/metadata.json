@@ -1,8 +1,8 @@
 {
-  "lastSync": "2025-08-12T08:13:47.128Z",
+  "lastSync": "2025-10-18T10:06:30.913Z",
   "backendUrl": "http://localhost:8000/openapi.json",
   "version": "0.1.0",
   "title": "DMSAPP Backend",
-  "endpointCount": 23,
-  "hash": "1acbf2959657bc203c09a0485bfa9009"
+  "endpointCount": 28,
+  "hash": "c8e4a7ce02967c7ba17a014ad4e90cf2"
 }

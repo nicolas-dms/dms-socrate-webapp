@@ -141,12 +141,6 @@
       "description": "Additions et soustractions en ligne et posées, compléments"
     },
     {
-      "id": "tableaux_graphiques",
-      "label": "Tableaux et graphiques",
-      "levels": ["CE2"],
-      "description": "Lire et calculer avec des tableaux et graphiques"
-    },
-    {
       "id": "additions_soustractions",
       "label": "Additions et soustractions",
       "levels": ["CM1"],
@@ -193,6 +187,12 @@
       "label": "Décimaux - Multiplication et division",
       "levels": ["CM2"],
       "description": "Multiplications et divisions avec des nombres décimaux"
+    },
+    {
+      "id" : "probemes",
+      "label" : "Problèmes",
+      "levels": ["CP","CE1","CE2","CM1","CM2"],
+      "description": "Problèmes de calcul ouvert à une ou plusieurs étapes"
     }
   ],
   "grandeurs": [

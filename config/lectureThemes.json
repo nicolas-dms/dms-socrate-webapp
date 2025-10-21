@@ -1,0 +1,77 @@
+[
+  {
+    "niveau": "CP",
+    "themes": [
+      { "theme": "Les animaux de la ferme", "types_de_textes": ["histoire", "poeme"], "description": "Découverte des animaux familiers et de leurs sons.", "tags": ["animaux", "ferme", "vie quotidienne"] },
+      { "theme": "L'école", "types_de_textes": ["histoire", "dialogue"], "description": "Histoires et échanges autour de la vie à l'école.", "tags": ["école", "élèves", "enseignant"] },
+      { "theme": "Les saisons", "types_de_textes": ["poeme", "culture"], "description": "Découverte des quatre saisons et de la nature.", "tags": ["nature", "temps", "météo"] },
+      { "theme": "La famille", "types_de_textes": ["dialogue", "histoire"], "description": "Textes sur la vie familiale et les liens affectifs.", "tags": ["famille", "parents", "enfants"] },
+      { "theme": "Les couleurs", "types_de_textes": ["poeme"], "description": "Jeux de rimes et d'images autour des couleurs.", "tags": ["couleurs", "vocabulaire", "perception"] },
+      { "theme": "Les émotions", "types_de_textes": ["histoire", "dialogue"], "description": "Exprimer et reconnaître les émotions.", "tags": ["émotions", "sentiments", "expression"] },
+      { "theme": "Les fêtes", "types_de_textes": ["histoire", "poeme"], "description": "Noël, Pâques et autres fêtes racontées aux enfants.", "tags": ["fêtes", "célébrations", "traditions"] },
+      { "theme": "Les animaux sauvages", "types_de_textes": ["histoire", "culture"], "description": "Découverte du monde animal à travers de petits récits.", "tags": ["animaux", "nature", "exploration"] },
+      { "theme": "Le corps humain", "types_de_textes": ["culture"], "description": "Découverte des parties du corps et des cinq sens.", "tags": ["corps", "santé", "sciences"] },
+      { "theme": "Les contes classiques", "types_de_textes": ["histoire"], "description": "Histoires inspirées de Perrault ou Andersen.", "tags": ["contes", "classiques", "imaginaire"] }
+    ]
+  },
+  {
+    "niveau": "CE1",
+    "themes": [
+      { "theme": "Les métiers", "types_de_textes": ["dialogue", "histoire"], "description": "Découverte des professions et de leur rôle.", "tags": ["travail", "métiers", "société"] },
+      { "theme": "Le temps qu'il fait", "types_de_textes": ["poeme", "culture"], "description": "Observer et décrire la météo au fil des jours.", "tags": ["météo", "saisons", "nature"] },
+      { "theme": "Les animaux d'Afrique", "types_de_textes": ["histoire", "culture"], "description": "Voyage imaginaire dans la savane.", "tags": ["animaux", "Afrique", "nature"] },
+      { "theme": "Les contes et fables", "types_de_textes": ["histoire", "poeme"], "description": "Petites histoires à morale ou poèmes rimés.", "tags": ["contes", "fables", "morale"] },
+      { "theme": "L'amitié", "types_de_textes": ["dialogue", "histoire"], "description": "Histoires sur le partage et la bienveillance.", "tags": ["amitié", "valeurs", "émotions"] },
+      { "theme": "Les transports", "types_de_textes": ["culture"], "description": "Comment on se déplace : train, avion, vélo.", "tags": ["transports", "technologie", "voyage"] },
+      { "theme": "La mer et les océans", "types_de_textes": ["poeme", "culture"], "description": "Beauté et mystère du monde marin.", "tags": ["mer", "océan", "nature"] },
+      { "theme": "Les plantes", "types_de_textes": ["culture"], "description": "Comment poussent les fleurs et les arbres.", "tags": ["plantes", "nature", "sciences"] },
+      { "theme": "Les chevaliers et princesses", "types_de_textes": ["histoire"], "description": "Aventures médiévales et contes merveilleux.", "tags": ["chevaliers", "princesses", "légendes"] },
+      { "theme": "La journée de l'enfant", "types_de_textes": ["histoire"], "description": "Un récit qui suit les moments d'une journée type.", "tags": ["routine", "enfant", "quotidien"] }
+    ]
+  },
+  {
+    "niveau": "CE2",
+    "themes": [
+      { "theme": "Les grandes découvertes", "types_de_textes": ["culture", "histoire"], "description": "Découverte de Christophe Colomb et autres explorateurs.", "tags": ["histoire", "exploration", "monde"] },
+      { "theme": "La préhistoire", "types_de_textes": ["culture", "histoire"], "description": "À la rencontre des premiers humains.", "tags": ["préhistoire", "archéologie", "histoire"] },
+      { "theme": "Les volcans", "types_de_textes": ["culture"], "description": "Comment fonctionne un volcan ?", "tags": ["sciences", "terre", "géologie"] },
+      { "theme": "La Terre et le ciel", "types_de_textes": ["culture", "poeme"], "description": "Découverte de l'espace et du ciel étoilé.", "tags": ["astronomie", "planètes", "espace"] },
+      { "theme": "Les contes du monde", "types_de_textes": ["histoire"], "description": "Histoires venues d'Afrique, d'Asie ou d'Amérique.", "tags": ["contes", "cultures", "voyage"] },
+      { "theme": "Les animaux en danger", "types_de_textes": ["culture", "histoire"], "description": "Protection et respect de la nature.", "tags": ["écologie", "animaux", "environnement"] },
+      { "theme": "L'eau et la nature", "types_de_textes": ["poeme", "culture"], "description": "Cycle de l'eau et beauté de la nature.", "tags": ["eau", "nature", "sciences"] },
+      { "theme": "Le cirque", "types_de_textes": ["dialogue", "histoire"], "description": "Spectacle, émotions et personnages colorés.", "tags": ["cirque", "spectacle", "loisirs"] },
+      { "theme": "La ville et la campagne", "types_de_textes": ["dialogue", "culture"], "description": "Comparer deux modes de vie.", "tags": ["ville", "campagne", "société"] },
+      { "theme": "Les inventions", "types_de_textes": ["culture"], "description": "Découverte des grandes inventions humaines.", "tags": ["inventions", "technologie", "histoire"] }
+    ]
+  },
+  {
+    "niveau": "CM1",
+    "themes": [
+      { "theme": "Les Gaulois et les Romains", "types_de_textes": ["culture", "histoire"], "description": "La vie à l'époque de Jules César et Vercingétorix.", "tags": ["antiquité", "histoire", "civilisation"] },
+      { "theme": "Les châteaux forts", "types_de_textes": ["histoire", "culture"], "description": "Le Moyen Âge et la vie des chevaliers.", "tags": ["moyen âge", "chevaliers", "architecture"] },
+      { "theme": "Les grandes explorations", "types_de_textes": ["culture"], "description": "Voyages et découvertes de nouveaux continents.", "tags": ["exploration", "géographie", "histoire"] },
+      { "theme": "La Révolution française", "types_de_textes": ["culture", "histoire"], "description": "Les grands changements de la société.", "tags": ["révolution", "citoyenneté", "France"] },
+      { "theme": "L'énergie et l'électricité", "types_de_textes": ["culture"], "description": "Découverte des sources d'énergie.", "tags": ["électricité", "sciences", "énergie"] },
+      { "theme": "Le système solaire", "types_de_textes": ["culture", "poeme"], "description": "Les planètes et leur mouvement autour du Soleil.", "tags": ["planètes", "astronomie", "univers"] },
+      { "theme": "La liberté et les droits", "types_de_textes": ["dialogue", "culture"], "description": "Valeurs humaines et citoyennes.", "tags": ["valeurs", "droits", "citoyenneté"] },
+      { "theme": "Les animaux marins", "types_de_textes": ["culture", "poeme"], "description": "La richesse du monde sous-marin.", "tags": ["mer", "animaux", "nature"] },
+      { "theme": "Le sport et l'effort", "types_de_textes": ["histoire", "dialogue"], "description": "Persévérance et esprit d'équipe.", "tags": ["sport", "valeurs", "santé"] },
+      { "theme": "Les grandes inventions", "types_de_textes": ["culture"], "description": "Des inventions qui ont changé le monde.", "tags": ["inventions", "progrès", "technologie"] }
+    ]
+  },
+  {
+    "niveau": "CM2",
+    "themes": [
+      { "theme": "La Seconde Guerre mondiale", "types_de_textes": ["culture", "histoire"], "description": "Récit adapté pour comprendre les grandes périodes du XXe siècle.", "tags": ["histoire", "seconde guerre", "citoyenneté"] },
+      { "theme": "L'espace et les planètes", "types_de_textes": ["culture", "poeme"], "description": "Découverte de l'univers et exploration spatiale.", "tags": ["astronomie", "science", "espace"] },
+      { "theme": "Les grandes découvertes scientifiques", "types_de_textes": ["culture"], "description": "Pasteur, Curie, Newton et les avancées de la science.", "tags": ["sciences", "découvertes", "savants"] },
+      { "theme": "Les droits de l'enfant", "types_de_textes": ["dialogue", "culture"], "description": "Comprendre les droits fondamentaux.", "tags": ["citoyenneté", "droits", "égalité"] },
+      { "theme": "La mythologie grecque", "types_de_textes": ["histoire", "poeme"], "description": "Les héros et les dieux de la Grèce antique.", "tags": ["mythologie", "légendes", "culture"] },
+      { "theme": "Le développement durable", "types_de_textes": ["culture"], "description": "Protéger la planète et respecter la nature.", "tags": ["écologie", "environnement", "durabilité"] },
+      { "theme": "Les écrivains célèbres", "types_de_textes": ["culture"], "description": "Découverte de grands auteurs français.", "tags": ["littérature", "culture", "France"] },
+      { "theme": "L'évolution du monde", "types_de_textes": ["culture"], "description": "Des transformations sociales et technologiques.", "tags": ["histoire", "société", "progrès"] },
+      { "theme": "La solidarité", "types_de_textes": ["dialogue", "histoire"], "description": "Aider, partager, comprendre les autres.", "tags": ["solidarité", "valeurs", "entraide"] },
+      { "theme": "Le futur et les robots", "types_de_textes": ["histoire", "culture"], "description": "Imaginer la technologie et la vie de demain.", "tags": ["futur", "robots", "innovation"] }
+    ]
+  }
+]

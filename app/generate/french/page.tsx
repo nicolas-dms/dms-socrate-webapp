@@ -7,7 +7,6 @@ import ProtectedPage from "../../../components/ProtectedPage";
 import LectureModal, { LectureParams } from "../../../components/LectureModal";
 import ConjugationModal, { ConjugationParams } from "../../../components/ConjugationModal";
 import GrammarModal, { GrammarParams } from "../../../components/GrammarModal";
-import VocabularyModal, { VocabularyParams } from "../../../components/VocabularyModal";
 import OrthographyModal, { OrthographyParams } from "../../../components/OrthographyModal";
 import ComprehensionModal, { ComprehensionParams } from "../../../components/ComprehensionModal";
 import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
@@ -20,10 +19,12 @@ import { ExerciceDomain, ExerciceTypeParam, ExerciceTime, ExerciceModalite, buil
 import { EXERCISE_CONTENT_CALCULATOR } from "../../../utils/pdfGenerationConfig";
 import { previewBackendRequest } from "../../../utils/requestPreview";
 import { getExerciseLabel } from "../../../types/frenchExerciseNaming";
+import frenchExerciseNaming from "../../../config/frenchExerciseNaming.json";
+import lectureThemesData from "../../../config/lectureThemes.json";
 import styles from "../../page.module.css";
 
 const levels = ["CP", "CE1", "CE2", "CM1", "CM2"];
-const durations = ["20 min", "30 min", "40 min"];
+const durations = ["10 min", "20 min", "30 min"];
 
 interface ExercisePreview {
   level: string;
@@ -58,9 +59,11 @@ export default function GenerateFrenchPage() {
   const [showLectureModal, setShowLectureModal] = useState(false);
   const [showConjugationModal, setShowConjugationModal] = useState(false);
   const [showGrammarModal, setShowGrammarModal] = useState(false);
-  const [showVocabularyModal, setShowVocabularyModal] = useState(false);
   const [showOrthographyModal, setShowOrthographyModal] = useState(false);
   const [showComprehensionModal, setShowComprehensionModal] = useState(false);
+  const [showExerciseGuideModal, setShowExerciseGuideModal] = useState(false);
+  const [exerciseGuideSearch, setExerciseGuideSearch] = useState("");
+  const [exerciseGuideLevel, setExerciseGuideLevel] = useState("");
   
   // Level change confirmation modal
   const [showLevelChangeModal, setShowLevelChangeModal] = useState(false);
@@ -78,10 +81,12 @@ export default function GenerateFrenchPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
 
-  // Fiche metadata (title and tags)
+  // Fiche metadata (title, tags, and theme)
   const [ficheTitle, setFicheTitle] = useState("");
   const [ficheTags, setFicheTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [ficheTheme, setFicheTheme] = useState(""); // Theme for the entire fiche
+  const [showAllFicheThemes, setShowAllFicheThemes] = useState(false);
 
   // Last generated parameters for regeneration
   const [lastGeneratedParams, setLastGeneratedParams] = useState<{
@@ -107,7 +112,6 @@ export default function GenerateFrenchPage() {
       case "comprehension": return "bi-lightbulb";
       case "grammaire": return "bi-pencil-square";
       case "conjugaison": return "bi-gear";
-      case "vocabulaire": return "bi-chat-dots";
       case "orthographe": return "bi-check2-square";
       default: return "bi-circle";
     }
@@ -151,14 +155,6 @@ export default function GenerateFrenchPage() {
           return labels.slice(0, 2).join(", ") + (labels.length > 2 ? ` +${labels.length - 2}` : "");
         }
         break;
-      case "vocabulaire":
-        if (params.themes && Array.isArray(params.themes)) {
-          const labels = params.themes.map((theme: string) => 
-            getExerciseLabel('vocabulaire', theme) || theme
-          );
-          return labels.slice(0, 2).join(", ") + (labels.length > 2 ? ` +${labels.length - 2}` : "");
-        }
-        break;
       case "orthographe":
         if (params.exerciseTypes && Array.isArray(params.exerciseTypes)) {
           const labels = params.exerciseTypes.map((exType: string) => 
@@ -168,17 +164,32 @@ export default function GenerateFrenchPage() {
         }
         break;
       case "comprehension":
-        if (params.types && Array.isArray(params.types)) {
-          const labels = params.types.map((compType: string) => 
-            getExerciseLabel('comprehension', compType) || compType
+        if (params.types) {
+          const types = typeof params.types === 'string' ? params.types.split(',') : params.types;
+          const labels = types.map((t: string) => 
+            getExerciseLabel('comprehension', t.trim()) || t
           );
           return labels.slice(0, 2).join(", ") + (labels.length > 2 ? ` +${labels.length - 2}` : "");
         }
         break;
       case "lecture":
-        // Lecture doesn't have exercise IDs, show text type or level
-        if (params.textType) {
-          return params.textType === 'random' ? 'Texte aléatoire' : 'Texte personnalisé';
+        // Show text type and length for lecture
+        if (params.style && params.length) {
+          const styleLabels: Record<string, string> = {
+            "histoire": "Histoire",
+            "dialogue": "Dialogue", 
+            "culture": "Culture",
+            "poeme": "Poème",
+            "syllabique": "Syllabique"
+          };
+          const lengthLabels: Record<string, string> = {
+            "court": "Court",
+            "moyen": "Moyen",
+            "long": "Long"
+          };
+          const styleLabel = styleLabels[params.style] || params.style;
+          const lengthLabel = lengthLabels[params.length] || params.length;
+          return `${styleLabel} - ${lengthLabel}`;
         }
         break;
     }
@@ -211,6 +222,8 @@ export default function GenerateFrenchPage() {
     setFicheTitle("");
     setFicheTags([]);
     setTagInput("");
+    setFicheTheme("");
+    setShowAllFicheThemes(false);
   };
 
   // Helper function to format style labels
@@ -298,8 +311,13 @@ export default function GenerateFrenchPage() {
             totalExercises += 1;
             break;
           case 'comprehension':
-            // Count comprehension exercises (always 1 per selection)
-            totalExercises += 1;
+            // Count comprehension exercises based on selected types
+            if (params.types) {
+              const comprehensionTypes = params.types.split(',').map((t: string) => t.trim()).filter(Boolean);
+              totalExercises += comprehensionTypes.length;
+            } else {
+              totalExercises += 1; // Default if no specific types
+            }
             break;
           case 'grammaire':
             // Count grammar exercises based on selected types
@@ -318,10 +336,6 @@ export default function GenerateFrenchPage() {
             } else {
               totalExercises += 1; // Default if no specific tenses
             }
-            break;
-          case 'vocabulaire':
-            // Count vocabulary exercises (always 1 per selection)
-            totalExercises += 1;
             break;
           case 'orthographe':
             // Count orthography exercises - each rule is a separate exercise + dictée if present
@@ -357,13 +371,14 @@ export default function GenerateFrenchPage() {
     return totalExercises;
   };
 
-  // Exercise limits based on duration (4 minutes per exercise)
+  // Exercise limits based on duration
   const getExerciseLimits = (duration: string): number => {
     switch (duration) {
-      case "20 min": return 2;  // 2 exercices pour 20 minutes
-      case "30 min": return 3;  // 3 exercices pour 30 minutes  
-      case "40 min": return 4; // 4 exercices pour 40 minutes
-      default: return 3;
+      case "10 min": return 3;  // 3 exercices max pour 10 minutes
+      case "20 min": return 5;  // 5 exercices max pour 20 minutes
+      case "30 min": return 7;  // 7 exercices max pour 30 minutes  
+      case "40 min": return 4; // 4 exercices pour 40 minutes (legacy support)
+      default: return 7;
     }
   };
 
@@ -379,6 +394,69 @@ export default function GenerateFrenchPage() {
     const limit = getExerciseLimits(duration);
     const currentTotal = getTotalSelectedExercises();
     return `Vous avez atteint la limite de ${limit} exercices pour la durée sélectionnée (actuellement: ${currentTotal})`;
+  };
+
+  // Calculate remaining exercise slots available for a specific type
+  const getRemainingExerciseSlots = (forType: string): number => {
+    const limit = getExerciseLimits(duration);
+    let currentTotal = 0;
+    
+    // Count all exercises EXCEPT the type we're configuring
+    selectedTypes.forEach(type => {
+      if (type === forType) return; // Skip the type we're configuring
+      
+      const params = exerciceTypeParams[type];
+      if (params) {
+        switch (type) {
+          case 'lecture':
+            currentTotal += 1;
+            break;
+          case 'comprehension':
+            if (params.types && Array.isArray(params.types)) {
+              currentTotal += params.types.length;
+            } else {
+              currentTotal += 1;
+            }
+            break;
+          case 'grammaire':
+            if (params.types) {
+              const grammarTypes = params.types.split(',').map((t: string) => t.trim()).filter(Boolean);
+              currentTotal += grammarTypes.length;
+            } else {
+              currentTotal += 1;
+            }
+            break;
+          case 'conjugaison':
+            if (params.tenses) {
+              const tensesList = params.tenses.split(',').map((t: string) => t.trim()).filter(Boolean);
+              currentTotal += tensesList.length;
+            } else {
+              currentTotal += 1;
+            }
+            break;
+          case 'orthographe':
+            let orthographyCount = 0;
+            if (params.words && params.words.startsWith('#dictee,')) {
+              orthographyCount += 1;
+            }
+            if (params.rules) {
+              const rules = params.rules.split(',').map((r: string) => r.trim()).filter(Boolean);
+              orthographyCount += rules.length;
+            }
+            if (orthographyCount === 0) {
+              orthographyCount = 1;
+            }
+            currentTotal += orthographyCount;
+            break;
+          default:
+            currentTotal += 1;
+        }
+      } else {
+        currentTotal += 1;
+      }
+    });
+    
+    return Math.max(1, limit - currentTotal); // Always allow at least 1
   };
 
   // Handle duration change with exercise limit adjustment
@@ -485,9 +563,6 @@ export default function GenerateFrenchPage() {
           case "grammaire":
             setShowGrammarModal(true);
             break;
-          case "vocabulaire":
-            setShowVocabularyModal(true);
-            break;
           case "orthographe":
             setShowOrthographyModal(true);
             break;
@@ -527,7 +602,8 @@ export default function GenerateFrenchPage() {
       lecture: {
         theme: params.theme,
         style: params.style,
-        length: params.length
+        length: params.length,
+        fluence: params.fluence
       }
     });
   };
@@ -592,31 +668,6 @@ export default function GenerateFrenchPage() {
     });
   };
 
-  const handleVocabularySave = (params: VocabularyParams) => {
-    // Check if adding this exercise would exceed the limit
-    const currentTotal = getTotalSelectedExercises();
-    const limit = getExerciseLimits(duration);
-    
-    // If vocabulary is not already selected, adding it would count as +1 exercise
-    const wouldExceedLimit = !selectedTypes.includes("vocabulaire") && (currentTotal >= limit);
-    
-    if (wouldExceedLimit) {
-      return; // Silently prevent save - UI should have prevented this
-    }
-    
-    if (!selectedTypes.includes("vocabulaire")) {
-      setSelectedTypes([...selectedTypes, "vocabulaire"]);
-    }
-    
-    setExerciceTypeParams({
-      ...exerciceTypeParams,
-      vocabulaire: {
-        words: params.words,
-        theme: params.theme
-      }
-    });
-  };
-
   const handleOrthographySave = (params: OrthographyParams) => {
     // Check if adding this exercise would exceed the limit
     const currentTotal = getTotalSelectedExercises();
@@ -643,14 +694,20 @@ export default function GenerateFrenchPage() {
   };
 
   const handleComprehensionSave = (params: ComprehensionParams) => {
+    // Parse the types string to count exercises
+    const typesArray = params.types.split(',').map(t => t.trim()).filter(t => t);
+    
     // Calculate how the total would change with this new comprehension configuration
-    const currentTotalWithoutComprehension = getTotalSelectedExercises() - (selectedTypes.includes("comprehension") ? 1 : 0);
-    const comprehensionExerciseCount = 1; // Comprehension always counts as 1 exercise in our total
+    const currentComprehensionCount = selectedTypes.includes("comprehension") && exerciceTypeParams.comprehension 
+      ? exerciceTypeParams.comprehension.types.split(',').map(t => t.trim()).filter(t => t).length
+      : 0;
+    const currentTotalWithoutComprehension = getTotalSelectedExercises() - currentComprehensionCount;
+    const comprehensionExerciseCount = typesArray.length; // Count each comprehension type as an exercise
     const newTotal = currentTotalWithoutComprehension + comprehensionExerciseCount;
     const limit = getExerciseLimits(duration);
     
-    // Only prevent save if this would exceed the session limit AND comprehension is not already selected
-    if (newTotal > limit && !selectedTypes.includes("comprehension")) {
+    // Prevent save if this would exceed the session limit
+    if (newTotal > limit) {
       // This should not happen due to UI controls, but safety check
       return;
     }
@@ -677,10 +734,6 @@ export default function GenerateFrenchPage() {
 
   const handleEditGrammarParams = () => {
     setShowGrammarModal(true);
-  };
-
-  const handleEditVocabularyParams = () => {
-    setShowVocabularyModal(true);
   };
 
   const handleEditOrthographyParams = () => {
@@ -712,6 +765,21 @@ export default function GenerateFrenchPage() {
       return;
     }
     
+    // Initialize fiche theme with lecture theme if it exists, otherwise pick a random theme
+    if (!ficheTheme) {
+      if (exerciceTypeParams.lecture?.theme) {
+        setFicheTheme(exerciceTypeParams.lecture.theme);
+      } else {
+        // Pick a random theme from the level's themes
+        const levelData = lectureThemesData.find((item: any) => item.niveau === level);
+        const allThemes = levelData?.themes || [];
+        if (allThemes.length > 0) {
+          const randomTheme = allThemes[Math.floor(Math.random() * allThemes.length)];
+          setFicheTheme(randomTheme.theme);
+        }
+      }
+    }
+    
     const previewData = generatePreview();
     setPreview(previewData);
     setShowPreviewModal(true);
@@ -736,8 +804,8 @@ export default function GenerateFrenchPage() {
       // Use 1 fiche from subscription allowance
       await useCredit();
       
-      // Get lecture theme from parameters
-      const lectureTheme = exerciceTypeParams.lecture?.theme || "";
+      // Use ficheTheme as the main theme for the request
+      const mainTheme = ficheTheme || "Exercices généraux";
       
       // Validate user authentication
       if (!user?.user_id) {
@@ -745,7 +813,7 @@ export default function GenerateFrenchPage() {
       }
 
       // Preview the backend request (for debugging)
-      previewBackendRequest(level, duration, selectedTypes, lectureTheme || "Exercices généraux");
+      previewBackendRequest(level, duration, selectedTypes, mainTheme);
       
       // Build exercices_by_type structure for backend
       const exercicesByType: ExercicesByType = {};
@@ -791,21 +859,6 @@ export default function GenerateFrenchPage() {
           }];
         }
         
-        if (type === 'vocabulaire' && exerciceTypeParams.vocabulaire) {
-          const theme = exerciceTypeParams.vocabulaire.theme;
-          exercicesByType['vocabulaire'] = [{
-            exercice_id: theme,
-            params: {
-              words: exerciceTypeParams.vocabulaire.words || undefined
-            }
-          }];
-        } else if (type === 'vocabulaire') {
-          exercicesByType['vocabulaire'] = [{
-            exercice_id: 'vocabulaire_general',
-            params: {}
-          }];
-        }
-        
         if (type === 'lecture') {
           if (exerciceTypeParams.lecture) {
             const style = exerciceTypeParams.lecture.style || 'histoire';
@@ -813,7 +866,8 @@ export default function GenerateFrenchPage() {
               exercice_id: style,
               params: {
                 theme: exerciceTypeParams.lecture.theme || undefined,
-                text_size: exerciceTypeParams.lecture.length || 'moyen'
+                text_size: exerciceTypeParams.lecture.length || 'moyen',
+                fluence: exerciceTypeParams.lecture.fluence || undefined
               }
             }];
           } else {
@@ -934,7 +988,7 @@ export default function GenerateFrenchPage() {
         level,
         duration,
         typesWithModalities, // Use encoded types with modalities
-        lectureTheme || "Exercices généraux",
+        mainTheme, // Use ficheTheme instead of lectureTheme
         ExerciceDomain.FRANCAIS,
         exerciceTypeParams,
         undefined, // specific requirements
@@ -1113,53 +1167,78 @@ export default function GenerateFrenchPage() {
       <Container className="mt-3">
         <Row className="justify-content-center">
           <Col lg={10}>
-            {/* Enhanced Main Title */}
-            <div className="text-center mb-3">
-              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
-                <i className="bi bi-book me-2" style={{ color: '#fbbf24' }}></i>
-                Exercices de Français
-              </h2>
-              <p className="text-muted" style={{ fontSize: '0.95rem' }}>
-                Configurez vos exercices de français personnalisés
-              </p>
+            {/* Enhanced Main Title with Clickable Book Icon */}
+            <div className="d-flex align-items-center justify-content-center mb-3">
+              <i 
+                className="bi bi-book" 
+                onClick={() => setShowExerciseGuideModal(true)}
+                style={{ 
+                  fontSize: '3rem',
+                  color: '#fbbf24',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  marginRight: '1.5rem',
+                  flexShrink: 0
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.15) rotate(-5deg)';
+                  e.currentTarget.style.color = '#f59e0b';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                  e.currentTarget.style.color = '#fbbf24';
+                }}
+                title="Voir tous les exercices disponibles"
+              ></i>
+              <div className="text-center">
+                <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
+                  Exercices de Français
+                </h2>
+                <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
+                  Configurez vos exercices de français personnalisés
+                </p>
+              </div>
             </div>
             
-              <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
                 <Card.Body className="p-3">
                   <form onSubmit={handlePreview}>
                     <div className="row g-3">
                       {/* Level Selection */}
                       <div className="col-12">
-                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Niveau</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#374151' }}>
+                          Niveau
+                        </h6>
                         <div className="d-flex gap-2 flex-wrap">
                           {levels.map((lvl) => (
                             <Card 
                               key={lvl}
-                              className={`border ${level === lvl ? 'border-warning' : 'border-secondary-subtle'} flex-fill`}
+                              className="flex-fill"
                               onClick={() => handleLevelChange(lvl)}
                               style={{ 
                                 cursor: 'pointer', 
                                 minWidth: '60px',
-                                borderRadius: '10px',
-                                backgroundColor: level === lvl ? '#fef3c7' : 'white',
-                                transition: 'all 0.2s ease',
-                                borderWidth: '2px'
+                                borderRadius: '12px',
+                                backgroundColor: 'white',
+                                transition: 'all 0.3s ease',
+                                border: level === lvl ? '2px solid #fbbf24' : '1px solid #e5e7eb',
+                                boxShadow: level === lvl ? '0 4px 12px rgba(251, 191, 36, 0.2)' : 'none'
                               }}
                               onMouseEnter={(e) => {
                                 if (level !== lvl) {
-                                  e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                  e.currentTarget.style.borderColor = '#fbbf24';
+                                  e.currentTarget.style.transform = 'translateY(-2px)';
+                                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(251, 191, 36, 0.15)';
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (level !== lvl) {
-                                  e.currentTarget.style.backgroundColor = 'white';
-                                  e.currentTarget.style.borderColor = '#dee2e6';
+                                  e.currentTarget.style.transform = 'translateY(0)';
+                                  e.currentTarget.style.boxShadow = 'none';
                                 }
                               }}
                             >
                               <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
-                                <span className={`fw-bold`} style={{ fontSize: '0.9rem', color: level === lvl ? '#d97706' : '#2c3e50' }}>
+                                <span className={`fw-bold`} style={{ fontSize: '0.9rem', color: level === lvl ? '#d97706' : '#374151' }}>
                                   {lvl}
                                 </span>
                               </Card.Body>
@@ -1170,35 +1249,38 @@ export default function GenerateFrenchPage() {
 
                       {/* Duration Selection */}
                       <div className="col-12">
-                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Durée de la séance</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.9rem', color: '#374151' }}>
+                          Durée de la séance
+                        </h6>
                         <div className="d-flex gap-2">
                           {durations.map((dur) => (
                             <div key={dur} className="flex-fill">
                               <Card 
-                                className={`border ${duration === dur ? 'border-warning' : 'border-secondary-subtle'}`}
+                                className=""
                                 onClick={() => handleDurationChange(dur)}
                                 style={{ 
                                   cursor: 'pointer',
-                                  borderRadius: '10px',
-                                  backgroundColor: duration === dur ? '#fef3c7' : 'white',
-                                  transition: 'all 0.2s ease',
-                                  borderWidth: '2px'
+                                  borderRadius: '12px',
+                                  backgroundColor: 'white',
+                                  transition: 'all 0.3s ease',
+                                  border: duration === dur ? '2px solid #fbbf24' : '1px solid #e5e7eb',
+                                  boxShadow: duration === dur ? '0 4px 12px rgba(251, 191, 36, 0.2)' : 'none'
                                 }}
                                 onMouseEnter={(e) => {
                                   if (duration !== dur) {
-                                    e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                    e.currentTarget.style.borderColor = '#fbbf24';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(251, 191, 36, 0.15)';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
                                   if (duration !== dur) {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                    e.currentTarget.style.borderColor = '#dee2e6';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = 'none';
                                   }
                                 }}
                               >
                                 <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center">
-                                  <span className={`fw-bold`} style={{ fontSize: '0.9rem', color: duration === dur ? '#d97706' : '#2c3e50' }}>
+                                  <span className={`fw-bold`} style={{ fontSize: '0.9rem', color: duration === dur ? '#d97706' : '#374151' }}>
                                     {dur}
                                   </span>
                                 </Card.Body>
@@ -1211,7 +1293,9 @@ export default function GenerateFrenchPage() {
                       {/* Exercise Types Selection */}
                       <div className="col-12">
                         <div className="d-flex justify-content-between align-items-center mb-2">
-                          <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#2c3e50' }}>Types d'exercices</h6>
+                          <h6 className="mb-0 fw-semibold" style={{ fontSize: '0.9rem', color: '#374151' }}>
+                            Types d'exercices
+                          </h6>
                           <div className="d-flex align-items-center gap-2">
                             <Badge 
                               bg={getTotalSelectedExercises() > getExerciseLimits(duration) ? 'danger' : getTotalSelectedExercises() >= getExerciseLimits(duration) ? 'warning' : 'light'}
@@ -1250,16 +1334,17 @@ export default function GenerateFrenchPage() {
                             return (
                               <Card 
                                 key={type.key}
-                                className={`border ${isSelected ? 'border-warning' : 'border-secondary-subtle'} flex-fill`}
+                                className="flex-fill"
                                 onClick={() => !isDisabled && toggleType(type.key)}
                                 style={{ 
                                   cursor: isDisabled ? 'not-allowed' : 'pointer',
                                   opacity: isDisabled ? 0.5 : 1,
                                   minWidth: '110px',
-                                  borderRadius: '10px',
-                                  backgroundColor: isSelected ? '#fef3c7' : 'white',
-                                  transition: 'all 0.2s ease',
-                                  borderWidth: '2px'
+                                  borderRadius: '12px',
+                                  backgroundColor: 'white',
+                                  transition: 'all 0.3s ease',
+                                  border: isSelected ? '2px solid #fbbf24' : '1px solid #e5e7eb',
+                                  boxShadow: isSelected ? '0 4px 12px rgba(251, 191, 36, 0.2)' : 'none'
                                 }}
                                 title={
                                   isComprehensionDisabled ? "Vous devez d'abord sélectionner 'Lecture'" : 
@@ -1267,19 +1352,19 @@ export default function GenerateFrenchPage() {
                                 }
                                 onMouseEnter={(e) => {
                                   if (!isDisabled && !isSelected) {
-                                    e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                    e.currentTarget.style.borderColor = '#fbbf24';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(251, 191, 36, 0.15)';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
                                   if (!isDisabled && !isSelected) {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                    e.currentTarget.style.borderColor = '#dee2e6';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = 'none';
                                   }
                                 }}
                               >
                                 <Card.Body className="p-2 text-center d-flex align-items-center justify-content-center" style={{ position: 'relative', minHeight: '60px' }}>
-                                  <span className={`fw-semibold`} style={{ fontSize: '0.8rem', lineHeight: '1.2', color: isSelected ? '#d97706' : '#2c3e50' }}>
+                                  <span className={`fw-semibold`} style={{ fontSize: '0.8rem', lineHeight: '1.2', color: isSelected ? '#d97706' : '#374151' }}>
                                     <i className={`${getTypeIcon(type.key)} me-1`}></i>
                                     {type.label}
                                   </span>
@@ -1300,189 +1385,202 @@ export default function GenerateFrenchPage() {
                     </div>
 
                   {/* Exercise Parameters Section */}
-                  <div className="mb-2">
+                  <div className="mb-2 mt-4">
                     {(selectedTypes.some(type => exerciceTypeParams[type])) && (
                       <div>
-                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.85rem', color: '#6c757d' }}>Paramètres configurés</h6>
+                        <h6 className="mb-2 fw-semibold" style={{ fontSize: '0.85rem', color: '#374151' }}>
+                          <i className="bi bi-sliders me-2" style={{ color: '#fbbf24' }}></i>
+                          Paramètres configurés
+                        </h6>
                         
                         <div className="d-flex gap-2 flex-wrap">
                           {/* Lecture parameters */}
                           {selectedTypes.includes("lecture") && exerciceTypeParams.lecture && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#fffbeb', 
+                                backgroundColor: 'white',
+                                border: '1px solid #fcd34d',
                                 minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#fbbf24'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                               }}
                               onClick={handleEditLectureParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fef3c7';
-                                e.currentTarget.style.borderColor = '#f59e0b';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fffbeb';
-                                e.currentTarget.style.borderColor = '#fbbf24';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                                e.currentTarget.style.borderColor = '#fcd34d';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-book me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-book me-1" style={{ color: '#fbbf24' }}></i>
                                   Lecture
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("lecture")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
                           
                           {/* Conjugation parameters */}
                           {selectedTypes.includes("conjugaison") && exerciceTypeParams.conjugaison && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#fffbeb', 
+                                backgroundColor: 'white',
+                                border: '1px solid #fcd34d',
                                 minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#fbbf24'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                               }}
                               onClick={handleEditConjugationParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fef3c7';
-                                e.currentTarget.style.borderColor = '#f59e0b';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fffbeb';
-                                e.currentTarget.style.borderColor = '#fbbf24';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                                e.currentTarget.style.borderColor = '#fcd34d';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-gear me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-gear me-1" style={{ color: '#fbbf24' }}></i>
                                   Conjugaison
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("conjugaison")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
                           {/* Grammar parameters */}
                           {selectedTypes.includes("grammaire") && exerciceTypeParams.grammaire && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#fffbeb', 
+                                backgroundColor: 'white',
+                                border: '1px solid #fcd34d',
                                 minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#fbbf24'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                               }}
                               onClick={handleEditGrammarParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fef3c7';
-                                e.currentTarget.style.borderColor = '#f59e0b';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fffbeb';
-                                e.currentTarget.style.borderColor = '#fbbf24';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                                e.currentTarget.style.borderColor = '#fcd34d';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-pencil-square me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-pencil-square me-1" style={{ color: '#fbbf24' }}></i>
                                   Grammaire
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("grammaire")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
                           {/* Vocabulary parameters */}
                           {selectedTypes.includes("vocabulaire") && exerciceTypeParams.vocabulaire && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#fffbeb', 
+                                backgroundColor: 'white',
+                                border: '1px solid #fcd34d',
                                 minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#fbbf24'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                               }}
                               onClick={handleEditVocabularyParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fef3c7';
-                                e.currentTarget.style.borderColor = '#f59e0b';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fffbeb';
-                                e.currentTarget.style.borderColor = '#fbbf24';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                                e.currentTarget.style.borderColor = '#fcd34d';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-chat-dots me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-chat-dots me-1" style={{ color: '#fbbf24' }}></i>
                                   Vocabulaire
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("vocabulaire")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
                           {/* Orthography parameters */}
                           {selectedTypes.includes("orthographe") && exerciceTypeParams.orthographe && (
                             <div 
-                              className="border rounded p-2 d-flex align-items-center gap-2 cursor-pointer" 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
                               style={{ 
-                                backgroundColor: '#fffbeb', 
+                                backgroundColor: 'white',
+                                border: '1px solid #fcd34d',
                                 minWidth: '150px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                borderRadius: '8px',
-                                borderColor: '#fbbf24'
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                               }}
                               onClick={handleEditOrthographyParams}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fef3c7';
-                                e.currentTarget.style.borderColor = '#f59e0b';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
+                                e.currentTarget.style.borderColor = '#fbbf24';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#fffbeb';
-                                e.currentTarget.style.borderColor = '#fbbf24';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                                e.currentTarget.style.borderColor = '#fcd34d';
                               }}
                               title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
-                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#2c3e50' }}>
-                                  <i className="bi bi-check2-square me-1"></i>
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-spellcheck me-1" style={{ color: '#fbbf24' }}></i>
                                   Orthographe
                                 </div>
-                                <div style={{ fontSize: '0.7rem' }} className="text-muted">
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
                                   {getConfiguredExerciseLabels("orthographe")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
 
@@ -1518,7 +1616,6 @@ export default function GenerateFrenchPage() {
                                   {getConfiguredExerciseLabels("comprehension")}
                                 </div>
                               </div>
-                              <i className="bi bi-pencil-square" style={{ fontSize: '0.85rem', color: '#fbbf24' }}></i>
                             </div>
                           )}
                         </div>
@@ -1541,7 +1638,6 @@ export default function GenerateFrenchPage() {
                         boxShadow: (selectedTypes.length > 0 && getTotalSelectedExercises() <= getExerciseLimits(duration)) ? '0 4px 15px rgba(251, 191, 36, 0.3)' : undefined
                       }}
                     >
-                      <i className="bi bi-eye me-2"></i>
                       Aperçu de la fiche ({level} - {duration})
                     </Button>
                     {selectedTypes.length === 0 && (
@@ -1584,6 +1680,150 @@ export default function GenerateFrenchPage() {
           <Modal.Body style={{ padding: '1.5rem' }}>
             {preview && (
               <div>
+                {/* Basic Information - Compact */}
+                <div className="d-flex gap-3 mb-3">
+                  <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                    <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
+                    <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                      {preview.level}
+                    </Badge>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                    <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
+                    <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                      {preview.duration}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Theme - Required for generation */}
+                <div className="mb-3">
+                  <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
+                    Thème de la fiche
+                  </label>
+                  
+                  {/* If lecture exercise exists, show locked theme from lecture */}
+                  {exerciceTypeParams.lecture?.theme ? (
+                    <>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={ficheTheme}
+                        readOnly
+                        disabled
+                        style={{ fontSize: '0.9rem', backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
+                      />
+                      <small className="text-muted">
+                        <i className="bi bi-lock me-1"></i>
+                        Thème défini par l'exercice de lecture.
+                      </small>
+                    </>
+                  ) : (
+                    <>
+                      {/* Theme suggestions based on level - only if no lecture */}
+                      {(() => {
+                        const levelData = lectureThemesData.find((item: any) => item.niveau === level);
+                        const allThemes = levelData?.themes || [];
+                        const displayedThemes = showAllFicheThemes ? allThemes : allThemes.slice(0, 6);
+                        
+                        return allThemes.length > 0 ? (
+                          <div className="mb-2">
+                            <small className="text-muted d-flex align-items-center justify-content-between mb-2">
+                              <span>
+                                <i className="bi bi-lightbulb me-1"></i>
+                                Suggestions de thèmes :
+                              </span>
+                              {allThemes.length > 6 && (
+                                <Button 
+                                  variant="link" 
+                                  size="sm" 
+                                  className="p-0 text-decoration-none"
+                                  onClick={() => setShowAllFicheThemes(!showAllFicheThemes)}
+                                  style={{ fontSize: '0.75rem' }}
+                                >
+                                  {showAllFicheThemes ? 'Voir moins' : `Voir tout (${allThemes.length})`}
+                                </Button>
+                              )}
+                            </small>
+                            <div className="d-flex flex-wrap gap-2 mb-2">
+                              {displayedThemes.map((themeObj: any, index: number) => (
+                                <Badge
+                                  key={index}
+                                  bg={ficheTheme === themeObj.theme ? "primary" : "light"}
+                                  text={ficheTheme === themeObj.theme ? "white" : "dark"}
+                                  className="border"
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'normal',
+                                    padding: '0.4rem 0.8rem',
+                                    transition: 'all 0.2s ease',
+                                    borderColor: ficheTheme === themeObj.theme ? '#0d6efd' : '#dee2e6'
+                                  }}
+                                  onClick={() => setFicheTheme(themeObj.theme)}
+                                  title={themeObj.description}
+                                >
+                                  {themeObj.theme}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                      
+                      {/* Custom theme input - only if no lecture */}
+                      <input
+                        type="text"
+                        className={`form-control ${!ficheTheme.trim() ? 'border-danger' : ''}`}
+                        placeholder={!ficheTheme.trim() ? "Veuillez saisir un thème" : "Thème personnalisé ou sélectionnez une suggestion ci-dessus"}
+                        value={ficheTheme}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value.length <= 60) {
+                            setFicheTheme(value);
+                          }
+                        }}
+                        maxLength={60}
+                        style={{ fontSize: '0.9rem' }}
+                      />
+                      <small className="text-muted">
+                        <i className="bi bi-info-circle me-1"></i>
+                        Cliquez sur une suggestion ci-dessus ou saisissez votre propre thème. ({ficheTheme.length}/60 caractères)
+                      </small>
+                    </>
+                  )}
+                </div>
+
+                {/* Selected Exercises - Compact List with Labels */}
+                <div className="mb-3">
+                  <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
+                    Exercices sélectionnés
+                  </h6>
+                  <div style={{ fontSize: '0.85rem' }}>
+                    {preview.types.map((type, index) => {
+                      const exerciseInfo = frenchTypes.find(ft => ft.key === type);
+                      return (
+                        <div 
+                          key={type} 
+                          style={{ 
+                            padding: '0.5rem 0',
+                            borderBottom: index < preview.types.length - 1 ? '1px solid #f0f0f0' : 'none'
+                          }}
+                        >
+                          <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
+                            {exerciseInfo?.label}
+                          </div>
+                          <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
+                            {getConfiguredExerciseLabels(type)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
+
                 {/* Fiche Title Input */}
                 <div className="mb-3">
                   <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
@@ -1650,52 +1890,6 @@ export default function GenerateFrenchPage() {
                     </div>
                   )}
                 </div>
-
-                <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
-
-                {/* Basic Information - Compact */}
-                <div className="d-flex gap-3 mb-3">
-                  <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                    <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
-                    <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                      {preview.level}
-                    </Badge>
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                    <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
-                    <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                      {preview.duration}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Selected Exercises - Compact List with Labels */}
-                <div>
-                  <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
-                    Exercices sélectionnés
-                  </h6>
-                  <div style={{ fontSize: '0.85rem' }}>
-                    {preview.types.map((type, index) => {
-                      const exerciseInfo = frenchTypes.find(ft => ft.key === type);
-                      return (
-                        <div 
-                          key={type} 
-                          style={{ 
-                            padding: '0.5rem 0',
-                            borderBottom: index < preview.types.length - 1 ? '1px solid #f0f0f0' : 'none'
-                          }}
-                        >
-                          <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
-                            {exerciseInfo?.label}
-                          </div>
-                          <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
-                            {getConfiguredExerciseLabels(type)}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
             )}
           </Modal.Body>
@@ -1709,16 +1903,16 @@ export default function GenerateFrenchPage() {
             </Button>
             <Button 
               onClick={handleConfirmGeneration}
-              disabled={!canGenerateMore()}
+              disabled={!canGenerateMore() || !ficheTheme.trim()}
               style={{
-                background: canGenerateMore() ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : undefined,
+                background: (canGenerateMore() && ficheTheme.trim()) ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : undefined,
                 border: 'none',
                 fontSize: '0.9rem',
                 fontWeight: '500',
                 color: 'white'
               }}
             >
-              {!canGenerateMore() ? 'Limite atteinte' : 'Confirmer et générer'}
+              {!canGenerateMore() ? 'Limite atteinte' : !ficheTheme.trim() ? 'Thème requis' : 'Confirmer et générer'}
             </Button>
           </Modal.Footer>
         </Modal>
@@ -1731,18 +1925,11 @@ export default function GenerateFrenchPage() {
           <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
             <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
               <span style={{ color: '#f59e0b', marginRight: '6px', fontSize: '1.2rem' }}>✓</span>
-              Fiche générée avec succès !
+              Votre fiche est prête !
             </Modal.Title>
           </Modal.Header>
           <Modal.Body style={{ padding: '1.5rem' }}>
             <div>
-              {/* Success Message */}
-              <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '1rem', textAlign: 'center' }}>
-                Votre fiche est prête !
-              </p>
-
-              <hr style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid #e9ecef' }} />
-
               {/* Level and Duration */}
               <div className="d-flex gap-3 mb-3">
                 <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
@@ -1789,7 +1976,8 @@ export default function GenerateFrenchPage() {
                     color: 'white'
                   }}
                 >
-                  📥 Télécharger le PDF
+                  <i className="bi bi-download me-2"></i>
+                  Télécharger le PDF
                 </Button>
                 <Button 
                   variant="outline-secondary"
@@ -1797,7 +1985,8 @@ export default function GenerateFrenchPage() {
                   disabled={!generatedExercise?.id}
                   style={{ fontSize: '0.9rem', padding: '0.6rem' }}
                 >
-                  👁️ Visualiser et imprimer
+                  <i className="bi bi-eye me-2"></i>
+                  Visualiser et imprimer
                 </Button>
               </div>
             </div>
@@ -1848,7 +2037,8 @@ export default function GenerateFrenchPage() {
           initialParams={exerciceTypeParams.lecture ? {
             theme: exerciceTypeParams.lecture.theme || "",
             style: exerciceTypeParams.lecture.style || "histoire",
-            length: exerciceTypeParams.lecture.length || "moyen"
+            length: exerciceTypeParams.lecture.length || "moyen",
+            fluence: exerciceTypeParams.lecture.fluence || false
           } : undefined}
         />
 
@@ -1870,17 +2060,6 @@ export default function GenerateFrenchPage() {
           level={level}
           initialParams={exerciceTypeParams.grammaire ? {
             types: exerciceTypeParams.grammaire.types
-          } : undefined}
-        />
-
-        <VocabularyModal
-          show={showVocabularyModal}
-          onHide={() => setShowVocabularyModal(false)}
-          onSave={handleVocabularySave}
-          level={level}
-          initialParams={exerciceTypeParams.vocabulaire ? {
-            words: exerciceTypeParams.vocabulaire.words,
-            theme: exerciceTypeParams.vocabulaire.theme
           } : undefined}
         />
 
@@ -1935,7 +2114,8 @@ export default function GenerateFrenchPage() {
           initialParams={exerciceTypeParams.comprehension ? {
             types: exerciceTypeParams.comprehension.types
           } : undefined}
-          maxExercises={3}
+          maxExercises={getRemainingExerciseSlots('comprehension')}
+          textType={exerciceTypeParams.lecture?.style}
         />
 
         {/* Level Change Confirmation Modal */}
@@ -1966,6 +2146,345 @@ export default function GenerateFrenchPage() {
             </Button>
             <Button variant="warning" size="sm" onClick={confirmLevelChange}>
               Confirmer
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Exercise Guide Modal */}
+        <Modal 
+          show={showExerciseGuideModal} 
+          onHide={() => setShowExerciseGuideModal(false)} 
+          centered 
+          size="xl"
+          scrollable
+        >
+          <Modal.Header 
+            closeButton 
+            style={{ 
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%)',
+              borderBottom: '3px solid #f59e0b'
+            }}
+          >
+            <Modal.Title className="fw-bold d-flex align-items-center">
+              <i className="bi bi-book-fill me-2" style={{ color: '#f59e0b', fontSize: '1.5rem' }}></i>
+              Guide des Exercices de Français
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ maxHeight: '70vh', backgroundColor: '#fffef5' }}>
+            <p className="text-muted mb-3">
+              Découvrez tous les types d'exercices disponibles par catégorie, avec leur description et les niveaux adaptés.
+            </p>
+
+            {/* Filters Row */}
+            <div className="row g-3 mb-4">
+              {/* Search Bar */}
+              <div className="col-md-8">
+                <div className="position-relative">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="🔍 Rechercher un exercice..."
+                    value={exerciseGuideSearch}
+                    onChange={(e) => setExerciseGuideSearch(e.target.value)}
+                    style={{
+                      paddingLeft: '2.5rem',
+                      borderRadius: '8px',
+                      border: '2px solid #fbbf24',
+                      fontSize: '0.95rem'
+                    }}
+                  />
+                  {exerciseGuideSearch && (
+                    <button
+                      className="btn btn-sm position-absolute"
+                      onClick={() => setExerciseGuideSearch('')}
+                      style={{
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        padding: '0.25rem 0.5rem',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      <i className="bi bi-x-circle"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Level Filter */}
+              <div className="col-md-4">
+                <select
+                  className="form-select"
+                  value={exerciseGuideLevel}
+                  onChange={(e) => setExerciseGuideLevel(e.target.value)}
+                  style={{
+                    borderRadius: '8px',
+                    border: '2px solid #fbbf24',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  <option value="">📚 Tous les niveaux</option>
+                  <option value="CP">CP</option>
+                  <option value="CE1">CE1</option>
+                  <option value="CE2">CE2</option>
+                  <option value="CM1">CM1</option>
+                  <option value="CM2">CM2</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Grammaire Section */}
+            {frenchExerciseNaming.grammaire.filter(exercise => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+            ).length > 0 && (
+            <div className="mb-4">
+              <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#f59e0b' }}>
+                <i className="bi bi-tag-fill me-2"></i>
+                Grammaire
+                <Badge bg="warning" text="dark" className="ms-2">
+                  {frenchExerciseNaming.grammaire.filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  ).length} exercices
+                </Badge>
+              </h5>
+              <Row className="g-3">
+                {frenchExerciseNaming.grammaire
+                  .filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  )
+                  .map((exercise) => (
+                  <Col md={6} key={exercise.id}>
+                    <Card className="h-100 border-warning shadow-sm" style={{ borderLeft: '4px solid #fbbf24' }}>
+                      <Card.Body>
+                        <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                          {exercise.label}
+                        </h6>
+                        <p className="small text-muted mb-2">{exercise.description}</p>
+                        <div className="d-flex flex-wrap gap-1">
+                          {exercise.levels.map((lvl) => (
+                            <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                              {lvl}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+            )}
+
+            {/* Conjugaison Section */}
+            {frenchExerciseNaming.conjugaison.filter(exercise => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+            ).length > 0 && (
+            <div className="mb-4">
+              <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#f59e0b' }}>
+                <i className="bi bi-pencil-fill me-2"></i>
+                Conjugaison
+                <Badge bg="warning" text="dark" className="ms-2">
+                  {frenchExerciseNaming.conjugaison.filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  ).length} exercices
+                </Badge>
+              </h5>
+              <Row className="g-3">
+                {frenchExerciseNaming.conjugaison
+                  .filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  )
+                  .map((exercise) => (
+                  <Col md={6} key={exercise.id}>
+                    <Card className="h-100 border-warning shadow-sm" style={{ borderLeft: '4px solid #fbbf24' }}>
+                      <Card.Body>
+                        <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                          {exercise.label}
+                        </h6>
+                        <p className="small text-muted mb-2">{exercise.description}</p>
+                        <div className="d-flex flex-wrap gap-1">
+                          {exercise.levels.map((lvl) => (
+                            <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                              {lvl}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+            )}
+
+            {/* Orthographe Section */}
+            {frenchExerciseNaming.orthographe.filter(exercise => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+            ).length > 0 && (
+            <div className="mb-4">
+              <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#f59e0b' }}>
+                <i className="bi bi-spellcheck me-2"></i>
+                Orthographe
+                <Badge bg="warning" text="dark" className="ms-2">
+                  {frenchExerciseNaming.orthographe.filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  ).length} exercices
+                </Badge>
+              </h5>
+              <Row className="g-3">
+                {frenchExerciseNaming.orthographe
+                  .filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  )
+                  .map((exercise) => (
+                  <Col md={6} key={exercise.id}>
+                    <Card className="h-100 border-warning shadow-sm" style={{ borderLeft: '4px solid #fbbf24' }}>
+                      <Card.Body>
+                        <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                          {exercise.label}
+                        </h6>
+                        <p className="small text-muted mb-2">{exercise.description}</p>
+                        <div className="d-flex flex-wrap gap-1">
+                          {exercise.levels.map((lvl) => (
+                            <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                              {lvl}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+            )}
+
+            {/* Compréhension Section */}
+            {frenchExerciseNaming.comprehension.filter(exercise => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+            ).length > 0 && (
+            <div className="mb-4">
+              <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#f59e0b' }}>
+                <i className="bi bi-chat-left-text-fill me-2"></i>
+                Compréhension
+                <Badge bg="warning" text="dark" className="ms-2">
+                  {frenchExerciseNaming.comprehension.filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  ).length} exercices
+                </Badge>
+              </h5>
+              <Row className="g-3">
+                {frenchExerciseNaming.comprehension
+                  .filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  )
+                  .map((exercise) => (
+                  <Col md={6} key={exercise.id}>
+                    <Card className="h-100 border-warning shadow-sm" style={{ borderLeft: '4px solid #fbbf24' }}>
+                      <Card.Body>
+                        <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                          {exercise.label}
+                        </h6>
+                        <p className="small text-muted mb-2">{exercise.description}</p>
+                        <div className="d-flex flex-wrap gap-1">
+                          {exercise.levels.map((lvl) => (
+                            <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                              {lvl}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+            )}
+
+            {/* No Results Message */}
+            {(exerciseGuideSearch || exerciseGuideLevel) && 
+             frenchExerciseNaming.grammaire.filter(exercise => 
+               (exerciseGuideSearch === '' || 
+                exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+               (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+             ).length === 0 &&
+             frenchExerciseNaming.conjugaison.filter(exercise => 
+               (exerciseGuideSearch === '' || 
+                exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+               (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+             ).length === 0 &&
+             frenchExerciseNaming.orthographe.filter(exercise => 
+               (exerciseGuideSearch === '' || 
+                exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+               (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+             ).length === 0 &&
+             frenchExerciseNaming.comprehension.filter(exercise => 
+               (exerciseGuideSearch === '' || 
+                exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+               (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+             ).length === 0 && (
+              <div className="text-center py-5">
+                <i className="bi bi-search" style={{ fontSize: '3rem', color: '#fbbf24' }}></i>
+                <p className="text-muted mt-3">
+                  Aucun exercice trouvé
+                  {exerciseGuideSearch && ` pour "${exerciseGuideSearch}"`}
+                  {exerciseGuideLevel && ` au niveau ${exerciseGuideLevel}`}
+                </p>
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer style={{ backgroundColor: '#fef3c7', borderTop: '2px solid #fbbf24' }}>
+            <Button 
+              variant="warning" 
+              onClick={() => setShowExerciseGuideModal(false)}
+              style={{ 
+                fontWeight: '600',
+                background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                border: 'none'
+              }}
+            >
+              <i className="bi bi-check-circle me-2"></i>
+              Compris !
             </Button>
           </Modal.Footer>
         </Modal>

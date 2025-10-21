@@ -1,16 +1,27 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Alert } from "react-bootstrap";
 import ProtectedPage from "../../components/ProtectedPage";
+import { useAuth } from "../../context/AuthContext";
 
 export default function GeneratePage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { isNewUser } = useAuth();
 
   return (
     <ProtectedPage>
       <Container className="mt-4 mb-5">
+        {/* Simple Welcome Message for New Users */}
+        {isNewUser && (
+          <div className="text-center mb-3">
+            <h4 className="fw-normal" style={{ color: '#495057' }}>
+              👋 Bienvenue !
+            </h4>
+          </div>
+        )}
+
         {/* Enhanced Main Title */}
         <div className="text-center mb-4">
           <h1 className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '2rem' }}>
@@ -180,6 +191,40 @@ export default function GeneratePage() {
             </Card>
           </Col>
         </Row>
+
+        {/* Neutral Instructional Banner for New Users */}
+        {isNewUser && (
+          <Alert 
+            variant="light" 
+            className="mt-4 mb-4 border"
+            style={{
+              backgroundColor: '#f8f9fa',
+              borderColor: '#dee2e6',
+              borderRadius: '10px',
+              borderLeft: '4px solid #6c757d'
+            }}
+          >
+            <div className="d-flex align-items-start">
+              <i className="bi bi-info-circle me-3" style={{ fontSize: '1.3rem', color: '#6c757d' }}></i>
+              <div style={{ flex: 1 }}>
+                <h6 className="fw-semibold mb-2" style={{ color: '#495057' }}>
+                  Comment créer votre première fiche d'exercices
+                </h6>
+                <div className="small" style={{ color: '#6c757d', lineHeight: '1.7' }}>
+                  <p className="mb-2">
+                    <strong>Étape 1 :</strong> Sélectionnez une matière (Français ou Mathématiques) en cliquant sur l'une des cartes ci-dessus.
+                  </p>
+                  <p className="mb-2">
+                    <strong>Étape 2 :</strong> Choisissez le niveau scolaire de votre enfant (CP, CE1, CE2, CM1 ou CM2) et les types d'exercices souhaités.
+                  </p>
+                  <p className="mb-0">
+                    <strong>Étape 3 :</strong> Générez votre fiche personnalisée et téléchargez-la au format PDF pour l'imprimer ou la consulter directement.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Alert>
+        )}
 
         {/* Help Section */}
         <div className="text-center mt-5">

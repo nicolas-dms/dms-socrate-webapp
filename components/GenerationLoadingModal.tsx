@@ -15,17 +15,17 @@ const GenerationLoadingModal: React.FC<GenerationLoadingModalProps> = ({ show, c
   const startTimeRef = useRef<number>(0);
 
   const messages = [
-    { icon: '✏️', text: 'Rédaction de tes exercices personnalisés...' },
-    { icon: '📖', text: 'Organisation des questions dans la fiche...' },
-    { icon: '🪄', text: 'Ajout d\'une touche de magie pédagogique...' },
-    { icon: '🖨️', text: 'Préparation du fichier PDF...' }
+    { text: 'Rédaction de vos exercices personnalisés...' },
+    { text: 'Organisation des questions dans la fiche...' },
+    { text: 'Ajout d\'une touche de magie pédagogique...' },
+    { text: 'Préparation du fichier PDF...' }
   ];
 
   // Additional patience messages for longer generations
   const patienceMessages = [
-    { threshold: 30, icon: '⏳', text: 'C\'est bientôt prêt...' },
-    { threshold: 40, icon: '🎯', text: 'Encore quelques secondes de patience...' },
-    { threshold: 55, icon: '🚀', text: 'La fusée va bientôt décoller...' }
+    { threshold: 30, text: 'C\'est bientôt prêt...' },
+    { threshold: 40, text: 'Encore quelques secondes de patience...' },
+    { threshold: 55, text: 'La génération se termine...' }
   ];
 
   const getCurrentMessage = () => {
@@ -146,7 +146,7 @@ const GenerationLoadingModal: React.FC<GenerationLoadingModalProps> = ({ show, c
         {/* Cycling messages */}
         <div className="mb-4" style={{ minHeight: '80px' }}>
           <h5 className="fw-bold text-primary mb-2" style={{ fontSize: '1.1rem' }}>
-            {completed ? '✅ Fiche générée !' : `${getCurrentMessage().icon} ${getCurrentMessage().text}`}
+            {completed ? '✅ Fiche générée !' : getCurrentMessage().text}
           </h5>
           <small className="text-muted">
             {completed ? 'Préparation de votre fiche...' : 'Veuillez patienter, cela peut prendre jusqu\'à 1 minute'}
@@ -160,11 +160,11 @@ const GenerationLoadingModal: React.FC<GenerationLoadingModalProps> = ({ show, c
           )}
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar - 2.5x larger (20px instead of 8px) */}
         <ProgressBar 
           now={progress} 
           variant="warning"
-          style={{ height: '8px' }}
+          style={{ height: '20px' }}
           className="mb-2"
           animated={!completed}
         />
