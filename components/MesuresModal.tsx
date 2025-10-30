@@ -2,6 +2,14 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Badge, Card } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import mathExerciseNaming from "../config/mathExerciseNaming.json";
+
+interface GrandeursExercise {
+  id: string;
+  label: string;
+  levels: string[];
+  description: string;
+}
 
 export interface MesuresParams {
   types: string;
@@ -37,18 +45,16 @@ export default function MesuresModal({
   // State for type selection
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
-  // Get exercises for current level and domain
-  const getAvailableExercises = () => {
-    if (!mathDomains) return [];
-    
-    const domain = mathDomains.find((d: any) => d.key === domainKey);
-    if (!domain || !domain.exercises[level]) return [];
-    
-    return domain.exercises[level];
+  // Get exercises for current level from mathExerciseNaming.json
+  const getAvailableExercises = (): GrandeursExercise[] => {
+    const grandeursExercises = (mathExerciseNaming as any).grandeurs || [];
+    return grandeursExercises.filter((ex: GrandeursExercise) => ex.levels.includes(level));
   };
   
   useEffect(() => {
-    if (initialParams) {
+    if (!show) return;
+    
+    if (initialParams && initialParams.types) {
       // Parse existing params if available
       const types = initialParams.types.split(",");
       setSelectedTypes(types);
@@ -56,25 +62,25 @@ export default function MesuresModal({
       // Reset to default for level - use first available exercise
       const availableExercises = getAvailableExercises();
       if (availableExercises.length > 0) {
-        setSelectedTypes([availableExercises[0].exercise]);
+        setSelectedTypes([availableExercises[0].id]);
       } else {
         setSelectedTypes([]);
       }
     }
-  }, [initialParams, level]);
+  }, [show, initialParams, level]);
 
-  const toggleType = (type: string) => {
-    if (selectedTypes.includes(type)) {
+  const toggleType = (exerciseId: string) => {
+    if (selectedTypes.includes(exerciseId)) {
       // Don't allow removing the last type
       if (selectedTypes.length > 1) {
-        setSelectedTypes(selectedTypes.filter(t => t !== type));
+        setSelectedTypes(selectedTypes.filter(t => t !== exerciseId));
       }
     } else {
       // Check if we can add more exercises
       if (canAddMoreExercises && !canAddMoreExercises(domainKey, 1)) {
         return; // Don't add if limit would be exceeded
       }
-      setSelectedTypes([...selectedTypes, type]);
+      setSelectedTypes([...selectedTypes, exerciseId]);
     }
   };
 
@@ -133,121 +139,132 @@ export default function MesuresModal({
           Configurer les exercices de mesures - {level}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white' }}>
-        <div 
-          className="mb-3"
-          style={{
-            backgroundColor: '#eff6ff',
-            border: '1px solid #93c5fd',
-            borderRadius: '8px',
-            padding: '1rem'
-          }}
-        >
-          <h6 className="mb-2" style={{ color: '#1e3a8a', fontWeight: 600 }}>Exercices disponibles pour {level}</h6>
-          <p className="small mb-0" style={{ color: '#1d4ed8' }}>
-            Sélectionnez les exercices de grandeurs et mesures que vous souhaitez inclure. Au moins un exercice doit être sélectionné.
-          </p>
+      <Modal.Body className="p-3" style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white' }}>
+        <div className="mb-2 p-2" style={{ 
+          backgroundColor: '#eff6ff',
+          borderRadius: '8px',
+          border: '1px solid #93c5fd'
+        }}>
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="fw-semibold" style={{ color: '#1e40af', fontSize: '0.8rem' }}>
+              <i className="bi bi-rulers me-1" style={{ color: '#3b82f6' }}></i>
+              Grandeurs et mesures - {level}
+            </small>
+            <Badge style={{ 
+              backgroundColor: '#3b82f6',
+              fontSize: '0.75rem',
+              padding: '0.3rem 0.6rem'
+            }}>
+              {selectedTypes.length} sélectionné{selectedTypes.length > 1 ? 's' : ''}
+            </Badge>
+          </div>
         </div>
 
-        <div className="mb-3">
-          <Row className="g-2">
-            {getAvailableExercises().map((exercise: any, index: number) => {
-              const isSelected = selectedTypes.includes(exercise.exercise);
-              const canSelect = !isSelected && canAddMoreExercises && canAddMoreExercises(domainKey, 1);
-              const cannotAddMore = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
-              const isDisabled = (isSelected && selectedTypes.length === 1) || cannotAddMore;
-              
-              return (
-                <Col key={index} md={6} lg={4}>
-                  <div 
-                    className={`mesures-card border p-2 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                    style={{ 
-                      border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                      backgroundColor: 'white'
-                    }}
-                    onClick={() => !isDisabled && toggleType(exercise.exercise)}
-                    title={
-                      isSelected && selectedTypes.length === 1 ? "Au moins un exercice doit être sélectionné" :
-                      cannotAddMore ? `Limite d'exercices atteinte (${currentTotalExercises}/${exerciseLimit})` : ""
-                    }
-                  >
-                    <div className="d-flex align-items-start gap-2">
-                      <div 
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          border: isSelected ? '2px solid #3b82f6' : '2px solid #d1d5db',
-                          background: isSelected ? '#3b82f6' : 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.3s ease',
-                          flexShrink: 0,
-                          marginTop: '2px'
-                        }}
-                      >
-                        {isSelected && (
-                          <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
+        <Row className="g-2">
+          {getAvailableExercises().map((exercise: GrandeursExercise) => {
+            const isSelected = selectedTypes.includes(exercise.id);
+            const cannotAddMore = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
+            const isDisabled = (isSelected && selectedTypes.length === 1) || cannotAddMore;
+            
+            return (
+              <Col key={exercise.id} md={6} lg={4}>
+                <div 
+                  className={`mesures-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  style={{ 
+                    border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                    backgroundColor: isSelected ? '#eff6ff' : 'white'
+                  }}
+                  onClick={() => !isDisabled && toggleType(exercise.id)}
+                  title={
+                    isSelected && selectedTypes.length === 1 ? "Au moins un exercice requis" :
+                    cannotAddMore ? `Limite atteinte (${currentTotalExercises}/${exerciseLimit})` : ""
+                  }
+                >
+                  <div className="d-flex align-items-start gap-2">
+                    <div 
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        border: isSelected ? '2px solid #3b82f6' : '2px solid #d1d5db',
+                        background: isSelected ? '#3b82f6' : 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                        flexShrink: 0
+                      }}
+                    >
+                      {isSelected && (
+                        <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
+                      )}
+                    </div>
+                    <div className="flex-grow-1">
+                      <div className="d-flex align-items-center gap-1">
+                        <h6 className="fw-semibold mb-0" style={{ 
+                          fontSize: '0.95rem', 
+                          lineHeight: '1.3', 
+                          color: isSelected ? '#1d4ed8' : '#374151' 
+                        }}>
+                          {exercise.label}
+                        </h6>
+                        {isSelected && selectedTypes.length === 1 && (
+                          <i className="bi bi-lock-fill" style={{ fontSize: '0.8rem', color: '#9ca3af' }}></i>
+                        )}
+                        {cannotAddMore && (
+                          <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '0.8rem', color: '#f59e0b' }}></i>
                         )}
                       </div>
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-1 mb-1">
-                          <span className="fw-semibold" style={{ fontSize: '0.85rem', lineHeight: '1.2', color: isSelected ? '#1d4ed8' : '#374151' }}>
-                            {exercise.exercise}
-                          </span>
-                          {isSelected && selectedTypes.length === 1 && <i className="bi bi-lock-fill text-muted" style={{ fontSize: '0.8rem' }}></i>}
-                          {cannotAddMore && <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '0.8rem', color: '#f59e0b' }}></i>}
-                        </div>
-                        <div className="small" style={{ fontSize: '0.75rem', lineHeight: '1.2', color: '#6b7280' }}>
-                          {exercise.contenu.length > 60 ? exercise.contenu.substring(0, 60) + '...' : exercise.contenu}
-                        </div>
-                      </div>
+                      <p className="small text-muted mb-0" style={{ 
+                        fontSize: '0.85rem', 
+                        lineHeight: '1.3', 
+                        color: isSelected ? '#1e40af' : '#6b7280',
+                        marginTop: '4px'
+                      }}>
+                        {exercise.description}
+                      </p>
                     </div>
                   </div>
-                </Col>
-              );
-            })}
-          </Row>
-        </div>
+                </div>
+              </Col>
+            );
+          })}
+        </Row>
 
-        <div 
-          style={{
+        {selectedTypes.length > 0 && (
+          <div className="mt-2 p-2" style={{ 
             backgroundColor: '#eff6ff',
-            border: '1px solid #93c5fd',
             borderRadius: '8px',
-            padding: '1rem',
-            marginTop: '1.5rem'
-          }}
-        >
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h6 className="mb-0" style={{ color: '#1e3a8a', fontWeight: 600 }}>Sélection actuelle</h6>
-            <small style={{ color: '#1d4ed8', fontWeight: 500 }}>
-              {selectedTypes.length} exercice{selectedTypes.length > 1 ? 's' : ''} sélectionné{selectedTypes.length > 1 ? 's' : ''}
-            </small>
+            border: '1px solid #93c5fd'
+          }}>
+            <div className="d-flex flex-wrap gap-1">
+              {selectedTypes.map((exerciseId) => {
+                const exerciseData = getAvailableExercises().find((ex: GrandeursExercise) => ex.id === exerciseId);
+                return (
+                  <Badge 
+                    key={exerciseId} 
+                    style={{ 
+                      fontSize: '0.7rem',
+                      backgroundColor: '#3b82f6',
+                      padding: '0.3rem 0.5rem'
+                    }}
+                  >
+                    {exerciseData?.label || exerciseId}
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
-          <div className="d-flex flex-wrap gap-2">
-            {selectedTypes.map((type) => {
-              const exerciseData = getAvailableExercises().find((ex: any) => ex.exercise === type);
-              return (
-                <Badge 
-                  key={type} 
-                  className="d-flex align-items-center gap-1" 
-                  style={{ 
-                    fontSize: '0.75rem',
-                    backgroundColor: '#3b82f6',
-                    padding: '0.4rem 0.8rem',
-                    borderRadius: '6px',
-                    fontWeight: 500
-                  }}
-                >
-                  <span>{getTypeIcon(type)}</span>
-                  {exerciseData?.exercise || type}
-                </Badge>
-              );
-            })}
+        )}
+        
+        {getAvailableExercises().length === 0 && (
+          <div className="text-center py-3">
+            <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+              <i className="bi bi-info-circle fs-3 mb-2 d-block"></i>
+              Aucun exercice disponible pour {level}
+            </div>
           </div>
-        </div>
+        )}
       </Modal.Body>
       <Modal.Footer style={{ backgroundColor: 'white' }}>
         <Button variant="secondary" onClick={onHide}>

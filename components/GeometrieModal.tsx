@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Badge, Card } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import mathExerciseNaming from "../config/mathExerciseNaming.json";
 
 export interface GeometrieParams {
   types: string;
@@ -17,7 +18,15 @@ interface GeometrieModalProps {
   currentTotalExercises: number;
   domainKey: string;
   canAddMoreExercises: (domainKey?: string, additionalExercises?: number) => boolean;
-  mathDomains?: any; // Add this prop
+  mathDomains?: any;
+}
+
+interface GeometryExercise {
+  id: string;
+  label: string;
+  levels: string[];
+  description: string;
+  modality?: string;
 }
 
 export default function GeometrieModal({ 
@@ -28,7 +37,7 @@ export default function GeometrieModal({
   level,
   exerciseLimit = 10,
   currentTotalExercises = 0,
-  domainKey = "espace-geometrie",
+  domainKey = "Geometrie",
   canAddMoreExercises,
   mathDomains
 }: GeometrieModalProps) {
@@ -37,44 +46,59 @@ export default function GeometrieModal({
   // State for type selection
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
-  // Get exercises for current level and domain
-  const getAvailableExercises = () => {
-    if (!mathDomains) return [];
+  // Get exercises for current level from mathExerciseNaming.json
+  const getAvailableExercises = (): GeometryExercise[] => {
+    const geometryExercises = (mathExerciseNaming as any).geometrie || [];
+    return geometryExercises.filter((ex: GeometryExercise) => 
+      ex.levels.includes(level)
+    );
+  };
+  
+  // Group exercises by modality
+  const getExercisesByModality = () => {
+    const exercises = getAvailableExercises();
+    const grouped: { [key: string]: GeometryExercise[] } = {
+      identification: [],
+      construction: [],
+      mesure: [],
+      other: []
+    };
     
-    const domain = mathDomains.find((d: any) => d.key === domainKey);
-    if (!domain || !domain.exercises[level]) return [];
+    exercises.forEach(ex => {
+      const modality = ex.modality || 'other';
+      if (grouped[modality]) {
+        grouped[modality].push(ex);
+      } else {
+        grouped.other.push(ex);
+      }
+    });
     
-    return domain.exercises[level];
+    return grouped;
   };
   
   useEffect(() => {
-    if (initialParams) {
-      // Parse existing params if available
-      const types = initialParams.types.split(",");
-      setSelectedTypes(types);
-    } else {
-      // Reset to default for level - use first available exercise
-      const availableExercises = getAvailableExercises();
-      if (availableExercises.length > 0) {
-        setSelectedTypes([availableExercises[0].exercise]);
+    if (show) {
+      if (initialParams && initialParams.types) {
+        // Parse existing params if available
+        const types = initialParams.types.split(",").map(t => t.trim()).filter(t => t);
+        setSelectedTypes(types);
       } else {
+        // Reset to default - start with empty selection
         setSelectedTypes([]);
       }
     }
-  }, [initialParams, level]);
+  }, [show, initialParams, level]);
 
-  const toggleType = (type: string) => {
-    if (selectedTypes.includes(type)) {
-      // Don't allow removing the last type
-      if (selectedTypes.length > 1) {
-        setSelectedTypes(selectedTypes.filter(t => t !== type));
-      }
+  const toggleType = (exerciseId: string) => {
+    if (selectedTypes.includes(exerciseId)) {
+      // Allow removing - can have 0 exercises selected
+      setSelectedTypes(selectedTypes.filter(t => t !== exerciseId));
     } else {
       // Check if we can add more exercises
       if (canAddMoreExercises && !canAddMoreExercises(domainKey, 1)) {
         return; // Don't add if limit would be exceeded
       }
-      setSelectedTypes([...selectedTypes, type]);
+      setSelectedTypes([...selectedTypes, exerciseId]);
     }
   };
 
@@ -91,20 +115,27 @@ export default function GeometrieModal({
     onHide();
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "formes_simples": return "🔺";
-      case "reconnaissance": return "👁️";
-      case "polygones": return "⬡";
-      case "lignes": return "📏";
-      case "angles": return "📐";
-      case "symetrie": return "🪞";
-      case "perimetre": return "📦";
-      case "aires": return "⬜";
-      case "volumes": return "🧊";
-      case "cercle": return "⭕";
-      default: return "📐";
+  const getModalityIcon = (modality: string) => {
+    switch (modality) {
+      case "identification": return "�️";
+      case "construction": return "�";
+      case "mesure": return "📏";
+      default: return "�";
     }
+  };
+  
+  const getModalityLabel = (modality: string) => {
+    switch (modality) {
+      case "identification": return "Identification";
+      case "construction": return "Construction";
+      case "mesure": return "Mesure";
+      default: return "Autre";
+    }
+  };
+  
+  const getModalityColor = (modality: string) => {
+    // All modalities use blue color
+    return { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' };
   };
 
   return (
@@ -134,105 +165,136 @@ export default function GeometrieModal({
           Configuration Géométrie - {level}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white' }}>
-        <div className="mb-3">
-          <h6 className="fw-bold mb-3" style={{ color: '#374151' }}>
-            <i className="bi bi-check-circle me-2" style={{ color: '#3b82f6' }}></i>
-            Exercices disponibles pour {level}
-          </h6>
-        </div>
-
-        <div className="mb-3">
-          <Row className="g-3">
-            {getAvailableExercises().map((exercise: any, index: number) => {
-              const isSelected = selectedTypes.includes(exercise.exercise);
-              const canSelect = !isSelected && canAddMoreExercises && canAddMoreExercises(domainKey, 1);
-              const cannotAddMore = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
-              const isDisabled = (isSelected && selectedTypes.length === 1) || cannotAddMore;
+      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white', padding: '1.25rem' }}>
+        {/* Display exercises grouped by modality */}
+        {Object.entries(getExercisesByModality()).map(([modality, exercises]) => {
+          if (exercises.length === 0) return null;
+          
+          const modalityColors = getModalityColor(modality);
+          
+          return (
+            <div key={modality} className="mb-3">
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <div style={{
+                  padding: '3px 10px',
+                  borderRadius: '6px',
+                  backgroundColor: modalityColors.bg,
+                  border: `1px solid ${modalityColors.border}`,
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  color: modalityColors.text
+                }}>
+                  {getModalityIcon(modality)} {getModalityLabel(modality)}
+                </div>
+              </div>
               
-              return (
-                <Col key={index} md={6} lg={4}>
-                  <div 
-                    className={`geometrie-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                    style={{ 
-                      border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                      backgroundColor: 'white',
-                      minHeight: '80px'
-                    }}
-                    onClick={() => !isDisabled && toggleType(exercise.exercise)}
-                    title={
-                      isSelected && selectedTypes.length === 1 ? "Au moins un exercice doit être sélectionné" :
-                      cannotAddMore ? `Limite d'exercices atteinte (${currentTotalExercises}/${exerciseLimit})` : ""
-                    }
-                  >
-                    <div className="d-flex align-items-start gap-2">
+              <Row className="g-2">
+                {exercises.map((exercise: GeometryExercise) => {
+                  const isSelected = selectedTypes.includes(exercise.id);
+                  const cannotAddMore = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
+                  const isDisabled = cannotAddMore;
+                  
+                  return (
+                    <Col key={exercise.id} md={6}>
                       <div 
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          border: isSelected ? '2px solid #3b82f6' : '2px solid #d1d5db',
-                          background: isSelected ? '#3b82f6' : 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.3s ease',
-                          flexShrink: 0
+                        className={`geometrie-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                        style={{ 
+                          border: isSelected ? `2px solid ${modalityColors.border}` : '1px solid #e5e7eb',
+                          backgroundColor: isSelected ? modalityColors.bg : 'white'
                         }}
+                        onClick={() => !isDisabled && toggleType(exercise.id)}
+                        title={
+                          cannotAddMore ? `Limite d'exercices atteinte (${currentTotalExercises}/${exerciseLimit})` : 
+                          "Cliquer pour sélectionner/désélectionner"
+                        }
                       >
-                        {isSelected && (
-                          <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
-                        )}
-                      </div>
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-1 mb-1">
-                          <span className="fw-semibold" style={{ fontSize: '0.85rem', lineHeight: '1.2', color: isSelected ? '#1d4ed8' : '#374151' }}>
-                            {exercise.exercise}
-                          </span>
-                          {isSelected && selectedTypes.length === 1 && <i className="bi bi-lock-fill text-muted" style={{ fontSize: '0.8rem' }}></i>}
-                          {cannotAddMore && <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '0.8rem', color: '#f59e0b' }}></i>}
+                        <div className="d-flex align-items-start gap-2">
+                          <div 
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              border: isSelected ? `2px solid ${modalityColors.border}` : '2px solid #d1d5db',
+                              background: isSelected ? modalityColors.border : 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.3s ease',
+                              flexShrink: 0
+                            }}
+                          >
+                            {isSelected && (
+                              <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
+                            )}
+                          </div>
+                          <div className="flex-grow-1">
+                            <div className="d-flex align-items-center gap-1 mb-0">
+                              <span className="fw-semibold" style={{ 
+                                fontSize: '0.95rem', 
+                                lineHeight: '1.3', 
+                                color: isSelected ? modalityColors.text : '#374151' 
+                              }}>
+                                {exercise.label}
+                              </span>
+                              {cannotAddMore && !isSelected && (
+                                <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '0.7rem', color: '#f59e0b' }}></i>
+                              )}
+                            </div>
+                            <div className="small text-muted" style={{ 
+                              fontSize: '0.85rem', 
+                              lineHeight: '1.3', 
+                              color: isSelected ? modalityColors.text : '#6b7280',
+                              marginTop: '4px'
+                            }}>
+                              {exercise.description}
+                            </div>
+                          </div>
                         </div>
-                        <div className="small text-muted" style={{ fontSize: '0.75rem', lineHeight: '1.2' }}>
-                          {exercise.contenu.length > 60 ? exercise.contenu.substring(0, 60) + '...' : exercise.contenu}
-                        </div>
                       </div>
-                    </div>
-                  </div>
-                </Col>
-              );
-            })}
-          </Row>
-        </div>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </div>
+          );
+        })}
 
-        <div className="mt-3 p-3" style={{ 
+        <div className="mt-2 p-2" style={{ 
           backgroundColor: '#eff6ff',
-          borderRadius: '10px',
+          borderRadius: '8px',
           border: '1px solid #93c5fd'
         }}>
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h6 className="mb-0 fw-semibold" style={{ color: '#374151' }}>
-              <i className="bi bi-list-check me-2" style={{ color: '#3b82f6' }}></i>
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="fw-semibold" style={{ color: '#1e40af', fontSize: '0.8rem' }}>
+              <i className="bi bi-list-check me-1" style={{ color: '#3b82f6' }}></i>
               Sélection actuelle
-            </h6>
-            <small style={{ color: '#1e3a8a' }}>
-              {selectedTypes.length} exercice{selectedTypes.length > 1 ? 's' : ''} sélectionné{selectedTypes.length > 1 ? 's' : ''}
+            </small>
+            <small style={{ color: '#1e40af', fontWeight: '600', fontSize: '0.75rem' }}>
+              {selectedTypes.length} exercice{selectedTypes.length > 1 ? 's' : ''}
             </small>
           </div>
-          <div className="d-flex flex-wrap gap-2 mt-2">
-            {selectedTypes.map((type) => {
-              const exerciseData = getAvailableExercises().find((ex: any) => ex.exercise === type);
-              return (
-                <Badge key={type} style={{ 
-                  backgroundColor: '#3b82f6',
-                  fontSize: '0.75rem',
-                  padding: '0.4rem 0.6rem'
-                }}>
-                  {getTypeIcon(type)}
-                  {exerciseData?.exercise || type}
-                </Badge>
-              );
-            })}
-          </div>
+          {selectedTypes.length > 0 && (
+            <div className="d-flex flex-wrap gap-1 mt-2">
+              {selectedTypes.map((typeId) => {
+                const exerciseData = getAvailableExercises().find((ex) => ex.id === typeId);
+                if (!exerciseData) return null;
+                
+                const modalityColors = getModalityColor(exerciseData.modality || 'other');
+                
+                return (
+                  <Badge key={typeId} style={{ 
+                    backgroundColor: modalityColors.border,
+                    fontSize: '0.7rem',
+                    padding: '0.3rem 0.6rem',
+                    fontWeight: '500',
+                    color: 'white'
+                  }}>
+                    {getModalityIcon(exerciseData.modality || 'other')} {exerciseData.label}
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
         </div>
       </Modal.Body>
       <Modal.Footer style={{ borderTop: '1px solid #e5e7eb', backgroundColor: 'white' }}>

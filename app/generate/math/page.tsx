@@ -112,11 +112,17 @@ export default function GenerateMathPage() {
     
     if (exercisesList.length === 0) return "Configuré";
     
+    // Map exercise IDs to their labels from mathExerciseNaming.json
+    const exerciseLabels = exercisesList.map((exerciseId: string) => {
+      const label = getMathExerciseLabel(exerciseId);
+      return label || exerciseId; // Fallback to ID if label not found
+    });
+    
     // Show first 2 exercises, then +N for remaining
-    if (exercisesList.length <= 2) {
-      return exercisesList.join(", ");
+    if (exerciseLabels.length <= 2) {
+      return exerciseLabels.join(", ");
     } else {
-      return exercisesList.slice(0, 2).join(", ") + ` +${exercisesList.length - 2}`;
+      return exerciseLabels.slice(0, 2).join(", ") + ` +${exerciseLabels.length - 2}`;
     }
   };
 

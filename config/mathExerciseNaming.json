@@ -49,6 +49,12 @@
       "description": "Ranger et comparer les nombres jusqu'à 10 000"
     },
     {
+      "id": "pair_impair",
+      "label": "Nombres pairs et impairs",
+      "levels": ["CE2", "CM1"],
+      "description": "Reconnaître les nombres pairs et impairs, identifier leurs propriétés et les utiliser dans des exercices"
+    },
+    {
       "id": "grands_nombres_lire_ecrire",
       "label": "Grands nombres - Lire et écrire",
       "levels": ["CM1"],
@@ -107,19 +113,19 @@
     {
       "id": "addition",
       "label": "Addition",
-      "levels": ["CP", "CE1"],
+      "levels": ["CP", "CE1","CE2","CM1","CM2"],
       "description": "Additions en ligne et posées, avec ou sans retenue"
     },
     {
       "id": "soustraction",
       "label": "Soustraction",
-      "levels": ["CP", "CE1"],
+      "levels": ["CP", "CE1","CE2","CM1","CM2"],
       "description": "Soustractions en ligne et posées, avec ou sans retenue"
     },
     {
       "id": "multiplication",
       "label": "Multiplication",
-      "levels": ["CP", "CE1", "CE2"],
+      "levels": ["CP", "CE1", "CE2","CM1","CM2"],
       "description": "Tables de multiplication et multiplications posées"
     },
     {
@@ -131,32 +137,8 @@
     {
       "id": "division",
       "label": "Division",
-      "levels": ["CE1", "CE2"],
-      "description": "Premiers partages, moitiés et divisions simples"
-    },
-    {
-      "id": "addition_soustraction",
-      "label": "Addition et soustraction",
-      "levels": ["CE2"],
-      "description": "Additions et soustractions en ligne et posées, compléments"
-    },
-    {
-      "id": "additions_soustractions",
-      "label": "Additions et soustractions",
-      "levels": ["CM1"],
-      "description": "Techniques d'addition et soustraction avec des entiers"
-    },
-    {
-      "id": "multiplication_cm1",
-      "label": "Multiplication",
-      "levels": ["CM1"],
-      "description": "Multiplications par 1 chiffre, 10, 100, 25, 50; décompositions"
-    },
-    {
-      "id": "division_cm1",
-      "label": "Division",
-      "levels": ["CM1"],
-      "description": "Multiples et diviseurs; divisions en ligne; divisions par 1 chiffre"
+      "levels": ["CE1", "CE2","CM1","CM2"],
+      "description": "Divisions"
     },
     {
       "id": "decimaux_addition_soustraction",
@@ -250,55 +232,78 @@
       "id": "reperage",
       "label": "Repérage",
       "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
-      "description": "Se repérer dans l'espace, sur un plan ou un quadrillage"
+      "description": "Se repérer dans l'espace, sur un plan ou un quadrillage.",
+      "modality": "identification"
     },
     {
       "id": "quadrillage",
       "label": "Quadrillage",
       "levels": ["CP"],
-      "description": "Se repérer dans un quadrillage et sur un plan, coder des déplacements"
+      "description": "Se repérer dans un quadrillage, coder et décoder des déplacements.",
+      "modality": "identification"
     },
     {
       "id": "symetrie",
       "label": "Symétrie",
       "levels": ["CP", "CE1", "CE2"],
-      "description": "Reconnaître et compléter des figures symétriques"
+      "description": "Reconnaître et compléter des figures symétriques.",
+      "modality": "identification"
     },
     {
       "id": "figures",
-      "label": "Figures",
+      "label": "Figures planes",
       "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
-      "description": "Identifier et tracer polygones, carrés, rectangles, triangles, cercles"
+      "description": "Identifier et nommer des figures planes : carré, rectangle, triangle, cercle.",
+      "modality": "identification"
     },
     {
       "id": "solides",
       "label": "Solides",
       "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
-      "description": "Reconnaître, nommer et décrire des solides"
+      "description": "Reconnaître, nommer et décrire des solides : cube, pavé, cylindre, pyramide.",
+      "modality": "identification"
     },
     {
       "id": "droites_angles",
       "label": "Droites et angles",
       "levels": ["CE1"],
-      "description": "Tracer des droites et segments, repérer un angle droit"
+      "description": "Tracer des droites et segments, repérer et construire des angles droits.",
+      "modality": "construction"
     },
     {
       "id": "instruments",
-      "label": "Instruments",
+      "label": "Utilisation des instruments",
       "levels": ["CE2"],
-      "description": "Utiliser règle, équerre et compas"
+      "description": "Utiliser règle, équerre et compas pour tracer des figures géométriques.",
+      "modality": "construction"
     },
     {
       "id": "droites_symetrie",
       "label": "Droites et symétrie",
       "levels": ["CM1", "CM2"],
-      "description": "Tracer droites perpendiculaires et parallèles, axes de symétrie"
+      "description": "Tracer des droites perpendiculaires et parallèles, déterminer et tracer des axes de symétrie.",
+      "modality": "construction"
     },
     {
       "id": "programmes",
-      "label": "Programmes",
+      "label": "Programmes de construction",
       "levels": ["CM1", "CM2"],
-      "description": "Suivre et rédiger des programmes de construction"
+      "description": "Suivre, rédiger et exécuter des programmes de construction géométriques.",
+      "modality": "construction"
+    },
+    {
+      "id": "mesure_longueurs_angles",
+      "label": "Mesure de longueurs et d’angles",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "description": "Mesurer et comparer des segments, des côtés, des périmètres et des angles.",
+      "modality": "mesure"
+    },
+    {
+      "id": "aire_perimetre",
+      "label": "Aire et périmètre",
+      "levels": ["CE2", "CM1", "CM2"],
+      "description": "Calculer le périmètre ou l’aire de figures simples (carrés, rectangles, triangles).",
+      "modality": "mesure"
     }
   ],
   "problemes": [

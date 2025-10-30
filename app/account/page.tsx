@@ -163,8 +163,8 @@ export default function AccountPage() {
           <Col lg={10} className="mx-auto">
             {/* Enhanced Main Title */}
             <div className="text-center mb-4">
-              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
-                <i className="bi bi-person-circle me-2" style={{ color: '#6c757d' }}></i>
+              <h2 className="fw-bold mb-2" style={{ color: '#1e40af' }}>
+                <i className="bi bi-person-circle me-2" style={{ color: '#fbbf24' }}></i>
                 Mon compte
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
@@ -178,110 +178,129 @@ export default function AccountPage() {
                 <button
                   onClick={() => setActiveSection("profile")}
                   style={{
-                    backgroundColor: activeSection === "profile" ? '#f8f9fa' : 'white',
-                    color: activeSection === "profile" ? '#2c3e50' : '#6c757d',
-                    border: `2px solid ${activeSection === "profile" ? '#dee2e6' : '#e9ecef'}`,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
+                    backgroundColor: activeSection === "profile" ? '#eff6ff' : 'white',
+                    color: activeSection === "profile" ? '#1e40af' : '#6b7280',
+                    border: `2px solid ${activeSection === "profile" ? '#3b82f6' : '#e5e7eb'}`,
+                    padding: '10px 18px',
+                    borderRadius: '10px',
                     fontSize: '0.9rem',
                     fontWeight: activeSection === "profile" ? '600' : '500',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s ease',
+                    transform: activeSection === "profile" ? 'translateY(-2px)' : 'none',
+                    boxShadow: activeSection === "profile" ? '0 4px 8px rgba(59, 130, 246, 0.2)' : 'none'
                   }}
                   onMouseEnter={(e) => {
                     if (activeSection !== "profile") {
-                      e.currentTarget.style.backgroundColor = '#f8f9fa';
-                      e.currentTarget.style.borderColor = '#dee2e6';
+                      e.currentTarget.style.backgroundColor = '#f0f9ff';
+                      e.currentTarget.style.borderColor = '#93c5fd';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (activeSection !== "profile") {
                       e.currentTarget.style.backgroundColor = 'white';
-                      e.currentTarget.style.borderColor = '#e9ecef';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.transform = 'none';
                     }
                   }}
                 >
+                  <i className="bi bi-person me-1"></i>
                   Profil utilisateur
                 </button>
                 <button
                   onClick={() => setActiveSection("subscription")}
                   style={{
-                    backgroundColor: activeSection === "subscription" ? '#f8f9fa' : 'white',
-                    color: activeSection === "subscription" ? '#2c3e50' : '#6c757d',
-                    border: `2px solid ${activeSection === "subscription" ? '#dee2e6' : '#e9ecef'}`,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
+                    backgroundColor: activeSection === "subscription" ? '#fef3c7' : 'white',
+                    color: activeSection === "subscription" ? '#92400e' : '#6b7280',
+                    border: `2px solid ${activeSection === "subscription" ? '#fbbf24' : '#e5e7eb'}`,
+                    padding: '10px 18px',
+                    borderRadius: '10px',
                     fontSize: '0.9rem',
                     fontWeight: activeSection === "subscription" ? '600' : '500',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s ease',
+                    transform: activeSection === "subscription" ? 'translateY(-2px)' : 'none',
+                    boxShadow: activeSection === "subscription" ? '0 4px 8px rgba(251, 191, 36, 0.2)' : 'none'
                   }}
                   onMouseEnter={(e) => {
                     if (activeSection !== "subscription") {
-                      e.currentTarget.style.backgroundColor = '#f8f9fa';
-                      e.currentTarget.style.borderColor = '#dee2e6';
+                      e.currentTarget.style.backgroundColor = '#fef9e7';
+                      e.currentTarget.style.borderColor = '#fcd34d';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (activeSection !== "subscription") {
                       e.currentTarget.style.backgroundColor = 'white';
-                      e.currentTarget.style.borderColor = '#e9ecef';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.transform = 'none';
                     }
                   }}
                 >
+                  <i className="bi bi-star me-1"></i>
                   Mon abonnement
                 </button>
                 <button
                   onClick={() => setActiveSection("settings")}
                   style={{
-                    backgroundColor: activeSection === "settings" ? '#f8f9fa' : 'white',
-                    color: activeSection === "settings" ? '#2c3e50' : '#6c757d',
-                    border: `2px solid ${activeSection === "settings" ? '#dee2e6' : '#e9ecef'}`,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
+                    backgroundColor: activeSection === "settings" ? '#eff6ff' : 'white',
+                    color: activeSection === "settings" ? '#1e40af' : '#6b7280',
+                    border: `2px solid ${activeSection === "settings" ? '#3b82f6' : '#e5e7eb'}`,
+                    padding: '10px 18px',
+                    borderRadius: '10px',
                     fontSize: '0.9rem',
                     fontWeight: activeSection === "settings" ? '600' : '500',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s ease',
+                    transform: activeSection === "settings" ? 'translateY(-2px)' : 'none',
+                    boxShadow: activeSection === "settings" ? '0 4px 8px rgba(59, 130, 246, 0.2)' : 'none'
                   }}
                   onMouseEnter={(e) => {
                     if (activeSection !== "settings") {
-                      e.currentTarget.style.backgroundColor = '#f8f9fa';
-                      e.currentTarget.style.borderColor = '#dee2e6';
+                      e.currentTarget.style.backgroundColor = '#f0f9ff';
+                      e.currentTarget.style.borderColor = '#93c5fd';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (activeSection !== "settings") {
                       e.currentTarget.style.backgroundColor = 'white';
-                      e.currentTarget.style.borderColor = '#e9ecef';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.transform = 'none';
                     }
                   }}
                 >
+                  <i className="bi bi-sliders me-1"></i>
                   Paramètres
                 </button>
                 <button
                   onClick={() => setActiveSection("support")}
                   style={{
-                    backgroundColor: activeSection === "support" ? '#f8f9fa' : 'white',
-                    color: activeSection === "support" ? '#2c3e50' : '#6c757d',
-                    border: `2px solid ${activeSection === "support" ? '#dee2e6' : '#e9ecef'}`,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
+                    backgroundColor: activeSection === "support" ? '#eff6ff' : 'white',
+                    color: activeSection === "support" ? '#1e40af' : '#6b7280',
+                    border: `2px solid ${activeSection === "support" ? '#3b82f6' : '#e5e7eb'}`,
+                    padding: '10px 18px',
+                    borderRadius: '10px',
                     fontSize: '0.9rem',
                     fontWeight: activeSection === "support" ? '600' : '500',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.3s ease',
+                    transform: activeSection === "support" ? 'translateY(-2px)' : 'none',
+                    boxShadow: activeSection === "support" ? '0 4px 8px rgba(59, 130, 246, 0.2)' : 'none'
                   }}
                   onMouseEnter={(e) => {
                     if (activeSection !== "support") {
-                      e.currentTarget.style.backgroundColor = '#f8f9fa';
-                      e.currentTarget.style.borderColor = '#dee2e6';
+                      e.currentTarget.style.backgroundColor = '#f0f9ff';
+                      e.currentTarget.style.borderColor = '#93c5fd';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (activeSection !== "support") {
                       e.currentTarget.style.backgroundColor = 'white';
-                      e.currentTarget.style.borderColor = '#e9ecef';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.transform = 'none';
                     }
                   }}
                 >
@@ -356,18 +375,19 @@ export default function AccountPage() {
             {/* Profile Section */}
             {activeSection === "profile" && (
               <Card style={{ 
-                border: '2px solid #e9ecef', 
+                border: '2px solid #3b82f6', 
                 borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
+                backgroundColor: 'white'
               }}>
                 <Card.Header style={{ 
-                  backgroundColor: '#f8f9fa',
-                  borderBottom: '2px solid #e9ecef',
+                  backgroundColor: '#eff6ff',
+                  borderBottom: '2px solid #93c5fd',
                   borderRadius: '10px 10px 0 0',
                   padding: '16px 20px'
                 }}>
-                  <h5 className="mb-0 fw-semibold" style={{ color: '#2c3e50' }}>
-                    <i className="bi bi-person me-2" style={{ color: '#6c757d' }}></i>
+                  <h5 className="mb-0 fw-semibold" style={{ color: '#1e40af' }}>
+                    <i className="bi bi-person me-2" style={{ color: '#3b82f6' }}></i>
                     Profil utilisateur
                   </h5>
                 </Card.Header>
@@ -407,18 +427,19 @@ export default function AccountPage() {
             {/* Subscription Section */}
             {activeSection === "subscription" && (
               <Card style={{ 
-                border: '2px solid #e9ecef', 
+                border: '2px solid #fbbf24', 
                 borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                boxShadow: '0 4px 12px rgba(251, 191, 36, 0.15)',
+                backgroundColor: 'white'
               }}>
                 <Card.Header style={{ 
-                  backgroundColor: '#f8f9fa',
-                  borderBottom: '2px solid #e9ecef',
+                  backgroundColor: '#fef3c7',
+                  borderBottom: '2px solid #fcd34d',
                   borderRadius: '10px 10px 0 0',
                   padding: '16px 20px'
                 }}>
-                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#2c3e50' }}>
-                    <i className="bi bi-credit-card me-2" style={{ color: '#6c757d' }}></i>
+                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#92400e' }}>
+                    <i className="bi bi-star-fill me-2" style={{ color: '#f59e0b' }}></i>
                     Mon abonnement
                   </h5>
                 </Card.Header>
@@ -432,88 +453,158 @@ export default function AccountPage() {
                 {/* Current Subscription */}
                 {subscription && (
                   <Card className="mb-4" style={{ 
-                    border: '2px solid #e9ecef',
-                    borderRadius: '10px'
+                    border: '2px solid #3b82f6',
+                    borderRadius: '12px',
+                    backgroundColor: 'white',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)'
                   }}>
                     <Card.Header className="d-flex justify-content-between align-items-center" style={{ 
-                      backgroundColor: '#f8f9fa',
-                      borderBottom: '1px solid #e9ecef',
-                      padding: '12px 16px'
+                      backgroundColor: '#eff6ff',
+                      borderBottom: '2px solid #93c5fd',
+                      borderRadius: '10px 10px 0 0',
+                      padding: '16px 20px'
                     }}>
-                      <h6 className="mb-0 d-flex align-items-center fw-semibold" style={{ color: '#2c3e50' }}>
-                        <i className="bi bi-clock-history me-2" style={{ color: '#6c757d' }}></i>
+                      <h6 className="mb-0 d-flex align-items-center fw-semibold" style={{ color: '#1e40af' }}>
+                        <i className="bi bi-star-fill me-2" style={{ color: '#fbbf24' }}></i>
                         Mon abonnement actuel
                       </h6>
                       <span style={{
-                        padding: '4px 12px',
-                        borderRadius: '6px',
+                        padding: '6px 14px',
+                        borderRadius: '8px',
                         fontSize: '0.8rem',
                         fontWeight: '600',
-                        backgroundColor: subscription.status === 'active' ? '#d1e7dd' : 
-                          subscription.status === 'cancelled' ? '#f8d7da' : '#fff3cd',
-                        color: subscription.status === 'active' ? '#0f5132' : 
-                          subscription.status === 'cancelled' ? '#842029' : '#664d03'
+                        backgroundColor: subscription.status === 'active' ? '#dcfce7' : 
+                          subscription.status === 'cancelled' ? '#fee2e2' : '#fef3c7',
+                        color: subscription.status === 'active' ? '#166534' : 
+                          subscription.status === 'cancelled' ? '#991b1b' : '#92400e',
+                        border: `2px solid ${subscription.status === 'active' ? '#86efac' : 
+                          subscription.status === 'cancelled' ? '#fca5a5' : '#fcd34d'}`
                       }}>
-                        {subscription.status === 'active' ? 'Actif' : 
-                         subscription.status === 'cancelled' ? 'Annulé' : 'Suspendu'}
+                        {subscription.status === 'active' ? '✓ Actif' : 
+                         subscription.status === 'cancelled' ? '✕ Annulé' : '⚠ Suspendu'}
                       </span>
                     </Card.Header>
-                    <Card.Body className="p-3">
+                    <Card.Body className="p-4">
                       <Row>
-                        <Col md={6}>
-                          <h5>{getCurrentPlan()?.name}</h5>
-                          <div className="h4 text-primary mb-2">{getCurrentPlan()?.price}€<small className="text-muted">/mois</small></div>
-                          <p className="mb-3">{getCurrentPlan()?.description}</p>
+                        <Col md={6} className="mb-3 mb-md-0">
+                          <div className="d-flex align-items-center mb-3">
+                            <div>
+                              <h4 className="mb-1" style={{ color: '#1e40af', fontWeight: '700' }}>
+                                {getCurrentPlan()?.name === 'Free' ? 'Gratuit' : 
+                                 getCurrentPlan()?.name === 'Standard' ? 'Standard' :
+                                 getCurrentPlan()?.name === 'Family' ? 'Family+' : getCurrentPlan()?.name}
+                              </h4>
+                              <div className="d-flex align-items-baseline">
+                                <span className="h3 mb-0" style={{ color: '#3b82f6', fontWeight: '700' }}>
+                                  {getCurrentPlan()?.price}€
+                                </span>
+                                <span className="text-muted ms-2" style={{ fontSize: '0.9rem' }}>/mois</span>
+                              </div>
+                            </div>
+                          </div>
                           
-                          <div className="mb-4">
-                            <h6>Utilisation ce mois</h6>
-                            <div className="progress mb-2" style={{height: '12px'}}>
+                          <div className="mb-4" style={{ 
+                            backgroundColor: '#fef3c7', 
+                            padding: '12px 16px', 
+                            borderRadius: '10px',
+                            border: '2px solid #fcd34d'
+                          }}>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <h6 className="mb-0" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#92400e' }}>
+                                <i className="bi bi-graph-up me-2" style={{ color: '#f59e0b' }}></i>
+                                Utilisation ce mois
+                              </h6>
+                              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#92400e' }}>
+                                {subscription.usageThisMonth || 0} / {getCurrentPlan()?.monthlyLimit}
+                              </span>
+                            </div>
+                            <div className="progress mb-2" style={{ 
+                              height: '14px', 
+                              backgroundColor: '#fef9e7',
+                              borderRadius: '8px',
+                              border: '1px solid #fde68a'
+                            }}>
                               <div 
                                 className="progress-bar" 
                                 role="progressbar" 
-                                style={{width: `${Math.min(((subscription.usageThisMonth || 0) / (getCurrentPlan()?.monthlyLimit || 1)) * 100, 100)}%`}}
+                                style={{
+                                  width: `${Math.min(((subscription.usageThisMonth || 0) / (getCurrentPlan()?.monthlyLimit || 1)) * 100, 100)}%`,
+                                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                                  borderRadius: '8px'
+                                }}
                                 aria-valuenow={subscription.usageThisMonth || 0} 
                                 aria-valuemin={0} 
                                 aria-valuemax={getCurrentPlan()?.monthlyLimit}
                               ></div>
                             </div>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <small className="text-muted">
-                                {subscription.usageThisMonth || 0} / {getCurrentPlan()?.monthlyLimit} fiches générées
-                              </small>
-                              <small className={`${(subscription.usageThisMonth || 0) >= (getCurrentPlan()?.monthlyLimit || 0) ? 'text-danger' : 'text-success'}`}>
-                                {(getCurrentPlan()?.monthlyLimit || 0) - (subscription.usageThisMonth || 0)} restantes
+                            <div className="text-center">
+                              <small style={{ 
+                                color: (subscription.usageThisMonth || 0) >= (getCurrentPlan()?.monthlyLimit || 0) ? '#dc2626' : '#166534',
+                                fontWeight: '600',
+                                fontSize: '0.85rem'
+                              }}>
+                                {(subscription.usageThisMonth || 0) >= (getCurrentPlan()?.monthlyLimit || 0) 
+                                  ? '⚠️ Limite atteinte' 
+                                  : `✓ ${(getCurrentPlan()?.monthlyLimit || 0) - (subscription.usageThisMonth || 0)} fiches restantes`}
                               </small>
                             </div>
                           </div>
                         </Col>
                         
                         <Col md={6}>
-                          <div className="mb-3">
-                            <strong>Début de l'abonnement :</strong><br />
-                            <span className="text-muted">{formatDate(subscription.currentPeriodStart)}</span>
-                          </div>
-                          <div className="mb-3">
-                            <strong>Prochaine facturation :</strong><br />
-                            <span className="text-muted">{formatDate(subscription.currentPeriodEnd)}</span>
+                          <div className="mb-3 p-3" style={{ 
+                            backgroundColor: '#f0f9ff', 
+                            borderRadius: '10px',
+                            border: '1px solid #bae6fd'
+                          }}>
+                            <div className="mb-3">
+                              <small style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: '600', textTransform: 'uppercase' }}>
+                                Début de l'abonnement
+                              </small>
+                              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e40af' }}>
+                                {formatDate(subscription.currentPeriodStart)}
+                              </div>
+                            </div>
+                            <div>
+                              <small style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: '600', textTransform: 'uppercase' }}>
+                                Prochaine facturation
+                              </small>
+                              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e40af' }}>
+                                {formatDate(subscription.currentPeriodEnd)}
+                              </div>
+                            </div>
                           </div>
                           
-                          <div className="mt-4">
+                          <div className="mt-3">
                             {subscription.status === 'active' ? (
                               <Button 
                                 variant="outline-danger"
                                 size="sm"
                                 onClick={handleCancelSubscription}
                                 disabled={actionLoading}
+                                style={{
+                                  borderWidth: '2px',
+                                  borderRadius: '8px',
+                                  fontWeight: '600',
+                                  padding: '8px 16px',
+                                  transition: 'all 0.2s ease'
+                                }}
                               >
                                 {actionLoading ? 'Chargement...' : 'Annuler l\'abonnement'}
                               </Button>
                             ) : subscription.status === 'cancelled' && (
                               <Button 
-                                variant="primary"
                                 size="sm"
                                 onClick={handleReactivateSubscription}
                                 disabled={actionLoading}
+                                style={{
+                                  background: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  fontWeight: '600',
+                                  padding: '8px 16px',
+                                  color: 'white'
+                                }}
                               >
                                 {actionLoading ? 'Chargement...' : 'Réactiver l\'abonnement'}
                               </Button>
@@ -525,7 +616,7 @@ export default function AccountPage() {
                   </Card>
                 )}
 
-                {/* Available Plans */}
+                {/* Available Plans - Detailed Comparison */}
                 <Card className="mb-4" style={{ 
                   border: '2px solid #e9ecef',
                   borderRadius: '10px'
@@ -540,63 +631,276 @@ export default function AccountPage() {
                     </h6>
                   </Card.Header>
                   <Card.Body className="p-3">
-                    <Row>
-                      {plans.map((plan) => {
-                        const isCurrentPlan = subscription?.planId === plan.id;
-                        const currentPlan = getCurrentPlan();
-                        const isUpgrade = subscription && currentPlan && plan.price > currentPlan.price;
-                        
-                        return (
-                          <Col key={plan.id} md={4} className="mb-3">
-                            <Card className={`h-100 ${isCurrentPlan ? 'border-primary' : ''} ${plan.id === 'standard' ? 'border-warning' : ''}`}>
-                              {plan.id === 'standard' && (
-                                <div className="position-absolute top-0 start-50 translate-middle">
-                                  <span className="badge bg-warning text-dark">Populaire</span>
-                                </div>
+                    {/* Plans Cards */}
+                    <Row className="mb-4">
+                      {/* Free Plan */}
+                      <Col md={4} className="mb-3">
+                        <Card className={`h-100`} style={{ 
+                          border: subscription?.planId === 'free' ? '3px solid #3b82f6' : '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          transition: 'all 0.3s ease',
+                          boxShadow: subscription?.planId === 'free' ? '0 4px 12px rgba(59, 130, 246, 0.2)' : 'none'
+                        }}>
+                          <Card.Body className="text-center d-flex flex-column p-4">
+                            <h5 className="card-title fw-bold mb-2" style={{ color: '#6b7280' }}>Gratuit</h5>
+                            <div className="display-6 mb-2" style={{ color: '#6b7280', fontWeight: '700' }}>0€</div>
+                            <p className="text-muted small mb-3">par mois</p>
+                            <p className="card-text mb-3" style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                              Pour découvrir l'application
+                            </p>
+                            
+                            <div className="mt-auto">
+                              {subscription?.planId === 'free' ? (
+                                <span className="badge p-2" style={{ 
+                                  backgroundColor: '#eff6ff', 
+                                  color: '#1e40af',
+                                  border: '2px solid #3b82f6',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '600'
+                                }}>
+                                  ✓ Plan actuel
+                                </span>
+                              ) : (
+                                <Button 
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  onClick={() => handlePlanChange('free', false)}
+                                  disabled={actionLoading}
+                                  style={{ 
+                                    borderWidth: '2px',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    padding: '8px 16px'
+                                  }}
+                                >
+                                  {actionLoading ? 'Chargement...' : 'Passer au gratuit'}
+                                </Button>
                               )}
-                              <Card.Body className="text-center d-flex flex-column">
-                                <h6 className="card-title">{plan.name}</h6>
-                                <div className="display-6 text-primary mb-2">{plan.price}€</div>
-                                <p className="text-muted small mb-3">par mois</p>
-                                <p className="card-text mb-4">{plan.description}</p>
-                                
-                                <ul className="list-unstyled mb-4 flex-grow-1">
-                                  <li className="mb-2">✓ <strong>{plan.monthlyLimit} fiches</strong> par mois</li>
-                                  <li className="mb-2">✓ Tous les types d'exercices</li>
-                                  <li className="mb-2">✓ Export PDF</li>
-                                  <li className="mb-2">✓ Support client</li>
-                                </ul>
-                                
-                                <div className="mt-auto">
-                                  {isCurrentPlan ? (
-                                    <span className="badge bg-primary p-2">Plan actuel</span>
-                                  ) : subscription?.status === 'active' ? (
-                                    <Button 
-                                      variant={isUpgrade ? 'primary' : 'outline-primary'}
-                                      size="sm"
-                                      onClick={() => handlePlanChange(plan.id, isUpgrade || false)}
-                                      disabled={actionLoading}
-                                    >
-                                      {actionLoading ? 'Chargement...' : 
-                                       isUpgrade ? 'Passer à ce plan' : 'Rétrograder'}
-                                    </Button>
-                                  ) : (
-                                    <Button 
-                                      variant={plan.id === 'standard' ? 'warning' : 'outline-primary'}
-                                      size="sm"
-                                      onClick={() => handlePlanChange(plan.id, true)}
-                                      disabled={actionLoading}
-                                    >
-                                      {actionLoading ? 'Chargement...' : 'Choisir ce plan'}
-                                    </Button>
-                                  )}
-                                </div>
-                              </Card.Body>
-                            </Card>
-                          </Col>
-                        );
-                      })}
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      {/* Standard Plan */}
+                      <Col md={4} className="mb-3">
+                        <Card className={`h-100`} style={{ 
+                          border: subscription?.planId === 'standard' ? '3px solid #fbbf24' : '2px solid #fbbf24',
+                          borderRadius: '12px',
+                          transition: 'all 0.3s ease',
+                          boxShadow: subscription?.planId === 'standard' ? '0 4px 12px rgba(251, 191, 36, 0.3)' : '0 2px 8px rgba(251, 191, 36, 0.15)',
+                          transform: 'scale(1.02)'
+                        }}>
+                          <div className="position-absolute top-0 start-50 translate-middle">
+                            <span className="badge text-dark px-3 py-2" style={{ 
+                              background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                              fontSize: '0.8rem',
+                              fontWeight: '700',
+                              borderRadius: '8px'
+                            }}>
+                              ⭐ Populaire
+                            </span>
+                          </div>
+                          <Card.Body className="text-center d-flex flex-column p-4" style={{ paddingTop: '2.5rem !important' }}>
+                            <h5 className="card-title fw-bold mb-2" style={{ color: '#92400e' }}>Standard</h5>
+                            <div className="display-6 mb-2" style={{ color: '#f59e0b', fontWeight: '700' }}>1,99€</div>
+                            <p className="text-muted small mb-3">par mois</p>
+                            <p className="card-text mb-3" style={{ fontSize: '0.9rem', color: '#78350f' }}>
+                              Pour une utilisation régulière
+                            </p>
+                            
+                            <div className="mt-auto">
+                              {subscription?.planId === 'standard' ? (
+                                <span className="badge p-2" style={{ 
+                                  backgroundColor: '#fef3c7', 
+                                  color: '#92400e',
+                                  border: '2px solid #fbbf24',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '600'
+                                }}>
+                                  ✓ Plan actuel
+                                </span>
+                              ) : (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => handlePlanChange('standard', (subscription?.planId === 'free'))}
+                                  disabled={actionLoading}
+                                  style={{ 
+                                    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    padding: '8px 16px',
+                                    color: 'white'
+                                  }}
+                                >
+                                  {actionLoading ? 'Chargement...' : 'Passer à 1,99€'}
+                                </Button>
+                              )}
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      {/* Family+ Plan */}
+                      <Col md={4} className="mb-3">
+                        <Card className={`h-100`} style={{ 
+                          border: subscription?.planId === 'family' ? '3px solid #3b82f6' : '2px solid #3b82f6',
+                          borderRadius: '12px',
+                          transition: 'all 0.3s ease',
+                          boxShadow: subscription?.planId === 'family' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : '0 2px 8px rgba(59, 130, 246, 0.15)'
+                        }}>
+                          <Card.Body className="text-center d-flex flex-column p-4">
+                            <h5 className="card-title fw-bold mb-2" style={{ color: '#1e40af' }}>Family+</h5>
+                            <div className="display-6 mb-2" style={{ color: '#3b82f6', fontWeight: '700' }}>3,99€</div>
+                            <p className="text-muted small mb-3">par mois</p>
+                            <p className="card-text mb-3" style={{ fontSize: '0.9rem', color: '#1e40af' }}>
+                              Pour une utilisation intensive
+                            </p>
+                            
+                            <div className="mt-auto">
+                              {subscription?.planId === 'family' ? (
+                                <span className="badge p-2" style={{ 
+                                  backgroundColor: '#eff6ff', 
+                                  color: '#1e40af',
+                                  border: '2px solid #3b82f6',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '600'
+                                }}>
+                                  ✓ Plan actuel
+                                </span>
+                              ) : (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => handlePlanChange('family', true)}
+                                  disabled={actionLoading}
+                                  style={{ 
+                                    background: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '600',
+                                    padding: '8px 16px',
+                                    color: 'white'
+                                  }}
+                                >
+                                  {actionLoading ? 'Chargement...' : 'Passer à 3,99€'}
+                                </Button>
+                              )}
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
                     </Row>
+
+                    {/* Detailed Features Comparison Table */}
+                    <div className="table-responsive">
+                      <table className="table table-bordered" style={{ fontSize: '0.9rem', borderRadius: '10px', overflow: 'hidden' }}>
+                        <thead>
+                          <tr>
+                            <th style={{ 
+                              width: '25%', 
+                              color: '#1e40af', 
+                              fontWeight: '600',
+                              backgroundColor: '#eff6ff',
+                              borderBottom: '2px solid #93c5fd'
+                            }}>Fonctionnalité</th>
+                            <th className="text-center" style={{ 
+                              color: '#6b7280', 
+                              fontWeight: '600',
+                              backgroundColor: '#f9fafb',
+                              borderBottom: '2px solid #e5e7eb'
+                            }}>Gratuit</th>
+                            <th className="text-center" style={{ 
+                              color: '#92400e', 
+                              fontWeight: '600',
+                              backgroundColor: '#fef3c7',
+                              borderBottom: '2px solid #fcd34d'
+                            }}>Standard (1,99€)</th>
+                            <th className="text-center" style={{ 
+                              color: '#1e40af', 
+                              fontWeight: '600',
+                              backgroundColor: '#eff6ff',
+                              borderBottom: '2px solid #93c5fd'
+                            }}>Family+ (3,99€)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><strong>Usage</strong></td>
+                            <td className="text-center">1 fiche/jour<br/><small className="text-muted">+ 3 bonus/mois</small></td>
+                            <td className="text-center"><strong>60 fiches/mois</strong><br/><small className="text-muted">(soft cap)</small></td>
+                            <td className="text-center"><strong>120 fiches/mois</strong><br/><small className="text-muted">(soft cap)</small></td>
+                          </tr>
+                          <tr>
+                            <td><strong>Historique</strong></td>
+                            <td className="text-center">7 dernières</td>
+                            <td className="text-center">90 jours</td>
+                            <td className="text-center"><span style={{ color: '#10b981', fontWeight: '600' }}>illimité</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>Tags</strong></td>
+                            <td className="text-center">non</td>
+                            <td className="text-center">non</td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> création et filtrage</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Priorité de génération</strong></td>
+                            <td className="text-center">standard</td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> priorité</td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> priorité</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Thèmes personnalisés</strong></td>
+                            <td className="text-center">basiques</td>
+                            <td className="text-center">basiques</td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> premium</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Accès web / mobile</strong></td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span></td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span></td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>Support PDF</strong></td>
+                            <td className="text-center">standard</td>
+                            <td className="text-center">standard</td>
+                            <td className="text-center">standard+</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Upsell Messages */}
+                    {subscription?.planId === 'free' && (
+                      <div className="mt-3 p-3" style={{ 
+                        backgroundColor: '#fef3c7',
+                        border: '2px solid #fbbf24',
+                        borderRadius: '10px'
+                      }}>
+                        <strong style={{ color: '#92400e', fontSize: '1rem' }}>
+                          <i className="bi bi-lightbulb me-2" style={{ color: '#f59e0b' }}></i>
+                          Passez à Standard (1,99€)
+                        </strong>
+                        <p className="mb-0 mt-2" style={{ color: '#78350f', fontSize: '0.9rem' }}>
+                          Générez jusqu'à 60 fiches par mois avec priorité de génération et conservez votre historique pendant 90 jours !
+                        </p>
+                      </div>
+                    )}
+                    {subscription?.planId === 'standard' && (
+                      <div className="mt-3 p-3" style={{ 
+                        backgroundColor: '#eff6ff',
+                        border: '2px solid #3b82f6',
+                        borderRadius: '10px'
+                      }}>
+                        <strong style={{ color: '#1e40af', fontSize: '1rem' }}>
+                          <i className="bi bi-rocket-takeoff me-2" style={{ color: '#3b82f6' }}></i>
+                          Passez à Family+ (3,99€)
+                        </strong>
+                        <p className="mb-0 mt-2" style={{ color: '#1e3a8a', fontSize: '0.9rem' }}>
+                          Doublez votre quota, taggez vos fiches et conservez toutes vos créations indéfiniment !
+                        </p>
+                      </div>
+                    )}
                     
                     <div className="mt-4 p-3 bg-light rounded">
                       <h6 className="mb-2">💡 Informations importantes</h6>
@@ -616,18 +920,19 @@ export default function AccountPage() {
             {/* Settings Section */}
             {activeSection === "settings" && (
               <Card style={{ 
-                border: '2px solid #e9ecef', 
+                border: '2px solid #3b82f6', 
                 borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
+                backgroundColor: 'white'
               }}>
                 <Card.Header style={{ 
-                  backgroundColor: '#f8f9fa',
-                  borderBottom: '2px solid #e9ecef',
+                  backgroundColor: '#eff6ff',
+                  borderBottom: '2px solid #93c5fd',
                   borderRadius: '10px 10px 0 0',
                   padding: '16px 20px'
                 }}>
-                  <h5 className="mb-0 fw-semibold" style={{ color: '#2c3e50' }}>
-                    <i className="bi bi-sliders me-2" style={{ color: '#6c757d' }}></i>
+                  <h5 className="mb-0 fw-semibold" style={{ color: '#1e40af' }}>
+                    <i className="bi bi-sliders me-2" style={{ color: '#3b82f6' }}></i>
                     Paramètres de l'application
                   </h5>
                 </Card.Header>
@@ -680,18 +985,19 @@ export default function AccountPage() {
             {/* Support Section */}
             {activeSection === "support" && (
               <Card style={{ 
-                border: '2px solid #e9ecef', 
+                border: '2px solid #3b82f6', 
                 borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
+                backgroundColor: 'white'
               }}>
                 <Card.Header style={{ 
-                  backgroundColor: '#f8f9fa',
-                  borderBottom: '2px solid #e9ecef',
+                  backgroundColor: '#eff6ff',
+                  borderBottom: '2px solid #93c5fd',
                   borderRadius: '10px 10px 0 0',
                   padding: '16px 20px'
                 }}>
-                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#2c3e50' }}>
-                    <i className="bi bi-headset me-2" style={{ color: '#6c757d' }}></i>
+                  <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#1e40af' }}>
+                    <i className="bi bi-headset me-2" style={{ color: '#3b82f6' }}></i>
                     Support Technique
                   </h5>
                 </Card.Header>

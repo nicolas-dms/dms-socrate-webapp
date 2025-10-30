@@ -2,6 +2,14 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import mathExerciseNaming from "../config/mathExerciseNaming.json";
+
+interface CalculExercise {
+  id: string;
+  label: string;
+  levels: string[];
+  description: string;
+}
 
 export interface CalculParams {
   operations: string;
@@ -36,17 +44,12 @@ export default function CalculModal({
   const [mounted, setMounted] = useState(false);
   
   // State for exercise selection
-  const [selectedExercises, setSelectedExercises] = useState<string[]>(["calcul-mental"]);
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   
-  // Get exercises for current level and domain
-  const getAvailableExercises = () => {
-    if (!mathDomains) return [];
-    
-    // Always use "Calculs" domain since this modal is now specifically for calculations
-    const domain = mathDomains.find((d: any) => d.key === "Calculs");
-    if (!domain || !domain.exercises[level]) return [];
-    
-    return domain.exercises[level];
+  // Get exercises for current level from mathExerciseNaming.json
+  const getAvailableExercises = (): CalculExercise[] => {
+    const calculExercises = (mathExerciseNaming as any).calculs || [];
+    return calculExercises.filter((ex: CalculExercise) => ex.levels.includes(level));
   };
   
   useEffect(() => {
@@ -54,7 +57,9 @@ export default function CalculModal({
   }, []);
 
   useEffect(() => {
-    if (initialParams) {
+    if (!show) return;
+    
+    if (initialParams && initialParams.operations) {
       // Parse existing params if available
       const exercises = initialParams.operations.split(",");
       setSelectedExercises(exercises);
@@ -62,30 +67,30 @@ export default function CalculModal({
       // Reset to default for level - use first available exercise
       const availableExercises = getAvailableExercises();
       if (availableExercises.length > 0) {
-        setSelectedExercises([availableExercises[0].exercise]);
+        setSelectedExercises([availableExercises[0].id]);
       } else {
-        setSelectedExercises(["calcul-mental"]);
+        setSelectedExercises([]);
       }
     }
-  }, [initialParams, level]);
+  }, [show, initialParams, level]);
 
   // Don't render on server side
   if (!mounted) {
     return null;
   }
 
-  const toggleExercise = (exercise: string) => {
-    if (selectedExercises.includes(exercise)) {
+  const toggleExercise = (exerciseId: string) => {
+    if (selectedExercises.includes(exerciseId)) {
       // Don't allow removing the last exercise
       if (selectedExercises.length > 1) {
-        setSelectedExercises(selectedExercises.filter((ex: string) => ex !== exercise));
+        setSelectedExercises(selectedExercises.filter((ex: string) => ex !== exerciseId));
       }
     } else {
       // Check if we can add more exercises
       if (canAddMoreExercises && !canAddMoreExercises(domainKey, 1)) {
         return; // Don't add if limit would be exceeded
       }
-      setSelectedExercises([...selectedExercises, exercise]);
+      setSelectedExercises([...selectedExercises, exerciseId]);
     }
   };
 
@@ -148,104 +153,129 @@ export default function CalculModal({
           Configuration Calculs - {level}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white' }}>
-        <div className="mb-3">
-          <h6 className="fw-bold mb-3" style={{ color: '#374151' }}>
-            <i className="bi bi-check-circle me-2" style={{ color: '#3b82f6' }}></i>
-            Exercices disponibles pour {level}
-          </h6>
-        </div>
-
-        <div className="mb-3">
-          <Row className="g-3">
-            {getAvailableExercises().map((exercise: any, index: number) => {
-              const isSelected = selectedExercises.includes(exercise.exercise);
-              const wouldExceedLimit = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
-              const isDisabled = (isSelected && selectedExercises.length === 1) || wouldExceedLimit;
-              
-              return (
-                <Col key={exercise.exercise} md={6} lg={4}>
-                  <div 
-                    className={`calcul-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                    onClick={() => !isDisabled && toggleExercise(exercise.exercise)}
-                    style={{ 
-                      border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                      backgroundColor: 'white',
-                      minHeight: '80px'
-                    }}
-                    title={
-                      isDisabled && isSelected && selectedExercises.length === 1 ? "Au moins un exercice doit être sélectionné" :
-                      wouldExceedLimit ? `Limite d'exercices atteinte (${currentTotalExercises}/${exerciseLimit})` : ""
-                    }
-                  >
-                    <div className="d-flex align-items-start gap-2">
-                      <div 
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          border: isSelected ? '2px solid #3b82f6' : '2px solid #d1d5db',
-                          background: isSelected ? '#3b82f6' : 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.3s ease',
-                          flexShrink: 0
-                        }}
-                      >
-                        {isSelected && (
-                          <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
-                        )}
-                      </div>
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-1 mb-1">
-                          <span className="fw-semibold" style={{ fontSize: '0.85rem', lineHeight: '1.2', color: isSelected ? '#1d4ed8' : '#374151' }}>
-                            {exercise.exercise}
-                          </span>
-                          {isDisabled && isSelected && selectedExercises.length === 1 && <i className="bi bi-lock-fill text-muted" style={{ fontSize: '0.8rem' }}></i>}
-                          {wouldExceedLimit && <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '0.8rem', color: '#f59e0b' }}></i>}
-                        </div>
-                        <div className="small text-muted" style={{ fontSize: '0.75rem', lineHeight: '1.2' }}>
-                          {exercise.contenu.length > 60 ? exercise.contenu.substring(0, 60) + '...' : exercise.contenu}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-              );
-            })}
-          </Row>
-        </div>
-
-        <div className="mt-3 p-3" style={{ 
+      <Modal.Body className="p-3" style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'white' }}>
+        <div className="mb-2 p-2" style={{ 
           backgroundColor: '#eff6ff',
-          borderRadius: '10px',
+          borderRadius: '8px',
           border: '1px solid #93c5fd'
         }}>
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h6 className="mb-0 fw-semibold" style={{ color: '#374151' }}>
-              <i className="bi bi-list-check me-2" style={{ color: '#3b82f6' }}></i>
-              Sélection actuelle
-            </h6>
-            <small style={{ color: '#1e3a8a' }}>
-              {selectedExercises.length} exercice{selectedExercises.length > 1 ? 's' : ''} sélectionné{selectedExercises.length > 1 ? 's' : ''}
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="fw-semibold" style={{ color: '#1e40af', fontSize: '0.8rem' }}>
+              <i className="bi bi-calculator me-1" style={{ color: '#3b82f6' }}></i>
+              Exercices de calculs - {level}
             </small>
-          </div>
-          <div className="d-flex flex-wrap gap-2 mt-2">
-            {selectedExercises.map((exerciseKey) => {
-              const exerciseData = getAvailableExercises().find((ex: any) => ex.exercise === exerciseKey);
-              return (
-                <Badge key={exerciseKey} className="d-flex align-items-center gap-1" style={{ 
-                  fontSize: '0.75rem',
-                  backgroundColor: '#3b82f6',
-                  padding: '0.4rem 0.6rem'
-                }}>
-                  {exerciseData?.exercise || exerciseKey}
-                </Badge>
-              );
-            })}
+            <Badge style={{ 
+              backgroundColor: '#3b82f6',
+              fontSize: '0.75rem',
+              padding: '0.3rem 0.6rem'
+            }}>
+              {selectedExercises.length} sélectionné{selectedExercises.length > 1 ? 's' : ''}
+            </Badge>
           </div>
         </div>
+
+        <Row className="g-2">
+          {getAvailableExercises().map((exercise: CalculExercise) => {
+            const isSelected = selectedExercises.includes(exercise.id);
+            const wouldExceedLimit = !isSelected && canAddMoreExercises && !canAddMoreExercises(domainKey, 1);
+            const isDisabled = (isSelected && selectedExercises.length === 1) || wouldExceedLimit;
+            
+            return (
+              <Col key={exercise.id} md={6} lg={4}>
+                <div 
+                  className={`calcul-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                  onClick={() => !isDisabled && toggleExercise(exercise.id)}
+                  style={{ 
+                    border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                    backgroundColor: isSelected ? '#eff6ff' : 'white'
+                  }}
+                  title={
+                    isDisabled && isSelected && selectedExercises.length === 1 ? "Au moins un exercice requis" :
+                    wouldExceedLimit ? `Limite atteinte (${currentTotalExercises}/${exerciseLimit})` : ""
+                  }
+                >
+                  <div className="d-flex align-items-start gap-2">
+                    <div 
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        border: isSelected ? '2px solid #3b82f6' : '2px solid #d1d5db',
+                        background: isSelected ? '#3b82f6' : 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                        flexShrink: 0
+                      }}
+                    >
+                      {isSelected && (
+                        <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
+                      )}
+                    </div>
+                    <div className="flex-grow-1">
+                      <div className="d-flex align-items-center gap-1">
+                        <h6 className="fw-semibold mb-0" style={{ 
+                          fontSize: '0.95rem', 
+                          lineHeight: '1.3', 
+                          color: isSelected ? '#1d4ed8' : '#374151' 
+                        }}>
+                          {exercise.label}
+                        </h6>
+                        {isDisabled && isSelected && selectedExercises.length === 1 && (
+                          <i className="bi bi-lock-fill" style={{ fontSize: '0.8rem', color: '#9ca3af' }}></i>
+                        )}
+                        {wouldExceedLimit && (
+                          <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: '0.8rem', color: '#f59e0b' }}></i>
+                        )}
+                      </div>
+                      <p className="small text-muted mb-0" style={{ 
+                        fontSize: '0.85rem', 
+                        lineHeight: '1.3', 
+                        color: isSelected ? '#1e40af' : '#6b7280',
+                        marginTop: '4px'
+                      }}>
+                        {exercise.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            );
+          })}
+        </Row>
+
+        {selectedExercises.length > 0 && (
+          <div className="mt-2 p-2" style={{ 
+            backgroundColor: '#eff6ff',
+            borderRadius: '8px',
+            border: '1px solid #93c5fd'
+          }}>
+            <div className="d-flex flex-wrap gap-1">
+              {selectedExercises.map((exerciseId) => {
+                const exerciseData = getAvailableExercises().find((ex: CalculExercise) => ex.id === exerciseId);
+                return (
+                  <Badge key={exerciseId} style={{ 
+                    fontSize: '0.7rem',
+                    backgroundColor: '#3b82f6',
+                    padding: '0.3rem 0.5rem'
+                  }}>
+                    {exerciseData?.label || exerciseId}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {getAvailableExercises().length === 0 && (
+          <div className="text-center py-3">
+            <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+              <i className="bi bi-info-circle fs-3 mb-2 d-block"></i>
+              Aucun exercice disponible pour {level}
+            </div>
+          </div>
+        )}
       </Modal.Body>
       <Modal.Footer style={{ borderTop: '1px solid #e5e7eb', backgroundColor: 'white' }}>
         <Button 

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Row, Col, Badge } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
+import mathExerciseNaming from "../config/mathExerciseNaming.json";
 
 interface NombresModalProps {
   show: boolean;
@@ -13,6 +14,13 @@ interface NombresModalProps {
   currentTotalExercises: number;
   canAddMoreExercises: (domainKey?: string, additionalExercises?: number) => boolean;
   mathDomains?: any;
+}
+
+interface NombresExercise {
+  id: string;
+  label: string;
+  levels: string[];
+  description: string;
 }
 
 export default function NombresModal({ 
@@ -30,24 +38,27 @@ export default function NombresModal({
   
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
 
-  // Initialize state with mathDomains data
+  // Initialize state
   useEffect(() => {
-    if (initialSelections) {
-      setSelectedExercises([...initialSelections]);
-    } else {
-      setSelectedExercises([]);
+    if (show) {
+      if (initialSelections && initialSelections.length > 0) {
+        setSelectedExercises([...initialSelections]);
+      } else {
+        setSelectedExercises([]);
+      }
     }
-  }, [initialSelections, level, mathDomains]);
+  }, [show, initialSelections, level]);
 
-  // Get available exercises for current level
-  const getAvailableExercises = () => {
-    if (!mathDomains) return [];
-    const domain = mathDomains.find((d: any) => d.key === "Nombres");
-    return domain?.exercises[level] || [];
+  // Get available exercises for current level from mathExerciseNaming.json
+  const getAvailableExercises = (): NombresExercise[] => {
+    const nombresExercises = (mathExerciseNaming as any).nombres || [];
+    return nombresExercises.filter((ex: NombresExercise) => 
+      ex.levels.includes(level)
+    );
   };
 
-  const toggleExercise = (exerciseName: string) => {
-    const isSelected = selectedExercises.includes(exerciseName);
+  const toggleExercise = (exerciseId: string) => {
+    const isSelected = selectedExercises.includes(exerciseId);
     
     if (!isSelected) {
       // Check if adding this exercise would exceed the limit
@@ -57,8 +68,8 @@ export default function NombresModal({
     }
 
     const newSelection = isSelected
-      ? selectedExercises.filter(name => name !== exerciseName)
-      : [...selectedExercises, exerciseName];
+      ? selectedExercises.filter(id => id !== exerciseId)
+      : [...selectedExercises, exerciseId];
 
     setSelectedExercises(newSelection);
   };
@@ -102,43 +113,43 @@ export default function NombresModal({
           Configuration Nombres - {level}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className="p-4" style={{ backgroundColor: 'white' }}>
-        <div className="mb-3 p-3" style={{ 
+      <Modal.Body className="p-3" style={{ backgroundColor: 'white', maxHeight: '70vh', overflowY: 'auto' }}>
+        <div className="mb-2 p-2" style={{ 
           backgroundColor: '#eff6ff',
-          borderRadius: '10px',
+          borderRadius: '8px',
           border: '1px solid #93c5fd'
         }}>
           <div className="d-flex justify-content-between align-items-center">
-            <h6 className="mb-0 fw-semibold" style={{ color: '#374151' }}>
-              <i className="bi bi-info-circle me-2" style={{ color: '#3b82f6' }}></i>
+            <small className="fw-semibold" style={{ color: '#1e40af', fontSize: '0.8rem' }}>
+              <i className="bi bi-info-circle me-1" style={{ color: '#3b82f6' }}></i>
               Sélectionnez les exercices de nombres
-            </h6>
+            </small>
             <Badge style={{ 
               backgroundColor: getTotalSelected() >= exerciseLimit ? '#f59e0b' : '#3b82f6',
-              fontSize: '0.85rem',
-              padding: '0.4rem 0.7rem'
+              fontSize: '0.75rem',
+              padding: '0.3rem 0.6rem'
             }}>
-              {getTotalSelected()}/{exerciseLimit} exercices
+              {getTotalSelected()}/{exerciseLimit}
             </Badge>
           </div>
         </div>
         
-        <Row className="g-3">
-          {getAvailableExercises().map((exercise: any, index: number) => {
-            const isSelected = selectedExercises.includes(exercise.exercise);
+        <Row className="g-2">
+          {getAvailableExercises().map((exercise: NombresExercise) => {
+            const isSelected = selectedExercises.includes(exercise.id);
             const wouldExceedLimit = !isSelected && !canAddMore();
             
             return (
-              <Col key={exercise.exercise} xl={4} lg={6} md={6}>
+              <Col key={exercise.id} xl={4} lg={6} md={6}>
                 <div 
                   className={`nombres-card border p-3 h-100 ${isSelected ? 'selected' : ''} ${wouldExceedLimit ? 'disabled' : ''}`}
                   style={{ 
                     border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                    backgroundColor: 'white'
+                    backgroundColor: isSelected ? '#eff6ff' : 'white'
                   }}
-                  onClick={() => !wouldExceedLimit && toggleExercise(exercise.exercise)}
+                  onClick={() => !wouldExceedLimit && toggleExercise(exercise.id)}
                 >
-                  <div className="d-flex align-items-start mb-2">
+                  <div className="d-flex align-items-start gap-2">
                     <div 
                       style={{
                         width: '24px',
@@ -150,7 +161,6 @@ export default function NombresModal({
                         alignItems: 'center',
                         justifyContent: 'center',
                         transition: 'all 0.3s ease',
-                        marginRight: '0.75rem',
                         flexShrink: 0
                       }}
                     >
@@ -158,18 +168,26 @@ export default function NombresModal({
                         <i className="bi bi-check-lg" style={{ color: 'white', fontSize: '0.9rem', fontWeight: 'bold' }}></i>
                       )}
                     </div>
-                    <h6 className="fw-semibold mb-0" style={{ 
-                      fontSize: '0.9rem',
-                      color: isSelected ? '#1d4ed8' : '#374151'
-                    }}>
-                      {exercise.exercise}
-                    </h6>
+                    <div className="flex-grow-1">
+                      <h6 className="fw-semibold mb-0" style={{ 
+                        fontSize: '0.95rem',
+                        lineHeight: '1.3',
+                        color: isSelected ? '#1d4ed8' : '#374151'
+                      }}>
+                        {exercise.label}
+                      </h6>
+                      <p className="small text-muted mb-0" style={{ 
+                        fontSize: '0.85rem', 
+                        lineHeight: '1.3', 
+                        color: isSelected ? '#1e40af' : '#6b7280',
+                        marginTop: '4px'
+                      }}>
+                        {exercise.description}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: '1.3', paddingLeft: '2rem' }}>
-                    {exercise.contenu}
-                  </p>
                   {wouldExceedLimit && (
-                    <small className="d-block mt-2" style={{ color: '#f59e0b', paddingLeft: '2rem' }}>
+                    <small className="d-block mt-1 text-center" style={{ color: '#f59e0b', fontSize: '0.7rem' }}>
                       <i className="bi bi-exclamation-triangle me-1"></i>
                       Limite atteinte
                     </small>
@@ -181,10 +199,10 @@ export default function NombresModal({
         </Row>
         
         {getAvailableExercises().length === 0 && (
-          <div className="text-center py-4">
-            <div className="text-muted">
-              <i className="bi bi-info-circle fs-1 mb-3 d-block"></i>
-              Aucun exercice de nombres disponible pour le niveau {level}
+          <div className="text-center py-3">
+            <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+              <i className="bi bi-info-circle fs-3 mb-2 d-block"></i>
+              Aucun exercice disponible pour {level}
             </div>
           </div>
         )}
