@@ -25,10 +25,22 @@
       "description": "Ranger et comparer les nombres jusqu'à 100"
     },
     {
+      "id": "encadrer_dizaine",
+      "label": "Encadrer à la dizaine",
+      "levels": ["CE1"],
+      "description": "Encadrer un nombre à la dizaine près (ex: 20 < 23 < 30)"
+    },
+    {
       "id": "lire_ecrire_decomposer_1000",
       "label": "Lire, écrire, décomposer jusqu'à 1000",
       "levels": ["CE1", "CE2"],
       "description": "Lire, écrire et décomposer les nombres jusqu'à 1000"
+    },
+    {
+      "id": "encadrer_dizaine_centaine_millier",
+      "label": "Encadrer à la dizaine, centaine, millier",
+      "levels": ["CE2"],
+      "description": "Encadrer un nombre à la dizaine, centaine ou millier près selon le contexte"
     },
     {
       "id": "ranger_comparer_1000",
@@ -65,6 +77,12 @@
       "label": "Grands nombres - Comparer et encadrer",
       "levels": ["CM1"],
       "description": "Comparer, encadrer et ordonner des nombres jusqu'aux milliards"
+    },
+    {
+      "id": "encadrer_grands_nombres",
+      "label": "Encadrer des grands nombres",
+      "levels": ["CM1", "CM2"],
+      "description": "Encadrer des nombres de plusieurs millions à différents ordres de grandeur (dizaine de millions, centaine de millions, etc.)"
     },
     {
       "id": "fractions",
@@ -171,7 +189,7 @@
       "description": "Multiplications et divisions avec des nombres décimaux"
     },
     {
-      "id" : "probemes",
+      "id" : "problemes",
       "label" : "Problèmes",
       "levels": ["CP","CE1","CE2","CM1","CM2"],
       "description": "Problèmes de calcul ouvert à une ou plusieurs étapes"
@@ -264,32 +282,207 @@
       "modality": "identification"
     },
     {
-      "id": "droites_angles",
-      "label": "Droites et angles",
+      "id": "cp_segment_simple",
+      "label": "Tracer un segment",
+      "levels": ["CP"],
+      "description": "Trace un segment [AB] de longueur donnée.",
+      "modality": "construction",
+      "parameters": {
+        "length": {"min": 2, "max": 6},
+        "orientation": {"choices": [0, 45, 90]},
+        "points": ["A", "B"]
+      },
+      "generator_hint": "Draw segment AB with given length and orientation.",
+      "difficulty": 1
+    },
+    {
+      "id": "cp_relier_points",
+      "label": "Relier des points pour fermer une figure",
+      "levels": ["CP"],
+      "description": "Relie les points pour former un triangle ou un carré.",
+      "modality": "construction",
+      "parameters": {
+        "shape": {"choices": ["triangle", "carré", "rectangle"]},
+        "point_count": {"choices": [3, 4]}
+      },
+      "generator_hint": "Connect provided points to form target shape.",
+      "difficulty": 1
+    },
+    {
+      "id": "cp_reproduire_figure",
+      "label": "Reproduire une figure simple",
+      "levels": ["CP"],
+      "description": "Reproduis la figure du modèle (carré, triangle, rectangle).",
+      "modality": "construction",
+      "parameters": {
+        "shape": {"choices": ["carré", "triangle", "rectangle"]},
+        "size": {"min": 3, "max": 6}
+      },
+      "generator_hint": "Render target shape with random size and orientation.",
+      "difficulty": 2
+    },
+    {
+      "id": "ce1_carre_rectangle",
+      "label": "Tracer un carré ou un rectangle",
       "levels": ["CE1"],
-      "description": "Tracer des droites et segments, repérer et construire des angles droits.",
-      "modality": "construction"
+      "description": "Trace un carré ou un rectangle de dimensions données.",
+      "modality": "construction",
+      "parameters": {
+        "shape": {"choices": ["carré", "rectangle"]},
+        "side": {"min": 3, "max": 6},
+        "orientation": {"choices": [0, 30, 45]}
+      },
+      "generator_hint": "Draw a square or rectangle based on parameters.",
+      "difficulty": 1
     },
     {
-      "id": "instruments",
-      "label": "Utilisation des instruments",
+      "id": "ce1_cercle",
+      "label": "Tracer un cercle",
+      "levels": ["CE1"],
+      "description": "Trace un cercle de centre O et de rayon donné.",
+      "modality": "construction",
+      "parameters": {
+        "radius": {"min": 1, "max": 3},
+        "center": {"choices": ["O", "A"]}
+      },
+      "generator_hint": "Draw circle with given center and radius.",
+      "difficulty": 1
+    },
+    {
+      "id": "ce1_triangle_simple",
+      "label": "Tracer un triangle",
+      "levels": ["CE1"],
+      "description": "Trace un triangle ABC avec des côtés donnés.",
+      "modality": "construction",
+      "parameters": {
+        "side1": {"min": 3, "max": 5},
+        "side2": {"min": 3, "max": 5}
+      },
+      "generator_hint": "Draw triangle given sides AB and AC.",
+      "difficulty": 2
+    },
+    {
+      "id": "ce2_triangle_mesures",
+      "label": "Construire un triangle défini",
       "levels": ["CE2"],
-      "description": "Utiliser règle, équerre et compas pour tracer des figures géométriques.",
-      "modality": "construction"
+      "description": "Trace un triangle ABC tel que AB et AC aient des longueurs données.",
+      "modality": "construction",
+      "parameters": {
+        "AB": {"min": 3, "max": 6},
+        "AC": {"min": 3, "max": 6}
+      },
+      "generator_hint": "Draw triangle ABC with AB and AC defined.",
+      "difficulty": 2
     },
     {
-      "id": "droites_symetrie",
-      "label": "Droites et symétrie",
-      "levels": ["CM1", "CM2"],
-      "description": "Tracer des droites perpendiculaires et parallèles, déterminer et tracer des axes de symétrie.",
-      "modality": "construction"
+      "id": "ce2_droites_perpendiculaires",
+      "label": "Tracer des droites perpendiculaires",
+      "levels": ["CE2"],
+      "description": "Trace une droite (d), puis une droite (d') perpendiculaire à (d) passant par A.",
+      "modality": "construction",
+      "parameters": {
+        "angle": {"choices": [90]},
+        "orientation": {"choices": [0, 30, 45, 60]},
+        "point": {"choices": ["A", "B"]}
+      },
+      "generator_hint": "Draw line d, then line d' perpendicular to d through A.",
+      "difficulty": 2
     },
     {
-      "id": "programmes",
-      "label": "Programmes de construction",
-      "levels": ["CM1", "CM2"],
-      "description": "Suivre, rédiger et exécuter des programmes de construction géométriques.",
-      "modality": "construction"
+      "id": "ce2_droites_paralleles",
+      "label": "Tracer des droites parallèles",
+      "levels": ["CE2"],
+      "description": "Trace une droite (d), puis une droite (d') parallèle à (d) passant par B.",
+      "modality": "construction",
+      "parameters": {
+        "distance": {"min": 1, "max": 3},
+        "orientation": {"choices": [0, 45, 60]}
+      },
+      "generator_hint": "Draw line d, then draw d' parallel at given distance.",
+      "difficulty": 2
+    },
+    {
+      "id": "cm1_rectangle_losange",
+      "label": "Tracer un rectangle ou un losange",
+      "levels": ["CM1"],
+      "description": "Trace un rectangle ou un losange à partir de ses côtés ou diagonales.",
+      "modality": "construction",
+      "parameters": {
+        "shape": {"choices": ["rectangle", "losange"]},
+        "length1": {"min": 3, "max": 6},
+        "length2": {"min": 3, "max": 6},
+        "orientation": {"choices": [0, 30, 45, 60]}
+      },
+      "generator_hint": "Draw rectangle or rhombus with given dimensions.",
+      "difficulty": 2
+    },
+    {
+      "id": "cm1_paralleles_perpendiculaires",
+      "label": "Tracer droites parallèles et perpendiculaires",
+      "levels": ["CM1"],
+      "description": "Trace deux droites parallèles, puis une droite perpendiculaire aux deux.",
+      "modality": "construction",
+      "parameters": {
+        "angle": {"choices": [90]},
+        "parallel_distance": {"min": 1, "max": 3},
+        "orientation": {"choices": [0, 30, 45, 60]}
+      },
+      "generator_hint": "Draw two parallel lines and a perpendicular one crossing both.",
+      "difficulty": 3
+    },
+    {
+      "id": "cm1_symetrie",
+      "label": "Tracer une figure symétrique",
+      "levels": ["CM1"],
+      "description": "Trace une figure et son symétrique par rapport à une droite d.",
+      "modality": "construction",
+      "parameters": {
+        "shape": {"choices": ["triangle", "rectangle"]},
+        "axis_orientation": {"choices": [0, 45, 90]}
+      },
+      "generator_hint": "Draw shape and its mirrored version across axis.",
+      "difficulty": 3
+    },
+    {
+      "id": "cm2_triangle_type",
+      "label": "Tracer un triangle particulier",
+      "levels": ["CM2"],
+      "description": "Trace un triangle isocèle, équilatéral ou rectangle selon les mesures données.",
+      "modality": "construction",
+      "parameters": {
+        "type": {"choices": ["isocèle", "équilatéral", "rectangle"]},
+        "side": {"min": 3, "max": 6},
+        "angle": {"choices": [30, 45, 60, 90]}
+      },
+      "generator_hint": "Draw special triangle based on given type and size.",
+      "difficulty": 2
+    },
+    {
+      "id": "cm2_parallelogramme",
+      "label": "Tracer un parallélogramme",
+      "levels": ["CM2"],
+      "description": "Trace un parallélogramme ABCD dont AB et CD sont parallèles.",
+      "modality": "construction",
+      "parameters": {
+        "AB": {"min": 4, "max": 8},
+        "AD": {"min": 3, "max": 6},
+        "angle": {"choices": [30, 45, 60]}
+      },
+      "generator_hint": "Draw parallelogram ABCD using parallel sides.",
+      "difficulty": 3
+    },
+    {
+      "id": "cm2_droites_combinees",
+      "label": "Tracer droites parallèles et perpendiculaires imbriquées",
+      "levels": ["CM2"],
+      "description": "Trace une droite (d), puis (d') perpendiculaire à (d) en A, puis (d'') parallèle à (d).",
+      "modality": "construction",
+      "parameters": {
+        "angle": {"choices": [90]},
+        "distance": {"min": 1, "max": 3}
+      },
+      "generator_hint": "Draw line d, then perpendicular through A, then parallel offset line.",
+      "difficulty": 3
     },
     {
       "id": "mesure_longueurs_angles",
@@ -305,91 +498,5 @@
       "description": "Calculer le périmètre ou l’aire de figures simples (carrés, rectangles, triangles).",
       "modality": "mesure"
     }
-  ],
-  "problemes": [
-    {
-      "id": "addition_simple",
-      "label": "Problèmes d'addition",
-      "levels": ["CP"],
-      "description": "Jean a 3 billes, Marie lui en donne 2..."
-    },
-    {
-      "id": "soustraction_simple",
-      "label": "Problèmes de soustraction",
-      "levels": ["CP"],
-      "description": "Il y avait 5 oiseaux, 2 s'envolent..."
-    },
-    {
-      "id": "addition",
-      "label": "Problèmes d'addition",
-      "levels": ["CE1"],
-      "description": "Calculs avec des nombres plus grands"
-    },
-    {
-      "id": "soustraction",
-      "label": "Problèmes de soustraction",
-      "levels": ["CE1"],
-      "description": "Situations de retrait, différence"
-    },
-    {
-      "id": "monnaie",
-      "label": "Problèmes de monnaie",
-      "levels": ["CE1"],
-      "description": "Achats, rendu de monnaie"
-    },
-    {
-      "id": "addition_soustraction",
-      "label": "Addition et soustraction",
-      "levels": ["CE2"],
-      "description": "Problèmes à plusieurs étapes"
-    },
-    {
-      "id": "multiplication",
-      "label": "Problèmes de multiplication",
-      "levels": ["CE2"],
-      "description": "Situations de groupements"
-    },
-    {
-      "id": "mesures",
-      "label": "Problèmes de mesures",
-      "levels": ["CE2"],
-      "description": "Longueurs, masses, durées"
-    },
-    {
-      "id": "quatre_operations",
-      "label": "Quatre opérations",
-      "levels": ["CM1"],
-      "description": "Problèmes complexes multi-étapes"
-    },
-    {
-      "id": "proportionnalite",
-      "label": "Proportionnalité",
-      "levels": ["CM1"],
-      "description": "Règle de trois, pourcentages"
-    },
-    {
-      "id": "geometrie",
-      "label": "Problèmes géométriques",
-      "levels": ["CM1"],
-      "description": "Périmètres, aires"
-    },
-    {
-      "id": "operations_complexes",
-      "label": "Opérations complexes",
-      "levels": ["CM2"],
-      "description": "Problèmes avec fractions, décimaux"
-    },
-    {
-      "id": "proportionnalite_avancee",
-      "label": "Proportionnalité avancée",
-      "levels": ["CM2"],
-      "description": "Échelles, vitesses, pourcentages"
-    },
-    {
-      "id": "geometrie_avancee",
-      "label": "Géométrie avancée",
-      "levels": ["CM2"],
-      "description": "Volumes, constructions"
-    }
   ]
-}
+ }

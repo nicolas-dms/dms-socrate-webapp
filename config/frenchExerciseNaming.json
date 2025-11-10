@@ -199,6 +199,12 @@
       "description": "Accents aigus, graves, circonflexes"
     },
     {
+      "id": "est_et",
+      "label": "Est / Et - verbe être ou conjonction",
+      "levels": ["CE1", "CE2"],
+      "description": "Distinguer 'est' (verbe être) de 'et' (conjonction de coordination)"
+    },
+    {
       "id": "homophones",
       "label": "Homophones (a/à, et/est, son/sont)",
       "levels": ["CE2"],

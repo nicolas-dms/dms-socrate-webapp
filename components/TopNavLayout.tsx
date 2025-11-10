@@ -72,13 +72,13 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
           <Navbar.Brand as={Link} href="/" className="d-flex align-items-center">
             <Image
               src="/ExoMinutesIncon.png"
-              alt="ExoMinutes"
+              alt="ExoMinute"
               width={60}
               height={60}
               className="me-2"
             />
             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2c3e50', letterSpacing: '-0.5px' }}>
-              ExoMinutes
+              ExoMinute
             </span>
           </Navbar.Brand>
 

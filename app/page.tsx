@@ -141,7 +141,7 @@ export default function Home() {
               <div style={{ textAlign: 'center' }}>
                 <Image
                   src="/working_girl2.png"
-                  alt="Enfant qui étudie avec des fiches d'exercices ExoMinutes"
+                  alt="Enfant qui étudie avec des fiches d'exercices ExoMinute"
                   width={500}
                   height={500}
                   style={{ maxWidth: '100%', height: 'auto' }}
@@ -163,7 +163,7 @@ export default function Home() {
             color: '#2c3e50', 
             marginBottom: '1rem' 
           }}>
-            Pourquoi choisir ExoMinutes ?
+            Pourquoi choisir ExoMinute ?
           </h2>
           <p style={{
             textAlign: 'center',
@@ -349,7 +349,7 @@ export default function Home() {
               }}>
                 <Image
                   src="/ExoMinutesIncon.png"
-                  alt="ExoMinutes"
+                  alt="ExoMinute"
                   width={36}
                   height={36}
                   style={{ marginRight: '0.7rem' }}
@@ -360,7 +360,7 @@ export default function Home() {
                   color: '#2c3e50',
                   letterSpacing: '-0.5px'
                 }}>
-                  ExoMinutes
+                  ExoMinute
                 </span>
               </div>
               <p style={{ 
@@ -376,7 +376,7 @@ export default function Home() {
                 fontSize: '0.85rem',
                 margin: 0
               }}>
-                © 2025 ExoMinutes. Tous droits réservés.
+                © 2025 ExoMinute. Tous droits réservés.
               </p>
             </Col>
             

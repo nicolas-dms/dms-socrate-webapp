@@ -1,5 +1,5 @@
 {
-  "welcome": "Welcome to ExoMinutes!",
+  "welcome": "Welcome to ExoMinute!",
   "description": "This is the English version of the educational webapp.",
   "home": "Home",
   "login": "Login", 
@@ -19,7 +19,7 @@
     "verifyCodeLogin": "Verify Code & Login",
     "welcomeNewUser": "Welcome! Your account has been created successfully.",
     "welcomeBackUser": "Welcome back!",
-    "welcomeBack": "Welcome back to ExoMinutes",
+    "welcomeBack": "Welcome back to ExoMinute",
     "invalidEmailFormat": "Please enter a valid email address (e.g., user@example.com)",
     "validEmail": "Valid email format",
     "emailHelperText": "Enter a valid email address to receive your verification code",

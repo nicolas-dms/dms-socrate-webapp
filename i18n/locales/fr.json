@@ -1,5 +1,5 @@
 {
-  "welcome": "Bienvenue sur ExoMinutes !",
+  "welcome": "Bienvenue sur ExoMinute !",
   "description": "Ceci est la version française de l'application éducative.",
   "home": "Accueil",
   "login": "Connexion",
@@ -19,7 +19,7 @@
     "verifyCodeLogin": "Vérifier le code et se connecter",
     "welcomeNewUser": "Bienvenue ! Votre compte a été créé avec succès.",
     "welcomeBackUser": "Bon retour !",
-    "welcomeBack": "Bon retour sur ExoMinutes",
+    "welcomeBack": "Bon retour sur ExoMinute",
     "invalidEmailFormat": "Veuillez saisir une adresse email valide (ex: utilisateur@exemple.com)",
     "validEmail": "Format d'email valide",
     "emailHelperText": "Saisissez une adresse email valide pour recevoir votre code de vérification",

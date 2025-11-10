@@ -28,13 +28,13 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
           <Navbar.Brand as={Link} href="/" className="d-flex align-items-center">
             <Image
               src="/pen-icon.svg"
-              alt="ExoMinutes"
+              alt="ExoMinute"
               width={32}
               height={32}
               className="me-2"
             />
             <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>
-              ExoMinutes
+              ExoMinute
             </span>
           </Navbar.Brand>
 

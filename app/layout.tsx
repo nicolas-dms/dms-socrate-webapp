@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ExoMinutes",
-  description: "ExoMinutes - Générateur d'exercices éducatifs pour les parents et enseignants.",
+  title: "ExoMinute",
+  description: "ExoMinute - Générateur d'exercices éducatifs pour les parents et enseignants.",
   icons: {
     icon: "/pen-icon.svg",
     shortcut: "/pen-icon.svg",
@@ -34,7 +34,7 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         <link rel="icon" href="/pen-icon.svg" type="image/svg+xml" />
-        <title>ExoMinutes</title>
+        <title>ExoMinute</title>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
