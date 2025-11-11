@@ -211,8 +211,8 @@
     {
       "id": "longueurs",
       "label": "Longueurs",
-      "levels": ["CP", "CE1", "CE2"],
-      "description": "Comparer, mesurer et tracer des longueurs"
+      "levels": ["CP", "CE1"],
+      "description": "Comparer et mesurer des longueurs"
     },
     {
       "id": "masses",
@@ -235,14 +235,21 @@
     {
       "id": "longueurs_perimetres",
       "label": "Longueurs et périmètres",
-      "levels": ["CM1", "CM2"],
+      "levels": ["CE2", "CM1", "CM2"],
       "description": "Conversions et calculs de longueurs et périmètres"
     },
     {
-      "id": "angles_aires",
-      "label": "Angles et aires",
+      "id": "angles",
+      "label": "Angles",
       "levels": ["CM1", "CM2"],
-      "description": "Identifier et construire des angles, calculer des aires"
+      "description": "Evaluer et Mesurer des angles"
+    },
+    {
+      "id": "aires",
+      "label": "Aires",
+      "levels": ["CM1", "CM2"],
+      "description": "Calculer l’aire de figures simples (carrés, rectangles, triangles).",
+      "modality": "mesure"
     }
   ],
   "geometrie": [
@@ -483,20 +490,6 @@
       },
       "generator_hint": "Draw line d, then perpendicular through A, then parallel offset line.",
       "difficulty": 3
-    },
-    {
-      "id": "mesure_longueurs_angles",
-      "label": "Mesure de longueurs et d’angles",
-      "levels": ["CE1", "CE2", "CM1", "CM2"],
-      "description": "Mesurer et comparer des segments, des côtés, des périmètres et des angles.",
-      "modality": "mesure"
-    },
-    {
-      "id": "aire_perimetre",
-      "label": "Aire et périmètre",
-      "levels": ["CE2", "CM1", "CM2"],
-      "description": "Calculer le périmètre ou l’aire de figures simples (carrés, rectangles, triangles).",
-      "modality": "mesure"
     }
   ]
  }
