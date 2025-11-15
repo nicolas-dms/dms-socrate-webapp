@@ -147,6 +147,24 @@
       "description": "Tables de multiplication et multiplications posées"
     },
     {
+      "id": "tables_addition",
+      "label": "Tables d'addition",
+      "levels": ["CP", "CE1", "CE2"],
+      "description": "Mémoriser et s'entraîner aux tables d'addition"
+    },
+    {
+      "id": "tables_multiplication",
+      "label": "Tables de multiplication",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "description": "Mémoriser et s'entraîner aux tables de multiplication"
+    },
+    {
+      "id": "grille_calcul_logique",
+      "label": "Grille de calcul et de logique",
+      "levels": [],
+      "description": "Compléter des grilles de calcul avec additions, soustractions, multiplications selon le niveau"
+    },
+    {
       "id": "partage",
       "label": "Partage",
       "levels": ["CP"],
@@ -261,17 +279,10 @@
       "modality": "identification"
     },
     {
-      "id": "quadrillage",
-      "label": "Quadrillage",
-      "levels": ["CP"],
-      "description": "Se repérer dans un quadrillage, coder et décoder des déplacements.",
-      "modality": "identification"
-    },
-    {
       "id": "symetrie",
       "label": "Symétrie",
       "levels": ["CP", "CE1", "CE2"],
-      "description": "Reconnaître et compléter des figures symétriques.",
+      "description": "Reconnaître des figures symétriques.",
       "modality": "identification"
     },
     {
@@ -284,212 +295,93 @@
     {
       "id": "solides",
       "label": "Solides",
-      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
       "description": "Reconnaître, nommer et décrire des solides : cube, pavé, cylindre, pyramide.",
       "modality": "identification"
     },
     {
-      "id": "cp_segment_simple",
-      "label": "Tracer un segment",
-      "levels": ["CP"],
-      "description": "Trace un segment [AB] de longueur donnée.",
-      "modality": "construction",
-      "parameters": {
-        "length": {"min": 2, "max": 6},
-        "orientation": {"choices": [0, 45, 90]},
-        "points": ["A", "B"]
-      },
-      "generator_hint": "Draw segment AB with given length and orientation.",
-      "difficulty": 1
+      "id": "identifier_droites",
+      "label": "Droites parallèles, perpendiculaires, sécantes",
+      "levels": ["CM1", "CM2"],
+      "description": "Identifier et différencier les droites parallèles, perpendiculaires et sécantes dans une figure.",
+      "modality": "identification"
     },
     {
-      "id": "cp_relier_points",
+      "id": "identifier_angles",
+      "label": "Angles",
+      "levels": ["CM1", "CM2"],
+      "description": "Identifier et nommer les angles : droit, aigu, obtus, plat.",
+      "modality": "identification"
+    },
+    {
+      "id": "tracer_segment",
+      "label": "Tracer un segment",
+      "levels": ["CP","CE1"],
+      "description": "Trace un segment [AB] de longueur donnée.",
+      "modality": "construction"
+    },
+    {
+      "id": "relier_points",
       "label": "Relier des points pour fermer une figure",
       "levels": ["CP"],
       "description": "Relie les points pour former un triangle ou un carré.",
-      "modality": "construction",
-      "parameters": {
-        "shape": {"choices": ["triangle", "carré", "rectangle"]},
-        "point_count": {"choices": [3, 4]}
-      },
-      "generator_hint": "Connect provided points to form target shape.",
-      "difficulty": 1
+      "modality": "construction"
     },
     {
-      "id": "cp_reproduire_figure",
-      "label": "Reproduire une figure simple",
-      "levels": ["CP"],
-      "description": "Reproduis la figure du modèle (carré, triangle, rectangle).",
-      "modality": "construction",
-      "parameters": {
-        "shape": {"choices": ["carré", "triangle", "rectangle"]},
-        "size": {"min": 3, "max": 6}
-      },
-      "generator_hint": "Render target shape with random size and orientation.",
-      "difficulty": 2
-    },
-    {
-      "id": "ce1_carre_rectangle",
+      "id": "tracer_carre_rectangle",
       "label": "Tracer un carré ou un rectangle",
-      "levels": ["CE1"],
+      "levels": ["CE1","CE2"],
       "description": "Trace un carré ou un rectangle de dimensions données.",
-      "modality": "construction",
-      "parameters": {
-        "shape": {"choices": ["carré", "rectangle"]},
-        "side": {"min": 3, "max": 6},
-        "orientation": {"choices": [0, 30, 45]}
-      },
-      "generator_hint": "Draw a square or rectangle based on parameters.",
-      "difficulty": 1
+      "modality": "construction"
     },
     {
-      "id": "ce1_cercle",
+      "id": "tracer_cercle",
       "label": "Tracer un cercle",
-      "levels": ["CE1"],
+      "levels": ["CE1","CE2"],
       "description": "Trace un cercle de centre O et de rayon donné.",
-      "modality": "construction",
-      "parameters": {
-        "radius": {"min": 1, "max": 3},
-        "center": {"choices": ["O", "A"]}
-      },
-      "generator_hint": "Draw circle with given center and radius.",
-      "difficulty": 1
+      "modality": "construction"
     },
     {
-      "id": "ce1_triangle_simple",
+      "id": "tracer_triangle",
       "label": "Tracer un triangle",
-      "levels": ["CE1"],
+      "levels": ["CE1","CE2"],
       "description": "Trace un triangle ABC avec des côtés donnés.",
-      "modality": "construction",
-      "parameters": {
-        "side1": {"min": 3, "max": 5},
-        "side2": {"min": 3, "max": 5}
-      },
-      "generator_hint": "Draw triangle given sides AB and AC.",
-      "difficulty": 2
+      "modality": "construction"
     },
     {
-      "id": "ce2_triangle_mesures",
-      "label": "Construire un triangle défini",
-      "levels": ["CE2"],
-      "description": "Trace un triangle ABC tel que AB et AC aient des longueurs données.",
-      "modality": "construction",
-      "parameters": {
-        "AB": {"min": 3, "max": 6},
-        "AC": {"min": 3, "max": 6}
-      },
-      "generator_hint": "Draw triangle ABC with AB and AC defined.",
-      "difficulty": 2
+      "id": "tracer_droites",
+      "label": "Tracer des droites parallèles et perpendiculaires",
+      "levels": ["CE2", "CM1", "CM2"],
+      "description": "Trace des droites parallèles ou perpendiculaires à une droite donnée.",
+      "modality": "construction"
     },
     {
-      "id": "ce2_droites_perpendiculaires",
-      "label": "Tracer des droites perpendiculaires",
-      "levels": ["CE2"],
-      "description": "Trace une droite (d), puis une droite (d') perpendiculaire à (d) passant par A.",
-      "modality": "construction",
-      "parameters": {
-        "angle": {"choices": [90]},
-        "orientation": {"choices": [0, 30, 45, 60]},
-        "point": {"choices": ["A", "B"]}
-      },
-      "generator_hint": "Draw line d, then line d' perpendicular to d through A.",
-      "difficulty": 2
-    },
-    {
-      "id": "ce2_droites_paralleles",
-      "label": "Tracer des droites parallèles",
-      "levels": ["CE2"],
-      "description": "Trace une droite (d), puis une droite (d') parallèle à (d) passant par B.",
-      "modality": "construction",
-      "parameters": {
-        "distance": {"min": 1, "max": 3},
-        "orientation": {"choices": [0, 45, 60]}
-      },
-      "generator_hint": "Draw line d, then draw d' parallel at given distance.",
-      "difficulty": 2
-    },
-    {
-      "id": "cm1_rectangle_losange",
+      "id": "tracer_rectangle_losange",
       "label": "Tracer un rectangle ou un losange",
       "levels": ["CM1"],
       "description": "Trace un rectangle ou un losange à partir de ses côtés ou diagonales.",
-      "modality": "construction",
-      "parameters": {
-        "shape": {"choices": ["rectangle", "losange"]},
-        "length1": {"min": 3, "max": 6},
-        "length2": {"min": 3, "max": 6},
-        "orientation": {"choices": [0, 30, 45, 60]}
-      },
-      "generator_hint": "Draw rectangle or rhombus with given dimensions.",
-      "difficulty": 2
+      "modality": "construction"
     },
     {
-      "id": "cm1_paralleles_perpendiculaires",
-      "label": "Tracer droites parallèles et perpendiculaires",
-      "levels": ["CM1"],
-      "description": "Trace deux droites parallèles, puis une droite perpendiculaire aux deux.",
-      "modality": "construction",
-      "parameters": {
-        "angle": {"choices": [90]},
-        "parallel_distance": {"min": 1, "max": 3},
-        "orientation": {"choices": [0, 30, 45, 60]}
-      },
-      "generator_hint": "Draw two parallel lines and a perpendicular one crossing both.",
-      "difficulty": 3
-    },
-    {
-      "id": "cm1_symetrie",
+      "id": "symetrie",
       "label": "Tracer une figure symétrique",
-      "levels": ["CM1"],
+      "levels": ["CM1","CM2"],
       "description": "Trace une figure et son symétrique par rapport à une droite d.",
-      "modality": "construction",
-      "parameters": {
-        "shape": {"choices": ["triangle", "rectangle"]},
-        "axis_orientation": {"choices": [0, 45, 90]}
-      },
-      "generator_hint": "Draw shape and its mirrored version across axis.",
-      "difficulty": 3
+      "modality": "construction"
     },
     {
-      "id": "cm2_triangle_type",
+      "id": "tracer_triangle_type",
       "label": "Tracer un triangle particulier",
       "levels": ["CM2"],
       "description": "Trace un triangle isocèle, équilatéral ou rectangle selon les mesures données.",
-      "modality": "construction",
-      "parameters": {
-        "type": {"choices": ["isocèle", "équilatéral", "rectangle"]},
-        "side": {"min": 3, "max": 6},
-        "angle": {"choices": [30, 45, 60, 90]}
-      },
-      "generator_hint": "Draw special triangle based on given type and size.",
-      "difficulty": 2
+      "modality": "construction"
     },
     {
-      "id": "cm2_parallelogramme",
+      "id": "tracer_parallelogramme",
       "label": "Tracer un parallélogramme",
       "levels": ["CM2"],
       "description": "Trace un parallélogramme ABCD dont AB et CD sont parallèles.",
-      "modality": "construction",
-      "parameters": {
-        "AB": {"min": 4, "max": 8},
-        "AD": {"min": 3, "max": 6},
-        "angle": {"choices": [30, 45, 60]}
-      },
-      "generator_hint": "Draw parallelogram ABCD using parallel sides.",
-      "difficulty": 3
-    },
-    {
-      "id": "cm2_droites_combinees",
-      "label": "Tracer droites parallèles et perpendiculaires imbriquées",
-      "levels": ["CM2"],
-      "description": "Trace une droite (d), puis (d') perpendiculaire à (d) en A, puis (d'') parallèle à (d).",
-      "modality": "construction",
-      "parameters": {
-        "angle": {"choices": [90]},
-        "distance": {"min": 1, "max": 3}
-      },
-      "generator_hint": "Draw line d, then perpendicular through A, then parallel offset line.",
-      "difficulty": 3
+      "modality": "construction"
     }
   ]
  }

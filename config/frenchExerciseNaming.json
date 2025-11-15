@@ -199,6 +199,12 @@
       "description": "Accents aigus, graves, circonflexes"
     },
     {
+      "id": "ordre_alphabetique",
+      "label": "Ordre alphabétique",
+      "levels": ["CE1", "CE2"],
+      "description": "Classer des mots dans l'ordre alphabétique comme dans un dictionnaire"
+    },
+    {
       "id": "est_et",
       "label": "Est / Et - verbe être ou conjonction",
       "levels": ["CE1", "CE2"],
