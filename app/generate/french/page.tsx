@@ -43,7 +43,7 @@ interface ExercisePreview {
 
 export default function GenerateFrenchPage() {
   const { t } = useTranslation();
-  const { subscription, canGenerateMore, getRemainingFiches, useCredit } = useSubscription();
+  const { status, usageView, canGenerateMore, getRemainingFiches, updateStatusFromQuotaInfo } = useSubscription();
   const { user } = useAuth();
   const router = useRouter();
   
@@ -801,8 +801,7 @@ export default function GenerateFrenchPage() {
       if (!canGenerateMore()) {
         throw new Error("Limite d'abonnement atteinte pour ce mois");
       }
-      // Use 1 fiche from subscription allowance
-      await useCredit();
+      // Note: useCredit() is deprecated - backend now tracks usage automatically
       
       // Use ficheTheme as the main theme for the request
       const mainTheme = ficheTheme || "Exercices généraux";
@@ -1008,6 +1007,14 @@ export default function GenerateFrenchPage() {
       if (response.id) {
         // Store the session response for download handling
         setGeneratedExercise(response);
+        
+        // Update subscription status from quota_info if present in response
+        if (response.quota_info) {
+          console.log('Generation successful, updating subscription status from quota_info:', response.quota_info);
+          updateStatusFromQuotaInfo(response.quota_info);
+        } else {
+          console.warn('No quota_info in generation response - backend may need update');
+        }
         
         // Show completion at 100% for 2 seconds
         setGenerationCompleted(true);
@@ -1652,14 +1659,16 @@ export default function GenerateFrenchPage() {
                         Trop d'exercices sélectionnés pour la durée choisie
                       </small>
                     )}
-                    {subscription && (() => {
+                    {usageView && (() => {
                       const remainingFiches = getRemainingFiches();
-                      const monthlyLimit = subscription.monthlyLimit || 0;
+                      const monthlyLimit = usageView.monthly_limit || 0;
                       const tenPercentLimit = Math.floor(monthlyLimit * 0.1);
                       
-                      return remainingFiches <= tenPercentLimit && (
-                        <small className="text-center text-warning" style={{ fontSize: '0.8rem' }}>
-                          ⚠️ Attention : Il vous reste seulement {remainingFiches} fiches ce mois • Coût : 1 fiche
+                      return remainingFiches <= tenPercentLimit && remainingFiches > 0 && (
+                        <small className="text-center" style={{ fontSize: '0.8rem', color: '#f59e0b' }}>
+                          <i className="bi bi-exclamation-triangle me-1"></i>
+                          Attention : Il vous reste {remainingFiches} fiche{remainingFiches > 1 ? 's' : ''} ce mois
+                          {usageView.addon_remaining > 0 && <> (dont {usageView.addon_remaining} pack{usageView.addon_remaining > 1 ? 's' : ''})</>}
                         </small>
                       );
                     })()}

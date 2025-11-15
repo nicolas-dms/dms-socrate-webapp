@@ -23,6 +23,7 @@ export interface ExerciseSession {
   created_at: string;
   pdf_url?: string;
   status: 'pending' | 'completed' | 'failed';
+  quota_info?: any; // Subscription status with updated quota counters (returned by backend after generation)
 }
 
 export interface CreditPackage {
@@ -58,6 +59,7 @@ export const exerciseService = {  // Generate exercises
       
       if (backendResponse.success && backendResponse.pdf_path) {
         console.log('Backend success with pdf_path:', backendResponse.pdf_path);
+        console.log('Backend quota_info:', backendResponse.quota_info);
         const session: ExerciseSession = {
           id: `session_${Date.now()}`,
           subject: request.exercice_domain,
@@ -67,7 +69,8 @@ export const exerciseService = {  // Generate exercises
           theme: request.theme,
           created_at: new Date().toISOString(),
           status: 'completed',
-          pdf_url: backendResponse.pdf_path
+          pdf_url: backendResponse.pdf_path,
+          quota_info: backendResponse.quota_info // Include quota_info from backend response
         };
         debugLog.exercises('Converted exercise session', session);
         return session;

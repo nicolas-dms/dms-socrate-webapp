@@ -26,7 +26,7 @@ const durations = ["10 min", "20 min", "30 min"];
 export default function GenerateMathPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { subscription, canGenerateMore, getRemainingFiches, useCredit } = useSubscription();
+  const { status, usageView, canGenerateMore, getRemainingFiches, updateStatusFromQuotaInfo } = useSubscription();
   
   // Form state
   const [level, setLevel] = useState("CE1");
@@ -642,6 +642,14 @@ export default function GenerateMathPage() {
         // Store the session response for download handling
         setExercise(response);
         
+        // Update subscription status from quota_info if present in response
+        if (response.quota_info) {
+          console.log('Generation successful, updating subscription status from quota_info:', response.quota_info);
+          updateStatusFromQuotaInfo(response.quota_info);
+        } else {
+          console.warn('No quota_info in generation response - backend may need update');
+        }
+        
         // Show completion at 100% for 2 seconds
         setGenerationCompleted(true);
         
@@ -652,8 +660,7 @@ export default function GenerateMathPage() {
           setShowSuccessModal(true);
         }, 2000);
         
-        // Use a fiche from subscription allowance
-        await useCredit();
+        // Note: useCredit() is deprecated - backend now tracks usage automatically
       } else {
         throw new Error("Erreur lors de la génération du PDF");
       }
@@ -784,16 +791,19 @@ export default function GenerateMathPage() {
             </div>
             
             {/* Subscription info - only show when low */}
-            {subscription && (() => {
+            {usageView && (() => {
               const remainingFiches = getRemainingFiches();
-              const monthlyLimit = subscription.monthlyLimit || 0;
+              const monthlyLimit = usageView.monthly_limit || 0;
               const tenPercentLimit = Math.floor(monthlyLimit * 0.1);
               
-              return remainingFiches <= tenPercentLimit && (
-                <div className="alert alert-warning mb-4">
-                  <strong>⚠️ Attention : Il vous reste seulement {remainingFiches} fiches ce mois</strong>
-                  <br />
-                  <small>Coût : 1 fiche par génération</small>
+              return remainingFiches <= tenPercentLimit && remainingFiches > 0 && (
+                <div className="alert alert-warning mb-4" style={{ borderRadius: '12px', border: '2px solid #f59e0b' }}>
+                  <strong><i className="bi bi-exclamation-triangle me-2"></i>Attention : Il vous reste {remainingFiches} fiche{remainingFiches > 1 ? 's' : ''} ce mois</strong>
+                  {usageView.addon_remaining > 0 && (
+                    <div className="mt-2">
+                      <small>Dont {usageView.addon_remaining} pack{usageView.addon_remaining > 1 ? 's' : ''} additionnel{usageView.addon_remaining > 1 ? 's' : ''}</small>
+                    </div>
+                  )}
                 </div>
               );
             })()}
