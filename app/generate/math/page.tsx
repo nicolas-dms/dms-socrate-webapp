@@ -36,6 +36,14 @@ export default function GenerateMathPage() {
   // Exercise type parameters
   const [exerciceTypeParams, setExerciceTypeParams] = useState<ExerciceTypeParam>({});
   
+  // Last generated parameters for regeneration
+  const [lastGeneratedParams, setLastGeneratedParams] = useState<{
+    level: string;
+    duration: string;
+    selectedTypes: string[];
+    exerciceTypeParams: ExerciceTypeParam;
+  } | null>(null);
+  
   // Exercise selections for each domain
   const [nombresSelections, setNombresSelections] = useState<{ [key: string]: number[] }>({});
   
@@ -301,11 +309,11 @@ export default function GenerateMathPage() {
   // Exercise limits based on duration (same as French generation)
   const getExerciseLimits = (duration: string): number => {
     switch (duration) {
-      case "10 min": return 3;  // 3 exercices max pour 10 minutes
-      case "20 min": return 5;  // 5 exercices max pour 20 minutes
-      case "30 min": return 7;  // 7 exercices max pour 30 minutes
+      case "10 min": return 2;  // 2 exercices max pour 10 minutes
+      case "20 min": return 3;  // 3 exercices max pour 20 minutes
+      case "30 min": return 4;  // 4 exercices max pour 30 minutes
       case "40 min": return 4;  // 4 exercices pour 40 minutes (legacy support)
-      default: return 7;
+      default: return 4;
     }
   };
 
@@ -591,6 +599,14 @@ export default function GenerateMathPage() {
       return;
     }
 
+    // Save parameters before generation for "Régénérer" functionality
+    setLastGeneratedParams({
+      level,
+      duration,
+      selectedTypes: [...selectedTypes],
+      exerciceTypeParams: JSON.parse(JSON.stringify(exerciceTypeParams))
+    });
+
     try {
       // Build exercicesByType structure similar to French generation
       const exercicesByType: ExercicesByType = {};
@@ -676,6 +692,28 @@ export default function GenerateMathPage() {
   const regenerateSameSheet = () => {
     setShowSuccessModal(false);
     // Reset for potential regeneration
+    setExercise(null);
+  };
+
+  const createNewSheet = () => {
+    // Reset all parameters for a completely new sheet
+    setLevel("CE1");
+    setDuration("20 min");
+    setSelectedTypes([]);
+    setExerciceTypeParams({});
+    setLastGeneratedParams(null);
+    setShowSuccessModal(false);
+    setExercise(null);
+  };
+
+  const restoreLastParameters = () => {
+    if (lastGeneratedParams) {
+      setLevel(lastGeneratedParams.level);
+      setDuration(lastGeneratedParams.duration);
+      setSelectedTypes([...lastGeneratedParams.selectedTypes]);
+      setExerciceTypeParams(JSON.parse(JSON.stringify(lastGeneratedParams.exerciceTypeParams)));
+    }
+    setShowSuccessModal(false);
     setExercise(null);
   };
 
@@ -1262,21 +1300,6 @@ export default function GenerateMathPage() {
 
               <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
 
-              {/* Fiche Title Input */}
-              <div className="mb-3">
-                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
-                  Titre de la fiche <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Ex: Exercices de calcul mental"
-                  value={ficheTitle}
-                  onChange={(e) => setFicheTitle(e.target.value)}
-                  style={{ fontSize: '0.9rem' }}
-                />
-              </div>
-
               {/* Tags Input */}
               <div className="mb-3">
                 <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
@@ -1428,6 +1451,24 @@ export default function GenerateMathPage() {
               )}
             </div>
           </Modal.Body>
+          <Modal.Footer style={{ borderTop: '1px solid #e9ecef', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between' }}>
+            <Button 
+              variant="outline-secondary"
+              onClick={createNewSheet}
+              style={{ fontSize: '0.9rem' }}
+            >
+              ✨ Nouvelle fiche
+            </Button>
+            {lastGeneratedParams && (
+              <Button 
+                variant="outline-secondary"
+                onClick={restoreLastParameters}
+                style={{ fontSize: '0.9rem' }}
+              >
+                🔄 Régénérer
+              </Button>
+            )}
+          </Modal.Footer>
         </Modal>
 
         {/* Error Modal */}

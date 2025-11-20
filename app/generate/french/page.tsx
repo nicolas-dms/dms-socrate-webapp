@@ -374,11 +374,11 @@ export default function GenerateFrenchPage() {
   // Exercise limits based on duration
   const getExerciseLimits = (duration: string): number => {
     switch (duration) {
-      case "10 min": return 3;  // 3 exercices max pour 10 minutes
-      case "20 min": return 5;  // 5 exercices max pour 20 minutes
-      case "30 min": return 7;  // 7 exercices max pour 30 minutes  
+      case "10 min": return 2;  // 2 exercices max pour 10 minutes
+      case "20 min": return 3;  // 3 exercices max pour 20 minutes
+      case "30 min": return 4;  // 4 exercices max pour 30 minutes  
       case "40 min": return 4; // 4 exercices pour 40 minutes (legacy support)
-      default: return 7;
+      default: return 4;
     }
   };
 
@@ -1832,21 +1832,6 @@ export default function GenerateFrenchPage() {
                 </div>
 
                 <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
-
-                {/* Fiche Title Input */}
-                <div className="mb-3">
-                  <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
-                    Titre de la fiche <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ex: Révisions de conjugaison"
-                    value={ficheTitle}
-                    onChange={(e) => setFicheTitle(e.target.value)}
-                    style={{ fontSize: '0.9rem' }}
-                  />
-                </div>
 
                 {/* Tags Input */}
                 <div className="mb-3">

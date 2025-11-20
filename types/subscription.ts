@@ -83,6 +83,13 @@ export interface SubscriptionStatus {
   auto_renewal: boolean;
   pending_tier: SubscriptionTier | null; // Tier to apply on renewal_date (downgrade)
   pending_billing_period: BillingPeriod | null; // Billing period to apply on renewal_date
+  
+  // Stripe-specific fields
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  stripe_payment_method_id?: string | null;
+  stripe_payment_method_last4?: string | null;
+  stripe_payment_method_brand?: string | null;
 }
 
 // ============================================================================

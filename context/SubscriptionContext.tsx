@@ -6,6 +6,7 @@ import {
   canGenerateMoreFromStatus,
   toUsageView
 } from "../services/subscriptionService";
+import { stripeService } from "../services/stripeService";
 import { 
   SubscriptionStatus, 
   SubscriptionUsageView,
@@ -28,14 +29,22 @@ interface SubscriptionContextType {
   // Actions
   refreshSubscription: () => Promise<void>;
   updateStatusFromQuotaInfo: (quotaInfo: SubscriptionStatus) => void;
-  changeTier: (newTier: "freemium" | "standard" | "famille_plus") => Promise<{ success: boolean; message: string }>;
+  changeTier: (newTier: "freemium" | "standard" | "famille_plus", billingPeriod?: "monthly" | "yearly") => Promise<{ success: boolean; message: string }>;
   changeBillingPeriod: (newPeriod: "monthly" | "yearly") => Promise<{ success: boolean; message: string }>;
   buyAddonPack: (quantity: number) => Promise<{ success: boolean; message: string }>;
   cancelSubscription: () => Promise<{ success: boolean; message: string }>;
   
+  // Stripe payment methods
+  buyAddonPackWithStripe: (quantity: number, paymentMethodId: string) => Promise<{ success: boolean; message: string; quotasAdded?: number }>;
+  createStripeSubscription: (tier: "standard" | "famille_plus", billingPeriod: "monthly" | "yearly", paymentMethodId: string) => Promise<{ success: boolean; message: string; requiresConfirmation?: boolean; clientSecret?: string }>;
+  updateStripeSubscription: (newTier: "standard" | "famille_plus", newBillingPeriod: "monthly" | "yearly") => Promise<{ success: boolean; message: string }>;
+  calculateProration: (newTier: "standard" | "famille_plus", newBillingPeriod: "monthly" | "yearly") => Promise<{ amount: number } | null>;
+  
   // Helpers
   canGenerateMore: () => boolean;
   getRemainingFiches: () => number;
+  hasStripeSubscription: () => boolean;
+  requiresStripePayment: (targetTier: "freemium" | "standard" | "famille_plus") => boolean;
   
   // Legacy compatibility (deprecated - will be removed in Phase 3)
   upgradePlan: (planId: string) => Promise<{ success: boolean; message: string }>;
@@ -113,7 +122,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
             renewal_date: initResponse.subscription.renewal_date,
             start_date: new Date().toISOString(),
             features: [],
-            auto_renewal: false
+            auto_renewal: false,
+            pending_tier: null,
+            pending_billing_period: null
           };
           setStatus(initStatus);
           setUsageView(toUsageView(initStatus));
@@ -161,7 +172,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   };
 
   // NEW: Change subscription tier
-  const changeTier = async (newTier: "freemium" | "standard" | "famille_plus"): Promise<{ success: boolean; message: string }> => {
+  const changeTier = async (
+    newTier: "freemium" | "standard" | "famille_plus",
+    billingPeriod?: "monthly" | "yearly"
+  ): Promise<{ success: boolean; message: string }> => {
     if (!user?.user_id && !user?.email) {
       return { success: false, message: "User not authenticated" };
     }
@@ -172,7 +186,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setLoading(true);
       const result = await subscriptionService.changeTier(userId, { 
         new_tier: newTier,
-        new_billing_period: status?.billing_period || "monthly"
+        new_billing_period: billingPeriod || status?.billing_period || "monthly"
       });
       
       if (result.success) {
@@ -285,6 +299,241 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setLoading(false);
     }
   };
+
+  // ========== STRIPE PAYMENT METHODS ==========
+
+  // Helper: Check if user has active Stripe subscription
+  const hasStripeSubscription = (): boolean => {
+    return !!(status?.stripe_subscription_id);
+  };
+
+  // Helper: Check if target tier requires Stripe payment
+  const requiresStripePayment = (targetTier: "freemium" | "standard" | "famille_plus"): boolean => {
+    // Freemium never requires payment
+    if (targetTier === "freemium") return false;
+    
+    // If current is freemium, target is paid -> requires payment
+    if (status?.tier === "freemium") return true;
+    
+    // If already has Stripe subscription, will use updateSubscription
+    return false;
+  };
+
+  // Calculate proration for subscription upgrade/downgrade
+  const calculateProration = async (
+    newTier: "standard" | "famille_plus",
+    newBillingPeriod: "monthly" | "yearly"
+  ): Promise<{ amount: number } | null> => {
+    if (!user?.user_id && !user?.email) {
+      console.error("User not authenticated");
+      return null;
+    }
+
+    try {
+      const result = await stripeService.calculateProration(newTier, newBillingPeriod);
+      return { amount: result.amount };
+    } catch (error) {
+      console.error("Failed to calculate proration:", error);
+      return null;
+    }
+  };
+
+  // Create new Stripe subscription (freemium -> paid tier)
+  const createStripeSubscription = async (
+    tier: "standard" | "famille_plus",
+    billingPeriod: "monthly" | "yearly",
+    paymentMethodId: string
+  ): Promise<{ 
+    success: boolean; 
+    message: string; 
+    requiresConfirmation?: boolean; 
+    clientSecret?: string 
+  }> => {
+    if (!user?.user_id && !user?.email) {
+      return { success: false, message: "User not authenticated" };
+    }
+
+    const userId = user.user_id || user.email;
+
+    try {
+      setLoading(true);
+
+      // Create Stripe subscription
+      const stripeResult = await stripeService.createSubscription(
+        tier,
+        billingPeriod,
+        paymentMethodId
+      );
+
+      if (!stripeResult.subscription_id) {
+        return {
+          success: false,
+          message: "Erreur lors de la création de l'abonnement Stripe"
+        };
+      }
+
+      // Check if 3D Secure confirmation needed
+      if (stripeResult.client_secret) {
+        return {
+          success: true,
+          message: "Confirmation de paiement requise",
+          requiresConfirmation: true,
+          clientSecret: stripeResult.client_secret
+        };
+      }
+
+      // Subscription created successfully, now update backend
+      const result = await subscriptionService.changeTier(userId, {
+        new_tier: tier,
+        new_billing_period: billingPeriod
+      });
+
+      if (result.success) {
+        // Refresh subscription status
+        const updatedStatus = await subscriptionService.getStatus(userId);
+        setStatus(updatedStatus);
+        setUsageView(toUsageView(updatedStatus));
+
+        // Refresh history
+        subscriptionService.getHistory(userId, 10)
+          .then((historyData: HistoryResponse) => setHistory(historyData.transactions))
+          .catch(err => console.error("Failed to refresh history:", err));
+      }
+
+      return {
+        success: true,
+        message: result.message || "Abonnement créé avec succès"
+      };
+    } catch (error) {
+      console.error("Failed to create Stripe subscription:", error);
+      return {
+        success: false,
+        message: (error as any)?.response?.data?.detail || "Erreur lors de la création de l'abonnement"
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update existing Stripe subscription (paid -> paid tier change)
+  const updateStripeSubscription = async (
+    newTier: "standard" | "famille_plus",
+    newBillingPeriod: "monthly" | "yearly"
+  ): Promise<{ success: boolean; message: string }> => {
+    if (!user?.user_id && !user?.email) {
+      return { success: false, message: "User not authenticated" };
+    }
+
+    if (!hasStripeSubscription()) {
+      return { success: false, message: "No active Stripe subscription" };
+    }
+
+    const userId = user.user_id || user.email;
+
+    try {
+      setLoading(true);
+
+      // Update Stripe subscription
+      const stripeResult = await stripeService.updateSubscription(newTier, newBillingPeriod);
+
+      if (!stripeResult.success) {
+        return {
+          success: false,
+          message: stripeResult.message || "Erreur lors de la mise à jour de l'abonnement Stripe"
+        };
+      }
+
+      // Update backend
+      const result = await subscriptionService.changeTier(userId, {
+        new_tier: newTier,
+        new_billing_period: newBillingPeriod
+      });
+
+      if (result.success) {
+        // Refresh subscription status
+        const updatedStatus = await subscriptionService.getStatus(userId);
+        setStatus(updatedStatus);
+        setUsageView(toUsageView(updatedStatus));
+
+        // Refresh history
+        subscriptionService.getHistory(userId, 10)
+          .then((historyData: HistoryResponse) => setHistory(historyData.transactions))
+          .catch(err => console.error("Failed to refresh history:", err));
+      }
+
+      return {
+        success: true,
+        message: result.message || "Abonnement mis à jour avec succès"
+      };
+    } catch (error) {
+      console.error("Failed to update Stripe subscription:", error);
+      return {
+        success: false,
+        message: (error as any)?.response?.data?.detail || "Erreur lors de la mise à jour de l'abonnement"
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Buy addon packs with Stripe payment
+  const buyAddonPackWithStripe = async (
+    quantity: number,
+    paymentMethodId: string
+  ): Promise<{ success: boolean; message: string; quotasAdded?: number }> => {
+    if (!user?.user_id && !user?.email) {
+      return { success: false, message: "User not authenticated" };
+    }
+
+    const userId = user.user_id || user.email;
+
+    try {
+      setLoading(true);
+
+      // Purchase addon packs via Stripe
+      const stripeResult = await stripeService.purchaseAddonPacks(quantity, paymentMethodId);
+
+      if (!stripeResult.success) {
+        return {
+          success: false,
+          message: stripeResult.message || "Erreur lors de l'achat du pack"
+        };
+      }
+
+      // Update backend subscription with new quotas
+      const result = await subscriptionService.buyAddonPack(userId, {
+        pack_count: quantity
+      });
+
+      if (result.success) {
+        // Refresh subscription status
+        const updatedStatus = await subscriptionService.getStatus(userId);
+        setStatus(updatedStatus);
+        setUsageView(toUsageView(updatedStatus));
+
+        // Refresh history
+        subscriptionService.getHistory(userId, 10)
+          .then((historyData: HistoryResponse) => setHistory(historyData.transactions))
+          .catch(err => console.error("Failed to refresh history:", err));
+      }
+
+      return {
+        success: true,
+        message: result.message || `${quantity} pack(s) acheté(s) avec succès`,
+        quotasAdded: stripeResult.quotas_added
+      };
+    } catch (error) {
+      console.error("Failed to buy addon pack with Stripe:", error);
+      return {
+        success: false,
+        message: (error as any)?.response?.data?.detail || "Erreur lors de l'achat du pack"
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========== END STRIPE PAYMENT METHODS ==========
 
   // LEGACY: Upgrade plan (maps to changeTier)
   const upgradePlan = async (planId: string): Promise<{ success: boolean; message: string }> => {
@@ -443,9 +692,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       buyAddonPack,
       cancelSubscription,
       
+      // Stripe payment methods
+      buyAddonPackWithStripe,
+      createStripeSubscription,
+      updateStripeSubscription,
+      calculateProration,
+      
       // Helpers
       canGenerateMore,
       getRemainingFiches,
+      hasStripeSubscription,
+      requiresStripePayment,
       
       // Legacy compatibility (deprecated)
       upgradePlan,

@@ -189,7 +189,9 @@ Le document est pensé pour un **LLM**: toutes les structures nécessaires (payl
     "advanced_exercises",
     "statistics"
   ],
-  "auto_renewal": true
+  "auto_renewal": true,
+  "pending_tier": null,          // Tier en attente (downgrade) à appliquer au renouvellement
+  "pending_billing_period": null // Période en attente à appliquer au renouvellement
 }
 ```
 
@@ -204,10 +206,13 @@ Le document est pensé pour un **LLM**: toutes les structures nécessaires (payl
   2. Si `200`:
      - Mettre à jour un store global `subscriptionStatus`.
      - Afficher:
-       - “Plan actuel: Standard (mensuel)” ou “Famille+ (annuel)”.
-       - “Renouvellement le JJ/MM/AAAA”.
-       - “Fiches restantes ce mois-ci: monthly_remaining”.
-       - “Fiches add-on restantes: addon_quota_remaining”.
+       - "Plan actuel: Standard (mensuel)" ou "Famille+ (annuel)".
+       - "Renouvellement le JJ/MM/AAAA".
+       - "Fiches restantes ce mois-ci: monthly_remaining".
+       - "Fiches add-on restantes: addon_quota_remaining".
+     - **Si `pending_tier` n'est pas null**:
+       - Afficher un badge ou message: "Changement de plan prévu le [renewal_date] vers [pending_tier]".
+       - Exemple: "Passage à Freemium prévu le 15/03/2025".
   3. Si `404`:
      - Appeler `/initialize` (cf. §3.3).
      - Puis re-appeler `/status`.
@@ -288,10 +293,18 @@ Le document est pensé pour un **LLM**: toutes les structures nécessaires (payl
 **Logique métier backend (à considérer côté front)**
 
 - **Upgrade** (vers un tier plus haut):
+  - Appliqué **immédiatement**.
   - Reset immédiat des quotas (`quota_used_monthly = 0`, `quota_used_daily = 0`).
-- **Downgrade** (tier plus bas):
-  - Les quotas utilisés sont conservés jusqu’à la `renewal_date`.
-  - Il est donc possible que `monthly_used > monthly_quota` pour le nouveau plan.
+  - **Réactivation automatique du renouvellement** (`auto_renewal = true`).
+  - Les champs `pending_tier` et `pending_billing_period` sont effacés.
+- **Downgrade** (vers un tier plus bas):
+  - Le changement est **différé** jusqu'à la `renewal_date`.
+  - Les champs `pending_tier` et `pending_billing_period` sont définis avec les nouvelles valeurs.
+  - Le `tier` actuel, les quotas et les features restent **inchangés** jusqu'au renouvellement.
+  - Exemple: Famille+ (150 fiches) → Standard (50 fiches):
+    - `tier` reste "famille_plus", `monthly_quota` reste 150.
+    - `pending_tier` = "standard", `pending_billing_period` = "monthly".
+    - Au `renewal_date`, le backend appliquera le downgrade et réinitialisera les quotas.
 - **Changement Freemium ↔ payant**:
   - Freemium → Standard/Famille+:
     - `renewal_type` passe à `"anniversary"`.
@@ -302,15 +315,34 @@ Le document est pensé pour un **LLM**: toutes les structures nécessaires (payl
 
 **Logique front à implémenter**
 
-- Sur la page Pricing / “Changer de plan”:
+- Sur la page Pricing / "Changer de plan":
   1. Récupérer `SubscriptionStatus`.
   2. Permettre de choisir un nouveau plan + période.
   3. Appeler `POST /change-tier`.
   4. En cas de succès:
      - Recharger `GET /status`.
-     - Afficher un message adapté, ex:
-       - Upgrade: “Votre plan a été mis à jour, vos quotas ont été réinitialisés.”
-       - Downgrade: “Votre plan sera aligné sur les limites Freemium au prochain renouvellement le JJ/MM/AAAA.”
+     - Afficher un message adapté:
+       - **Upgrade**: "Votre plan a été mis à jour immédiatement, vos quotas ont été réinitialisés et le renouvellement automatique a été activé."
+       - **Downgrade**: "Votre changement de plan est programmé pour le [renewal_date]. Vous conservez votre plan actuel et vos quotas jusqu'à cette date."
+       - **Annulation downgrade**: "Le changement de plan planifié a été annulé. Vous conservez votre plan actuel."
+     - Si downgrade, afficher clairement:
+       - "Plan actuel: Famille+ (150 fiches/mois)"
+       - "Changement prévu: Standard (50 fiches/mois) le 15/03/2025"
+       - Badge visible: "Changement planifié"
+
+**Annuler un downgrade planifié**
+
+- Si `pending_tier` existe et que l'utilisateur veut **annuler** le changement:
+  1. Appeler `POST /change-tier` avec le **tier actuel** :
+     ```json
+     {
+       "new_tier": "famille_plus",
+       "new_billing_period": "monthly"
+     }
+     ```
+  2. Le backend détectera que c'est le tier actuel avec un `pending_tier` existant
+  3. Il annulera le `pending_tier` et `pending_billing_period`
+  4. Afficher : "Le changement de plan planifié a été annulé"
 
 ---
 
@@ -402,11 +434,90 @@ Le document est pensé pour un **LLM**: toutes les structures nécessaires (payl
   3. En cas de succès:
      - Mettre à jour l’affichage `addon_quota_remaining` avec la valeur renvoyée.
      - Facultatif: recharger `/status` pour un état complet.
-  4. Afficher un message “X fiches supplémentaires ont été ajoutées à votre compte”.
+  4. Afficher un message "X fiches supplémentaires ont été ajoutées à votre compte".
 
 ---
 
-### 3.7 Historique des transactions
+### 3.7 Annuler le renouvellement automatique
+
+**Endpoint**
+
+- `POST /api/subscription/{user_id}/cancel-auto-renewal`
+
+**But**
+
+- Désactiver le renouvellement automatique de l'abonnement.
+- L'utilisateur pourra continuer à utiliser son abonnement jusqu'à la date de renouvellement (`renewal_date`).
+- Aucune facturation ne sera effectuée après cette date.
+
+**Réponse – structure**
+
+```jsonc
+{
+  "success": true,
+  "message": "Auto-renewal cancelled. Your subscription will remain active until 2025-03-15T00:00:00+00:00"
+}
+```
+
+**Erreurs**
+
+- `400` si le renouvellement automatique est déjà désactivé.
+- `404` si utilisateur non trouvé.
+
+**Logique front à implémenter**
+
+- Sur la page "Mon abonnement":
+  - Afficher le statut du renouvellement automatique (`auto_renewal`).
+  - Bouton "Annuler le renouvellement automatique" si `auto_renewal === true`.
+  - Lors du clic:
+    1. Appeler `POST /cancel-auto-renewal`.
+    2. En cas de succès:
+       - Recharger `GET /status`.
+       - Afficher un message: "Votre abonnement ne sera pas renouvelé. Vous pourrez l'utiliser jusqu'au [date]."
+       - Afficher un badge "Renouvellement annulé" ou similaire.
+       - Proposer de réactiver (cf. §3.8).
+
+---
+
+### 3.8 Réactiver le renouvellement automatique
+
+**Endpoint**
+
+- `POST /api/subscription/{user_id}/reactivate-auto-renewal`
+
+**But**
+
+- Réactiver le renouvellement automatique de l'abonnement.
+- L'abonnement sera automatiquement renouvelé à la date prévue (`renewal_date`).
+
+**Réponse – structure**
+
+```jsonc
+{
+  "success": true,
+  "message": "Auto-renewal reactivated. Your subscription will automatically renew on 2025-03-15T00:00:00+00:00"
+}
+```
+
+**Erreurs**
+
+- `400` si le renouvellement automatique est déjà activé.
+- `404` si utilisateur non trouvé.
+
+**Logique front à implémenter**
+
+- Sur la page "Mon abonnement":
+  - Bouton "Réactiver le renouvellement automatique" si `auto_renewal === false`.
+  - Lors du clic:
+    1. Appeler `POST /reactivate-auto-renewal`.
+    2. En cas de succès:
+       - Recharger `GET /status`.
+       - Afficher un message: "Votre abonnement sera automatiquement renouvelé le [date]."
+       - Retirer le badge "Renouvellement annulé".
+
+---
+
+### 3.9 Historique des transactions
 
 **Endpoint**
 
@@ -475,7 +586,7 @@ Le document est pensé pour un **LLM**: toutes les structures nécessaires (payl
 
 ---
 
-### 3.8 Health check
+### 3.10 Health check
 
 **Endpoint**
 
@@ -551,6 +662,8 @@ type SubscriptionStatus = {
   start_date: string;   // ISO
   features: string[];
   auto_renewal: boolean;
+  pending_tier: SubscriptionTier | null;      // Tier en attente (downgrade)
+  pending_billing_period: BillingPeriod | null; // Période en attente
 };
 ```
 
@@ -575,17 +688,21 @@ type SubscriptionStatus = {
 
 1. Appeler `GET /api/subscription/plans`.
 2. Appeler `GET /api/subscription/{user_id}/status` (si connecté).
-3. Construire l’UI:
+3. Construire l'UI:
    - 3 cartes de plan avec:
      - Nom, description, quotas.
      - Prix mensuel et annuel.
-     - Badge “Économisez X%” sur l’option yearly recommandée.
-   - Marquer le plan/période actuel comme “Actif”.
-4. Lors d’un clic sur “Choisir ce plan”:
+     - Badge "Économisez X%" sur l'option yearly recommandée.
+   - Marquer le plan/période actuel comme "Actif".
+   - **Si `pending_tier` existe**:
+     - Afficher un badge sur le plan actuel: "Changement planifié vers [pending_tier]".
+     - Afficher la date du changement prévu.
+4. Lors d'un clic sur "Choisir ce plan":
    - Appeler `POST /change-tier` avec `new_tier` et `new_billing_period`.
    - En cas de succès:
      - Recharger `/status`.
-     - Rediriger vers “Mon abonnement” ou afficher un message de succès.
+     - Afficher un message adapté (upgrade immédiat vs downgrade différé).
+     - Rediriger vers "Mon abonnement".
 
 ### 5.3 Page “Mon abonnement”
 
@@ -597,42 +714,115 @@ Données chargées via:
 Affichage:
 
 - Plan actuel et période (`tier`, `billing_period`).
+- **Si `pending_tier` existe (downgrade planifié)**:
+  - Afficher un encadré bien visible:
+    - "Plan actuel: [tier] ([billing_period])"
+    - "Changement prévu: [pending_tier] ([pending_billing_period]) le [renewal_date]"
+  - Badge: "Changement planifié" ou "Downgrade prévu".
+  - **Bouton "Annuler le changement"**:
+    - Appeler `POST /change-tier` avec le tier actuel :
+      ```json
+      { "new_tier": "famille_plus", "new_billing_period": "monthly" }
+      ```
+    - Recharger `/status` après succès
+    - Le `pending_tier` sera effacé
 - Quotas:
-  - “Fiches restantes ce mois-ci: `monthly_remaining` sur `monthly_quota`.”
-  - “Fiches add-on restantes: `addon_quota_remaining`.”
+  - "Fiches restantes ce mois-ci: `monthly_remaining` sur `monthly_quota`."
+  - "Fiches add-on restantes: `addon_quota_remaining`."
 - Date de `renewal_date` formatée.
+- **Statut du renouvellement automatique** (`auto_renewal`):
+  - Si `true`: afficher "Renouvellement automatique activé".
+  - Si `false`: afficher badge "Renouvellement annulé" + message "Votre abonnement reste actif jusqu'au [renewal_date]".
 - Actions:
-  - “Changer de plan” → navigation vers Pricing.
-  - “Passer à annuel / mensuel”:
+  - "Changer de plan" → navigation vers Pricing.
+  - "Passer à annuel / mensuel":
     - `POST /change-billing-period`.
-  - “Acheter un pack de 20 fiches”:
+  - "Acheter un pack de 20 fiches":
     - `POST /addon-pack` avec `pack_count` choisi.
+  - **Gestion renouvellement automatique**:
+    - Si `auto_renewal === true`: bouton "Annuler le renouvellement automatique" → `POST /cancel-auto-renewal`.
+    - Si `auto_renewal === false`: bouton "Réactiver le renouvellement automatique" → `POST /reactivate-auto-renewal`.
 
 ### 5.4 Gestion des quotas lors de la génération d’exercices
 
 L’endpoint de génération d’exercices (dans `education/routes/exercise_route.py`) vérifie et consomme les quotas avant de générer:
 
 - En cas de quotas suffisant:
-  - L’exercice est généré.
-  - La réponse peut inclure des infos de quotas (selon implémentation).
+  - L'exercice est généré.
+  - **La réponse inclut systématiquement `quota_info` avec l'état des quotas mis à jour**.
 - En cas de quotas épuisés:
   - HTTP 429 (Too Many Requests) avec un `detail` contenant `quota_info`.
 
+**Structure de réponse (succès - 200)**
+
+```jsonc
+{
+  "success": true,
+  "error_message": null,
+  "pdf_path": "https://...",
+  "pdf_base64": "...",
+  "file_id": "exercise-uuid-123",
+  "quota_info": {
+    "tier": "standard",
+    "status": "active",
+    "billing_period": "monthly",
+    "renewal_type": "anniversary",
+    "monthly_quota": 50,
+    "monthly_used": 13,
+    "monthly_remaining": 37,
+    "daily_quota": null,
+    "daily_used": null,
+    "daily_remaining": null,
+    "addon_quota_remaining": 20,
+    "addon_packs_purchased": 1,
+    "renewal_date": "2025-03-15T00:00:00+00:00",
+    "start_date": "2025-01-15T10:00:00+00:00",
+    "features": ["basic_exercises", "pdf_download", "advanced_exercises", "statistics"],
+    "auto_renewal": true
+  }
+}
+```
+
+**Structure d'erreur (quota dépassé - 429)**
+
+```jsonc
+{
+  "detail": {
+    "error": "Monthly quota exceeded",
+    "message": "Quota exceeded. Please upgrade your subscription or purchase add-on packs.",
+    "quota_info": {
+      "tier": "freemium",
+      "monthly_quota": 3,
+      "monthly_used": 3,
+      "monthly_remaining": 0,
+      "daily_quota": 1,
+      "daily_used": 1,
+      "daily_remaining": 0,
+      "addon_quota_remaining": 0,
+      ...
+    }
+  }
+}
+```
+
 **Logique front**
 
-- Lors d’un appel à l’API de génération d’exercices:
+- Lors d'un appel à l'API de génération d'exercices:
   - Si réponse 200:
-    - Afficher les exercices.
-    - Optionnellement mettre à jour les quotas avec `quota_info` si présent.
+    - Afficher les exercices (PDF).
+    - **Mettre à jour automatiquement l'affichage des quotas avec `response.quota_info`**:
+      - `monthly_remaining` → "Fiches restantes ce mois-ci: X"
+      - `addon_quota_remaining` → "Fiches add-on restantes: Y"
+    - **Pas besoin de recharger `/status` séparément** (économise un appel API).
   - Si réponse 429:
-    - Lire `err.response.data.detail.quota_info` (ou équivalent).
-    - Afficher un message “Vous avez atteint votre quota”.
+    - Lire `err.response.data.detail.quota_info`.
+    - Afficher un message "Vous avez atteint votre quota".
+    - Afficher les détails: `monthly_remaining`, `daily_remaining`, etc.
     - Proposer:
       - Achat de pack add-on (→ `POST /addon-pack`).
       - Upgrade de plan (→ `POST /change-tier`).
-    - Après action de l’utilisateur:
-      - Recharger `/status`.
-      - Proposer de relancer la génération.
+    - Après action de l'utilisateur:
+      - Recharger `/status` ou relancer la génération directement.
 
 ---
 
@@ -643,9 +833,9 @@ Lors de la génération du code front-end pour cette logique de souscription:
 1. **Toujours**:
    - Utiliser `user_id` = email pour appeler les endpoints.
    - Centraliser l’état de souscription dans un store global (ex: `subscriptionStore`).
-2. **Après chaque action de souscription** (change-tier, change-billing-period, addon-pack, initialize):
+2. **Après chaque action de souscription** (change-tier, change-billing-period, addon-pack, initialize, cancel-auto-renewal, reactivate-auto-renewal):
    - Re-appeler `GET /api/subscription/{user_id}/status`.
-   - Mettre à jour l’état global et l’UI.
+   - Mettre à jour l'état global et l'UI.
 3. **Ne pas recalculer les quotas côté front**:
    - Utiliser exclusivement les valeurs renvoyées par le backend (`monthly_remaining`, `addon_quota_remaining`, etc.).
 4. **Gérer les erreurs HTTP**:
@@ -653,5 +843,38 @@ Lors de la génération du code front-end pour cette logique de souscription:
    - 404 sur `/status`: tenter `/initialize` puis re-check.
    - 429 sur les routes d’exercices: afficher un message clair “quota dépassé” + CTA pour upgrade ou achat de pack.
 5. **Ne pas implémenter la logique de facturation Stripe**:
-   - Considérer que les endpoints d’abonnement encapsulent déjà la logique de paiement (mock ou réel).
-   - Le front se contente d’appeler les routes et d’afficher la confirmation / échec.
+   - Considérer que les endpoints d'abonnement encapsulent déjà la logique de paiement (mock ou réel).
+   - Le front se contente d'appeler les routes et d'afficher la confirmation / échec.
+6. **Gestion du renouvellement automatique**:
+   - Toujours afficher clairement l'état de `auto_renewal` sur la page "Mon abonnement".
+   - Si `auto_renewal === false`:
+     - Afficher un message d'avertissement visible "Votre abonnement ne sera pas renouvelé automatiquement".
+     - Indiquer la date jusqu'à laquelle l'abonnement reste actif.
+     - Proposer de réactiver facilement.
+   - Après annulation ou réactivation, recharger `/status` pour afficher le nouvel état.
+7. **Gestion des downgrades avec pending_tier**:
+   - **Toujours vérifier la présence de `pending_tier` et `pending_billing_period`** dans la réponse `/status`.
+   - Si `pending_tier !== null`:
+     - Le changement de plan est **différé** jusqu'à `renewal_date`.
+     - Afficher clairement les deux informations:
+       - "Plan actuel: [tier] ([billing_period]) - [monthly_quota] fiches/mois"
+       - "Plan à partir du [renewal_date]: [pending_tier] ([pending_billing_period]) - [quotas du pending_tier]"
+     - Ajouter un badge visible: "Changement planifié" ou "Downgrade prévu".
+     - Sur la page Pricing, afficher sur la carte du plan actuel: "Changement vers [pending_tier] le [date]".
+   - L'utilisateur peut **annuler** un downgrade planifié:
+     - En re-sélectionnant son plan actuel via `POST /change-tier` avec son tier actuel.
+     - Exemple : si `tier = "famille_plus"` et `pending_tier = "standard"`, appeler :
+       ```json
+       POST /change-tier
+       { "new_tier": "famille_plus", "new_billing_period": "monthly" }
+       ```
+     - Le backend détectera que c'est le même tier avec un `pending_tier` existant
+     - Cela effacera `pending_tier` et `pending_billing_period`
+     - Message de réponse : "Pending tier change cancelled"
+   - **NE PAS** afficher les quotas du `pending_tier` dans les compteurs actuels.
+   - Les quotas affichés sont **toujours ceux du tier actif** (`tier`, `monthly_quota`, `monthly_remaining`).
+8. **Réactivation automatique lors d'un upgrade**:
+   - Lors d'un upgrade (passage à un tier supérieur), `auto_renewal` est **automatiquement réactivé** (`true`).
+   - Cela garantit que l'utilisateur qui passe à un plan payant supérieur bénéficie du renouvellement automatique.
+   - Afficher un message clair: "Le renouvellement automatique a été activé pour votre nouveau plan."
+   - L'utilisateur peut toujours le désactiver manuellement ensuite via `POST /cancel-auto-renewal`.

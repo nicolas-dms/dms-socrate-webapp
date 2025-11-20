@@ -3,9 +3,12 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Container, Row, Col, Card, Button, Form, Alert, Badge, ProgressBar, Modal } from "react-bootstrap";
 import { useRouter } from 'next/navigation';
+import { Elements, useStripe } from "@stripe/react-stripe-js";
 import ProtectedPage from "../../components/ProtectedPage";
 import { useAuth } from "../../context/AuthContext";
 import { useSubscription } from "../../context/SubscriptionContext";
+import { SubscriptionPaymentModal } from "../../components/SubscriptionPaymentModal";
+import { AddonPackPaymentModal } from "../../components/AddonPackPaymentModal";
 
 export default function AccountPage() {
   const { t } = useTranslation();
@@ -25,6 +28,12 @@ export default function AccountPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showReactivateConfirm, setShowReactivateConfirm] = useState(false);
 
+  // Stripe payment modals state
+  const [showStripeSubscriptionModal, setShowStripeSubscriptionModal] = useState(false);
+  const [showStripeAddonModal, setShowStripeAddonModal] = useState(false);
+  const [pendingTier, setPendingTier] = useState<"standard" | "famille_plus" | null>(null);
+  const [pendingBillingPeriod, setPendingBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+
   // Support form states
   const [supportForm, setSupportForm] = useState({
     type: 'bug',
@@ -37,6 +46,18 @@ export default function AccountPage() {
 
   // Vérifier si l'utilisateur est admin
   const isAdmin = user?.email === 'admin@exominutes.com';
+
+  // Debug: log status changes
+  useEffect(() => {
+    if (status) {
+      console.log("=== Current Subscription Status ===");
+      console.log("Tier:", status.tier);
+      console.log("Pending Tier:", status.pending_tier);
+      console.log("Pending Billing Period:", status.pending_billing_period);
+      console.log("Auto Renewal:", status.auto_renewal);
+      console.log("===================================");
+    }
+  }, [status]);
 
   // Refresh subscription status when switching to subscription tab or on mount if already on subscription tab
   useEffect(() => {
@@ -51,8 +72,52 @@ export default function AccountPage() {
     // Redirect will be handled by the auth context
   };
 
+  // Cancel a pending downgrade by re-selecting the current tier
+  const handleCancelPendingChange = async () => {
+    if (!status || !status.pending_tier) return;
+    
+    setActionLoading(true);
+    setMessage(null);
+    
+    try {
+      console.log(`Cancelling pending change from ${status.tier} to ${status.pending_tier}`);
+      // Call change-tier with current tier to cancel the pending change
+      const result = await changeTier(status.tier, status.billing_period);
+      console.log('Cancel pending change result:', result);
+      
+      if (result.success) {
+        setMessage({
+          type: 'success',
+          text: `Le changement vers ${getTierDisplayName(status.pending_tier)} a été annulé. Votre abonnement ${getTierDisplayName(status.tier)} continuera automatiquement.`
+        });
+      } else {
+        setMessage({
+          type: 'error',
+          text: result.message
+        });
+      }
+    } catch (error: any) {
+      console.error('Error cancelling pending change:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.detail || "Erreur lors de l'annulation du changement"
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleTierChange = async (newTier: 'freemium' | 'standard' | 'famille_plus') => {
     if (!status) return;
+    
+    // Check if Stripe payment is required (freemium -> paid tier)
+    if (status.tier === 'freemium' && (newTier === 'standard' || newTier === 'famille_plus')) {
+      // Open Stripe payment modal
+      setPendingTier(newTier);
+      setPendingBillingPeriod(status.billing_period || "monthly");
+      setShowStripeSubscriptionModal(true);
+      return;
+    }
     
     setActionLoading(true);
     setMessage(null);
@@ -136,6 +201,12 @@ export default function AccountPage() {
   const handleBuyAddonPack = async () => {
     if (!status) return;
     
+    // Check if user has paid subscription - if yes, use Stripe
+    if (status.tier !== 'freemium') {
+      setShowStripeAddonModal(true);
+      return;
+    }
+    
     setActionLoading(true);
     setMessage(null);
     
@@ -155,6 +226,50 @@ export default function AccountPage() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  // Stripe Subscription Payment Success Handler
+  const handleStripeSubscriptionSuccess = () => {
+    setShowStripeSubscriptionModal(false);
+    setMessage({
+      type: 'success',
+      text: `Félicitations ! Votre abonnement ${getTierDisplayName(pendingTier!)} a été créé avec succès.`
+    });
+    setPendingTier(null);
+    // Refresh subscription status
+    refreshSubscription();
+  };
+
+  // Stripe Subscription Payment Error Handler
+  const handleStripeSubscriptionError = (error: string) => {
+    setShowStripeSubscriptionModal(false);
+    setMessage({
+      type: 'error',
+      text: `Erreur lors du paiement: ${error}`
+    });
+    setPendingTier(null);
+  };
+
+  // Stripe Addon Pack Payment Success Handler
+  const handleStripeAddonSuccess = (packsAdded: number, quotasAdded: number) => {
+    setShowStripeAddonModal(false);
+    setShowAddonModal(false);
+    setAddonQuantity(1);
+    setMessage({
+      type: 'success',
+      text: `${packsAdded} pack${packsAdded > 1 ? 's' : ''} acheté${packsAdded > 1 ? 's' : ''} avec succès ! ${quotasAdded} fiches ajoutées.`
+    });
+    // Refresh subscription status
+    refreshSubscription();
+  };
+
+  // Stripe Addon Pack Payment Error Handler
+  const handleStripeAddonError = (error: string) => {
+    setShowStripeAddonModal(false);
+    setMessage({
+      type: 'error',
+      text: `Erreur lors du paiement: ${error}`
+    });
   };
 
   const handleCancelSubscription = async () => {
@@ -592,6 +707,7 @@ export default function AccountPage() {
                     )}
 
                     {/* Pending tier change banner (downgrade) */}
+                    {console.log("Checking pending_tier:", status.pending_tier, "Type:", typeof status.pending_tier)}
                     {status.pending_tier && (
                       <Alert 
                         className="mb-4"
@@ -1081,7 +1197,7 @@ export default function AccountPage() {
                               ) : status?.tier === 'famille_plus' && status?.pending_tier ? (
                                 <Button 
                                   size="sm"
-                                  onClick={() => handleTierChange('famille_plus')}
+                                  onClick={handleCancelPendingChange}
                                   disabled={actionLoading}
                                   style={{ 
                                     background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -1887,6 +2003,34 @@ Informations utiles :
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Stripe Subscription Payment Modal */}
+      {pendingTier && (
+        <SubscriptionPaymentModal
+          show={showStripeSubscriptionModal}
+          onHide={() => {
+            setShowStripeSubscriptionModal(false);
+            setPendingTier(null);
+          }}
+          tier={pendingTier}
+          billingPeriod={pendingBillingPeriod}
+          onSuccess={handleStripeSubscriptionSuccess}
+          onError={handleStripeSubscriptionError}
+          tierDisplayName={getTierDisplayName(pendingTier)}
+          price={plans.find(p => p.tier === pendingTier)?.pricing[pendingBillingPeriod].price || 0}
+          features={plans.find(p => p.tier === pendingTier)?.features || []}
+        />
+      )}
+
+      {/* Stripe Addon Pack Payment Modal */}
+      <AddonPackPaymentModal
+        show={showStripeAddonModal}
+        onHide={() => setShowStripeAddonModal(false)}
+        onSuccess={handleStripeAddonSuccess}
+        onError={handleStripeAddonError}
+        packSize={20}
+        packPrice={2.99}
+      />
     </ProtectedPage>
   );
 }

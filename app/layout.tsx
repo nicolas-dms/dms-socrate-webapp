@@ -4,6 +4,7 @@ import "./globals.css";
 import TopNavLayout from "../components/TopNavLayout";
 import { AuthProvider } from "../context/AuthContext";
 import { SubscriptionProvider } from "../context/SubscriptionContext";
+import { StripeProvider } from "../context/StripeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
           <SubscriptionProvider>
-            <TopNavLayout>{children}</TopNavLayout>
+            <StripeProvider>
+              <TopNavLayout>{children}</TopNavLayout>
+            </StripeProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </body>
