@@ -4,30 +4,37 @@ import { useTranslation } from "react-i18next";
 import { Container, Row, Col, Card, Button, Alert } from "react-bootstrap";
 import ProtectedPage from "../../components/ProtectedPage";
 import { useAuth } from "../../context/AuthContext";
+import { useSubscription } from "../../context/SubscriptionContext";
+import { WelcomePackBanner } from "../../components/WelcomePackBanner";
 
 export default function GeneratePage() {
   const router = useRouter();
   const { t } = useTranslation();
   const { isNewUser } = useAuth();
+  const { status } = useSubscription();
 
   return (
     <ProtectedPage>
       <Container className="mt-4 mb-5">
-        {/* Simple Welcome Message for New Users */}
-        {isNewUser && (
-          <div className="text-center mb-3">
+        {/* Welcome Message for First Connection - Show only when pack is available but not yet activated */}
+        {status?.welcome_pack?.available && !status.welcome_pack.activated && (
+          <div className="text-center mb-4">
             <h4 className="fw-normal" style={{ color: '#495057' }}>
-              👋 Bienvenue !
+              👋 Bienvenue ! Profitez de vos 10 fiches gratuites dès à présent !
             </h4>
           </div>
         )}
 
+        {/* Welcome Pack Banner - Show only when pack is activated (active state) */}
+        {status?.welcome_pack?.active && (
+          <WelcomePackBanner
+            welcomePack={status.welcome_pack}
+            monthlyRemaining={status.monthly_remaining}
+          />
+        )}
+
         {/* Enhanced Main Title */}
         <div className="text-center mb-4">
-          <h1 className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '2rem' }}>
-            <i className="bi bi-pencil-square me-3" style={{ color: '#495057' }}></i>
-            {t('generate.title')}
-          </h1>
           <p className="text-muted" style={{ fontSize: '1rem', maxWidth: '700px', margin: '0 auto' }}>
             Choisissez la matière pour créer des exercices personnalisés adaptés au niveau de votre enfant
           </p>

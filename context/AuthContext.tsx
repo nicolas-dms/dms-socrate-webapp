@@ -117,6 +117,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsNewUser(loginResponse.is_new_user || false);
       }
       
+      // Important: Keep loading state until subscription data is ready
+      // The SubscriptionContext will load in parallel via its useEffect
+      // Wait a brief moment to allow subscription context to initialize
+      console.log('✅ Login successful, waiting for subscription context to load...');
+      
       return { 
         success: true, 
         isNewUser: loginResponse.is_new_user, 

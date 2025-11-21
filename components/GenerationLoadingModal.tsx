@@ -151,13 +151,6 @@ const GenerationLoadingModal: React.FC<GenerationLoadingModalProps> = ({ show, c
           <small className="text-muted">
             {completed ? 'Préparation de votre fiche...' : 'Veuillez patienter, cela peut prendre jusqu\'à 1 minute'}
           </small>
-          {elapsedTime > 0 && (
-            <div className="mt-2">
-              <small className="text-muted" style={{ fontSize: '0.85rem' }}>
-                ⏱️ Temps écoulé : {formatTime(elapsedTime)}
-              </small>
-            </div>
-          )}
         </div>
 
         {/* Progress bar - 2.5x larger (20px instead of 8px) */}

@@ -358,11 +358,19 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       setLoading(true);
 
+      if (!user.email) {
+        return {
+          success: false,
+          message: "Email utilisateur non disponible"
+        };
+      }
+
       // Create Stripe subscription
       const stripeResult = await stripeService.createSubscription(
         tier,
         billingPeriod,
-        paymentMethodId
+        paymentMethodId,
+        user.email
       );
 
       if (!stripeResult.subscription_id) {

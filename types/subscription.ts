@@ -61,6 +61,23 @@ export interface SubscriptionPlansResponse {
 }
 
 // ============================================================================
+// Welcome Pack (48h bonus for new freemium users)
+// ============================================================================
+
+export interface WelcomePack {
+  available: boolean;           // Can be activated
+  activated: boolean;           // Has been used (permanent)
+  active: boolean;              // Currently providing bonus
+  quota_total: number;          // Total bonus amount (10)
+  quota_used: number;           // Amount already used
+  quota_remaining: number;      // Amount still available
+  activated_at: string;         // ISO timestamp
+  expires_at: string;           // ISO timestamp
+  hours_remaining: number;      // Time left (decimal)
+  message: string;              // Display message
+}
+
+// ============================================================================
 // Subscription Status (from backend)
 // ============================================================================
 
@@ -83,6 +100,9 @@ export interface SubscriptionStatus {
   auto_renewal: boolean;
   pending_tier: SubscriptionTier | null; // Tier to apply on renewal_date (downgrade)
   pending_billing_period: BillingPeriod | null; // Billing period to apply on renewal_date
+  
+  // Welcome Pack (new freemium users only)
+  welcome_pack: WelcomePack | null;
   
   // Stripe-specific fields
   stripe_customer_id?: string | null;

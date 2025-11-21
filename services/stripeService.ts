@@ -34,27 +34,58 @@ class StripeService {
 
   /**
    * Create a new Stripe subscription for a tier
-   * Backend: POST /api/subscription/stripe/create
+   * Backend: POST /api/subscription/stripe/create?user_email={email}
    * 
    * @param tier - Subscription tier ('standard' or 'famille_plus')
    * @param billingPeriod - Billing period ('monthly' or 'yearly')
    * @param paymentMethodId - Payment method ID from Stripe Elements
+   * @param userEmail - User's email address (required by backend)
    */
   async createSubscription(
     tier: SubscriptionTier,
     billingPeriod: BillingPeriod,
-    paymentMethodId: string
+    paymentMethodId: string,
+    userEmail: string
   ): Promise<StripeSubscriptionResponse> {
     const request: CreateSubscriptionRequest = {
       tier,
       billing_period: billingPeriod,
       payment_method_id: paymentMethodId,
     };
-    const response = await api.post<StripeSubscriptionResponse>(
-      `/api/subscription/stripe/create`,
-      request
-    );
-    return response.data;
+    
+    console.log('💳 [Stripe Service] Creating subscription:', {
+      endpoint: `/api/subscription/stripe/create?user_email=${userEmail}`,
+      request: request,
+      userEmail: userEmail
+    });
+    
+    try {
+      const response = await api.post<StripeSubscriptionResponse>(
+        `/api/subscription/stripe/create?user_email=${encodeURIComponent(userEmail)}`,
+        request
+      );
+      
+      console.log('✅ [Stripe Service] Subscription created successfully:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ [Stripe Service] Failed to create subscription:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        request: request,
+        userEmail: userEmail
+      });
+      
+      // Log specific backend error for debugging
+      if (error.response?.status === 500 && error.response?.data?.detail) {
+        console.error('🔴 [Backend Error]:', error.response.data.detail);
+        console.error('⚠️ This is a BACKEND issue. The backend Stripe integration needs to be fixed.');
+        console.error('⚠️ The backend is failing to process the Stripe subscription response.');
+      }
+      
+      throw error;
+    }
   }
 
   /**

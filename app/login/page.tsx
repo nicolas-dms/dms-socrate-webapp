@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import { useSubscription } from "../../context/SubscriptionContext";
 import { validators } from "../../utils/validators";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -11,6 +12,7 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const { user, login, sendMagicCode, loading } = useAuth();
+  const { status: subscriptionStatus, loading: subscriptionLoading } = useSubscription();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -25,13 +27,13 @@ export default function LoginPage() {
   const [sendingCode, setSendingCode] = useState(false); // Loading state for sending magic code
   const [verifyingCode, setVerifyingCode] = useState(false); // Loading state for verifying code
 
-  // Redirect if already logged in
+  // Redirect if already logged in AND subscription is loaded
   useEffect(() => {
-    if (!loading && user) {
-      console.log('User already authenticated, redirecting to /generate');
+    if (!loading && user && !subscriptionLoading) {
+      console.log('User authenticated and subscription loaded, redirecting to /generate');
       router.push("/generate");
     }
-  }, [user, loading, router]);
+  }, [user, loading, subscriptionLoading, router]);
 
   // Don't render login form if user is authenticated (silent redirect)
   if (user) {
@@ -109,7 +111,12 @@ export default function LoginPage() {
         } else {
           setSuccess(result.message || t('auth.welcomeBackUser'));
         }
-        router.push("/generate"); // Redirect to exercise generation page
+        
+        // Wait a moment for subscription context to load before redirecting
+        console.log('Login successful, waiting for subscription data...');
+        setTimeout(() => {
+          router.push("/generate");
+        }, 500); // Small delay to allow subscription context to initialize
       } else {
         // Authentication failed - show temp error and clear input
         setShowTempError(true);
@@ -187,9 +194,11 @@ export default function LoginPage() {
     return (
       <div className="mb-3 d-flex justify-content-center">{boxes}</div>
     );
-  };return (
-    <div className="container-fluid min-vh-100 d-flex align-items-start justify-content-center py-4" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #fef3c7 100%)' }}>
-      <div className="row justify-content-center w-100" style={{ marginTop: '10vh' }}>
+  };
+
+  return (
+    <div className="container-fluid py-4" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #fef3c7 100%)', minHeight: 'calc(100vh - 76px)' }}>
+      <div className="row justify-content-center w-100 pt-4">
         <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
           <div className="card shadow-lg border-0" style={{ borderRadius: '15px' }}>
             <div className="card-body p-4 p-sm-5">

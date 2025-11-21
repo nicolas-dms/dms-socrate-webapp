@@ -15,7 +15,7 @@ export default function AccountPage() {
   const { user, logout } = useAuth();
   const { status, usageView, plans, history, loading, changeTier, changeBillingPeriod, buyAddonPack, cancelSubscription, reactivateSubscription, refreshSubscription } = useSubscription();
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState("subscription");
+  const [activeSection, setActiveSection] = useState<"profile" | "subscription" | "settings" | "support" | "admin" | "logout">("subscription");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -327,7 +327,7 @@ export default function AccountPage() {
     switch (tier) {
       case 'freemium': return 'Gratuit';
       case 'standard': return 'Standard';
-      case 'famille_plus': return 'Family+';
+      case 'famille_plus': return 'Famille+';
       default: return tier;
     }
   };
@@ -384,22 +384,12 @@ export default function AccountPage() {
       <Container className="mt-3">
         <Row>
           <Col lg={10} className="mx-auto">
-            {/* Enhanced Main Title */}
-            <div className="text-center mb-4">
-              <h2 className="fw-bold mb-2" style={{ color: '#1e40af' }}>
-                <i className="bi bi-person-circle me-2" style={{ color: '#fbbf24' }}></i>
-                Mon compte
-              </h2>
-              <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
-                Gérez votre profil, abonnement et préférences
-              </p>
-            </div>
 
             {/* Navigation Tabs */}
             <div className="mb-4">
               <div className="d-flex gap-2 flex-wrap justify-content-center">
                 <button
-                  onClick={() => setActiveSection("profile")}
+                  onClick={(e) => { e.preventDefault(); setActiveSection("profile"); }}
                   style={{
                     backgroundColor: activeSection === "profile" ? '#eff6ff' : 'white',
                     color: activeSection === "profile" ? '#1e40af' : '#6b7280',
@@ -432,7 +422,7 @@ export default function AccountPage() {
                   Profil utilisateur
                 </button>
                 <button
-                  onClick={() => setActiveSection("subscription")}
+                  onClick={(e) => { e.preventDefault(); setActiveSection("subscription"); }}
                   style={{
                     backgroundColor: activeSection === "subscription" ? '#fef3c7' : 'white',
                     color: activeSection === "subscription" ? '#92400e' : '#6b7280',
@@ -465,7 +455,7 @@ export default function AccountPage() {
                   Mon abonnement
                 </button>
                 <button
-                  onClick={() => setActiveSection("settings")}
+                  onClick={(e) => { e.preventDefault(); setActiveSection("settings"); }}
                   style={{
                     backgroundColor: activeSection === "settings" ? '#eff6ff' : 'white',
                     color: activeSection === "settings" ? '#1e40af' : '#6b7280',
@@ -498,7 +488,7 @@ export default function AccountPage() {
                   Paramètres
                 </button>
                 <button
-                  onClick={() => setActiveSection("support")}
+                  onClick={(e) => { e.preventDefault(); setActiveSection("support"); }}
                   style={{
                     backgroundColor: activeSection === "support" ? '#eff6ff' : 'white',
                     color: activeSection === "support" ? '#1e40af' : '#6b7280',
@@ -533,7 +523,7 @@ export default function AccountPage() {
                 {/* Section Admin - uniquement pour admin@exominutes.com */}
                 {isAdmin && (
                   <button
-                    onClick={() => setActiveSection("admin")}
+                    onClick={(e) => { e.preventDefault(); setActiveSection("admin"); }}
                     style={{
                       backgroundColor: activeSection === "admin" ? '#f8f9fa' : 'white',
                       color: activeSection === "admin" ? '#2c3e50' : '#6c757d',
@@ -563,7 +553,7 @@ export default function AccountPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => setActiveSection("logout")}
+                  onClick={(e) => { e.preventDefault(); setActiveSection("logout"); }}
                   style={{
                     backgroundColor: activeSection === "logout" ? '#fff5f5' : 'white',
                     color: activeSection === "logout" ? '#dc3545' : '#6c757d',
@@ -597,6 +587,7 @@ export default function AccountPage() {
 
             {/* Profile Section */}
             {activeSection === "profile" && (
+              <>
               <Card style={{ 
                 border: '2px solid #3b82f6', 
                 borderRadius: '12px',
@@ -645,6 +636,7 @@ export default function AccountPage() {
                   </div>
                 </Card.Body>
               </Card>
+              </>
             )}
 
             {/* Subscription Section */}
@@ -707,7 +699,6 @@ export default function AccountPage() {
                     )}
 
                     {/* Pending tier change banner (downgrade) */}
-                    {console.log("Checking pending_tier:", status.pending_tier, "Type:", typeof status.pending_tier)}
                     {status.pending_tier && (
                       <Alert 
                         className="mb-4"
@@ -774,7 +765,7 @@ export default function AccountPage() {
                       backgroundColor: 'white',
                       boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)'
                     }}>
-                      <Card.Header className="d-flex justify-content-between align-items-center" style={{ 
+                      <Card.Header style={{ 
                         backgroundColor: '#eff6ff',
                         borderBottom: '2px solid #93c5fd',
                         borderRadius: '10px 10px 0 0',
@@ -784,21 +775,6 @@ export default function AccountPage() {
                           <i className="bi bi-star-fill me-2" style={{ color: '#fbbf24' }}></i>
                           Mon abonnement actuel
                         </h6>
-                        <span style={{
-                          padding: '6px 14px',
-                          borderRadius: '8px',
-                          fontSize: '0.8rem',
-                          fontWeight: '600',
-                          backgroundColor: status.status === 'active' ? '#dcfce7' : 
-                            status.status === 'cancelled' ? '#fee2e2' : '#fef3c7',
-                          color: status.status === 'active' ? '#166534' : 
-                            status.status === 'cancelled' ? '#991b1b' : '#92400e',
-                          border: `2px solid ${status.status === 'active' ? '#86efac' : 
-                            status.status === 'cancelled' ? '#fca5a5' : '#fcd34d'}`
-                        }}>
-                          {status.status === 'active' ? '✓ Actif' : 
-                           status.status === 'cancelled' ? '✕ Annulé' : '⚠ Suspendu'}
-                        </span>
                       </Card.Header>
                     <Card.Body className="p-4">
                       <Row>
@@ -832,7 +808,8 @@ export default function AccountPage() {
                               </h6>
                               <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#92400e' }}>
                                 {status.monthly_used} / {status.monthly_quota}
-                                {status.addon_quota_remaining > 0 && <> (+{status.addon_quota_remaining})</>}
+                                {status.addon_quota_remaining > 0 && <> (+{status.addon_quota_remaining} addon)</>}
+                                {status.welcome_pack?.active && <> (+{status.welcome_pack.quota_remaining} 🎁)</>}
                               </span>
                             </div>
                             <div className="progress mb-2" style={{ 
@@ -856,13 +833,13 @@ export default function AccountPage() {
                             </div>
                             <div className="text-center">
                               <small style={{ 
-                                color: status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0 ? '#dc2626' : '#166534',
+                                color: status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0 && (!status.welcome_pack?.active || status.welcome_pack.quota_remaining <= 0) ? '#dc2626' : '#166534',
                                 fontWeight: '600',
                                 fontSize: '0.85rem'
                               }}>
-                                {status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0
+                                {status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0 && (!status.welcome_pack?.active || status.welcome_pack.quota_remaining <= 0)
                                   ? '⚠️ Limite atteinte' 
-                                  : `✓ ${status.monthly_remaining + status.addon_quota_remaining} fiches restantes`}
+                                  : `✓ ${status.monthly_remaining + status.addon_quota_remaining + (status.welcome_pack?.active ? status.welcome_pack.quota_remaining : 0)} fiches restantes`}
                               </small>
                             </div>
                           </div>
@@ -1099,7 +1076,7 @@ export default function AccountPage() {
                           <Card.Body className="text-center d-flex flex-column p-4" style={{ paddingTop: '2.5rem !important' }}>
                             <h5 className="card-title fw-bold mb-2" style={{ color: '#92400e' }}>Standard</h5>
                             <div className="display-6 mb-2" style={{ color: '#f59e0b', fontWeight: '700' }}>
-                              {plans.find(p => p.tier === 'standard')?.pricing.monthly.price || '1.99'}€
+                              {plans.find(p => p.tier === 'standard')?.pricing.monthly.price || '2.99'}€
                             </div>
                             <p className="text-muted small mb-3">par mois</p>
                             <p className="card-text mb-3" style={{ fontSize: '0.9rem', color: '#78350f' }}>
@@ -1174,9 +1151,9 @@ export default function AccountPage() {
                           boxShadow: status?.tier === 'famille_plus' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : '0 2px 8px rgba(59, 130, 246, 0.15)'
                         }}>
                           <Card.Body className="text-center d-flex flex-column p-4">
-                            <h5 className="card-title fw-bold mb-2" style={{ color: '#1e40af' }}>Family+</h5>
+                            <h5 className="card-title fw-bold mb-2" style={{ color: '#1e40af' }}>Famille+</h5>
                             <div className="display-6 mb-2" style={{ color: '#3b82f6', fontWeight: '700' }}>
-                              {plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '3.99'}€
+                              {plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '4.99'}€
                             </div>
                             <p className="text-muted small mb-3">par mois</p>
                             <p className="card-text mb-3" style={{ fontSize: '0.9rem', color: '#1e40af' }}>
@@ -1234,7 +1211,7 @@ export default function AccountPage() {
                                     color: 'white'
                                   }}
                                 >
-                                  {actionLoading ? 'Chargement...' : 'Passer à Family+'}
+                                  {actionLoading ? 'Chargement...' : 'Passer à Famille+'}
                                 </Button>
                               ) : null}
                             </div>
@@ -1266,13 +1243,13 @@ export default function AccountPage() {
                               fontWeight: '600',
                               backgroundColor: '#fef3c7',
                               borderBottom: '2px solid #fcd34d'
-                            }}>Standard ({plans.find(p => p.tier === 'standard')?.pricing.monthly.price || '1.99'}€)</th>
+                            }}>Standard ({plans.find(p => p.tier === 'standard')?.pricing.monthly.price || '2.99'}€)</th>
                             <th className="text-center" style={{ 
                               color: '#1e40af', 
                               fontWeight: '600',
                               backgroundColor: '#eff6ff',
                               borderBottom: '2px solid #93c5fd'
-                            }}>Family+ ({plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '3.99'}€)</th>
+                            }}>Famille+ ({plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '4.99'}€)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1346,7 +1323,7 @@ export default function AccountPage() {
                       }}>
                         <strong style={{ color: '#1e40af', fontSize: '1rem' }}>
                           <i className="bi bi-rocket-takeoff me-2" style={{ color: '#3b82f6' }}></i>
-                          Passez à Family+
+                          Passez à Famille+
                         </strong>
                         <p className="mb-0 mt-2" style={{ color: '#1e3a8a', fontSize: '0.9rem' }}>
                           Doublez votre quota, taggez vos fiches et conservez toutes vos créations indéfiniment !
@@ -1371,6 +1348,7 @@ export default function AccountPage() {
 
             {/* Settings Section */}
             {activeSection === "settings" && (
+              <>
               <Card style={{ 
                 border: '2px solid #3b82f6', 
                 borderRadius: '12px',
@@ -1432,10 +1410,12 @@ export default function AccountPage() {
                   </Button>
                 </Card.Body>
               </Card>
+              </>
             )}
 
             {/* Support Section */}
             {activeSection === "support" && (
+              <>
               <Card style={{ 
                 border: '2px solid #3b82f6', 
                 borderRadius: '12px',
@@ -1574,10 +1554,12 @@ Informations utiles :
                   </div>
                 </Card.Body>
               </Card>
+              </>
             )}
 
             {/* Admin Section - uniquement pour admin@exominutes.com */}
             {activeSection === "admin" && isAdmin && (
+              <>
               <Card style={{ 
                 border: '2px solid #ffc107', 
                 borderRadius: '12px',
@@ -1648,10 +1630,12 @@ Informations utiles :
                   </div>
                 </Card.Body>
               </Card>
+              </>
             )}
 
             {/* Logout Section */}
             {activeSection === "logout" && (
+              <>
               <Card style={{ 
                 border: '2px solid #f8d7da', 
                 borderRadius: '12px',
@@ -1709,6 +1693,7 @@ Informations utiles :
                   )}
                 </Card.Body>
               </Card>
+              </>
             )}
           </Col>
         </Row>
@@ -1755,7 +1740,7 @@ Informations utiles :
               }}
             />
             <Form.Text className="text-muted">
-              Chaque pack contient 10 fiches supplémentaires
+              Chaque pack contient 15 fiches supplémentaires
             </Form.Text>
           </Form.Group>
 
@@ -1770,7 +1755,7 @@ Informations utiles :
                   Total de fiches
                 </div>
                 <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#b45309' }}>
-                  {addonQuantity * 10} fiches
+                  {addonQuantity * 15} fiches
                 </div>
               </div>
               <div className="text-end">
@@ -1778,7 +1763,7 @@ Informations utiles :
                   Prix total
                 </div>
                 <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#b45309' }}>
-                  {(addonQuantity * 2.99).toFixed(2)}€
+                  {(addonQuantity * 0.99).toFixed(2)}€
                 </div>
               </div>
             </div>
@@ -2019,6 +2004,8 @@ Informations utiles :
           tierDisplayName={getTierDisplayName(pendingTier)}
           price={plans.find(p => p.tier === pendingTier)?.pricing[pendingBillingPeriod].price || 0}
           features={plans.find(p => p.tier === pendingTier)?.features || []}
+          currentTier={status?.tier || 'freemium'}
+          hasStripeSubscription={!!status?.stripe_subscription_id}
         />
       )}
 
@@ -2028,8 +2015,8 @@ Informations utiles :
         onHide={() => setShowStripeAddonModal(false)}
         onSuccess={handleStripeAddonSuccess}
         onError={handleStripeAddonError}
-        packSize={20}
-        packPrice={2.99}
+        packSize={15}
+        packPrice={0.99}
       />
     </ProtectedPage>
   );

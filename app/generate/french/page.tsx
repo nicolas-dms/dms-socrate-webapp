@@ -1906,7 +1906,13 @@ export default function GenerateFrenchPage() {
                 color: 'white'
               }}
             >
-              {!canGenerateMore() ? 'Limite atteinte' : !ficheTheme.trim() ? 'Thème requis' : 'Confirmer et générer'}
+              {!canGenerateMore() 
+                ? (status && status.monthly_remaining === 0 && status.addon_quota_remaining === 0 && status.daily_remaining === 0
+                    ? 'Limite quotidienne atteinte' 
+                    : 'Limite atteinte')
+                : !ficheTheme.trim() 
+                  ? 'Thème requis' 
+                  : 'Confirmer et générer'}
             </Button>
           </Modal.Footer>
         </Modal>
@@ -2262,7 +2268,6 @@ export default function GenerateFrenchPage() {
                         <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
                           {exercise.label}
                         </h6>
-                        <p className="small text-muted mb-2">{exercise.description}</p>
                         <div className="d-flex flex-wrap gap-1">
                           {exercise.levels.map((lvl) => (
                             <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
@@ -2313,7 +2318,6 @@ export default function GenerateFrenchPage() {
                         <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
                           {exercise.label}
                         </h6>
-                        <p className="small text-muted mb-2">{exercise.description}</p>
                         <div className="d-flex flex-wrap gap-1">
                           {exercise.levels.map((lvl) => (
                             <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>

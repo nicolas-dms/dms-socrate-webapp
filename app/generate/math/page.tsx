@@ -1233,10 +1233,12 @@ export default function GenerateMathPage() {
                     </small>
                   )}
                   
-                  {!canGenerate && !canGenerateMore() && (
+                  {!canGenerate && selectedTypes.length > 0 && !canGenerateMore() && (
                     <small className="text-danger d-block text-center mt-2" style={{ fontSize: '0.8rem' }}>
                       <i className="bi bi-exclamation-circle me-1"></i>
-                      Limite d'abonnement atteinte ce mois
+                      {status && status.monthly_remaining === 0 && status.addon_quota_remaining === 0 && status.daily_remaining === 0
+                        ? "Limite quotidienne atteinte (1 fiche/jour). Revenez demain !"
+                        : "Limite d'abonnement atteinte ce mois"}
                     </small>
                   )}
                 </form>
@@ -1723,7 +1725,6 @@ export default function GenerateMathPage() {
                           <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
                             {exercise.label}
                           </h6>
-                          <p className="small text-muted mb-2">{exercise.description}</p>
                           <div className="d-flex flex-wrap gap-1">
                             {exercise.levels?.map((lvl: string) => (
                               <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
@@ -1825,7 +1826,6 @@ export default function GenerateMathPage() {
                           <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
                             {exercise.label}
                           </h6>
-                          <p className="small text-muted mb-2">{exercise.description}</p>
                           <div className="d-flex flex-wrap gap-1">
                             {exercise.levels?.map((lvl: string) => (
                               <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
@@ -1876,7 +1876,6 @@ export default function GenerateMathPage() {
                           <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
                             {exercise.label}
                           </h6>
-                          <p className="small text-muted mb-2">{exercise.description}</p>
                           <div className="d-flex flex-wrap gap-1">
                             {exercise.levels?.map((lvl: string) => (
                               <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>

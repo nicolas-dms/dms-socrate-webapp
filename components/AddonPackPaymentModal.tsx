@@ -29,7 +29,7 @@ export const AddonPackPaymentModal: React.FC<AddonPackPaymentModalProps> = ({
   onHide,
   onSuccess,
   onError,
-  packSize = 20,
+  packSize = 15,
   packPrice = 0.99,
 }) => {
   const stripe = useStripe();
