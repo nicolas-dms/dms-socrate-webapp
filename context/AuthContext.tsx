@@ -1,16 +1,25 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authService, User } from "../services/authService";
+import { userService } from "../services/userService";
+
+interface UserPreferences {
+  default_level: string;
+  default_domain: string;
+  default_period: string;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
   isNewUser: boolean | null;
+  userPreferences: UserPreferences;
   login: (email: string, code: string) => Promise<{ success: boolean; isNewUser?: boolean; message?: string }>;
   sendMagicCode: (email: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateUserPreferences: (prefs: Partial<UserPreferences>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +28,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
+    default_level: 'CE2',
+    default_domain: 'tous',
+    default_period: '20 min'
+  });
 
   // Check for existing session on mount
   useEffect(() => {
@@ -28,6 +42,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Try to get current user info
           const userData = await authService.getCurrentUser();
           setUser(userData);
+          
+          // Load user preferences
+          await loadUserPreferences(userData.email);
           
           // Check if user is new by counting their files
           await checkIfNewUser(userData.user_id);
@@ -43,6 +60,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
   }, []);
+
+  // Function to load user preferences
+  const loadUserPreferences = async (email: string): Promise<void> => {
+    try {
+      console.log('👤 [AuthContext] Loading user preferences...');
+      const userData = await userService.getUserWithPreferences(email);
+      
+      if (userData.user_preferences) {
+        const prefs = userData.user_preferences;
+        const newPrefs = {
+          default_level: prefs.default_level || 'CE2',
+          default_domain: prefs.default_domain || 'tous',
+          default_period: prefs.default_period || '20 min'
+        };
+        setUserPreferences(newPrefs);
+        console.log('✅ [AuthContext] User preferences loaded:', newPrefs);
+        
+        // Auto-save default preferences if any are missing
+        if (!prefs.default_level || !prefs.default_domain || !prefs.default_period) {
+          console.log('🔄 [AuthContext] Auto-saving default preferences...');
+          await userService.updateUserPreferences(email, newPrefs);
+        }
+      } else {
+        // No preferences - create defaults
+        console.log('🔄 [AuthContext] Creating default preferences...');
+        const defaultPrefs = {
+          default_level: 'CE2',
+          default_domain: 'tous',
+          default_period: '20 min'
+        };
+        await userService.updateUserPreferences(email, defaultPrefs);
+        setUserPreferences(defaultPrefs);
+      }
+    } catch (error) {
+      console.error('❌ [AuthContext] Failed to load user preferences:', error);
+      // Keep default values on error
+    }
+  };
 
   // Function to check if user has less than 2 files
   const checkIfNewUser = async (userId: string): Promise<void> => {
@@ -102,6 +157,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log user data structure to debug
       console.log('📊 Login response user_data:', loginResponse.user_data);
       
+      // Load user preferences immediately after login
+      await loadUserPreferences(email);
+      
       // Check file count to determine if user is new
       // Try multiple possible user ID fields
       const userId = loginResponse.user_data?.user_id 
@@ -144,11 +202,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Logout successful:', result.message);
       setUser(null);
       setIsNewUser(null);
+      // Reset preferences to defaults
+      setUserPreferences({
+        default_level: 'CE2',
+        default_domain: 'tous',
+        default_period: '20 min'
+      });
     } catch (error) {
       console.error("Logout failed:", error);
       // Still clear user state even if backend call fails
       setUser(null);
       setIsNewUser(null);
+      setUserPreferences({
+        default_level: 'CE2',
+        default_domain: 'tous',
+        default_period: '20 min'
+      });
     } finally {
       setLoading(false);
     }
@@ -167,6 +236,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUserPreferences = async (prefs: Partial<UserPreferences>): Promise<void> => {
+    if (!user?.email) throw new Error('User not authenticated');
+    
+    try {
+      // Merge with existing preferences
+      const updatedPrefs = { ...userPreferences, ...prefs };
+      
+      // Update backend
+      await userService.updateUserPreferences(user.email, updatedPrefs);
+      
+      // Update local state immediately
+      setUserPreferences(updatedPrefs);
+      console.log('✅ [AuthContext] User preferences updated:', updatedPrefs);
+    } catch (error) {
+      console.error('❌ [AuthContext] Failed to update preferences:', error);
+      throw error;
+    }
+  };
+
   const isAuthenticated = !!user && authService.isAuthenticated();
 
   return (    <AuthContext.Provider value={{ 
@@ -174,10 +262,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading, 
       isAuthenticated,
       isNewUser,
+      userPreferences,
       login, 
       sendMagicCode,
       logout,
-      refreshUser 
+      refreshUser,
+      updateUserPreferences 
     }}>
       {children}
     </AuthContext.Provider>

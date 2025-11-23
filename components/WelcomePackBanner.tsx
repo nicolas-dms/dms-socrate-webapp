@@ -86,6 +86,11 @@ export const WelcomePackBanner: React.FC<WelcomePackBannerProps> = ({
 
   // Pack Active - Within 48h
   if (welcomePack.active && welcomePack.hours_remaining !== undefined) {
+    // Don't show banner if no fiches remaining or no time left
+    if (welcomePack.quota_remaining <= 0 || welcomePack.hours_remaining <= 0) {
+      return null;
+    }
+    
     const isExpiringSoon = welcomePack.hours_remaining < 6;
     const variant = isExpiringSoon ? 'warning' : 'success';
     const bgGradient = isExpiringSoon 
@@ -95,16 +100,18 @@ export const WelcomePackBanner: React.FC<WelcomePackBannerProps> = ({
     const textColor = isExpiringSoon ? '#92400e' : '#065f46';
 
     return (
-      <Alert 
-        variant={variant}
-        className="mb-3"
-        style={{
-          background: bgGradient,
-          border: `1px solid ${borderColor}`,
-          borderRadius: '12px',
-          padding: '1rem 1.5rem'
-        }}
-      >
+      <div className="d-flex justify-content-center mb-3">
+        <Alert 
+          variant={variant}
+          style={{
+            background: bgGradient,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '12px',
+            padding: '1rem 1.5rem',
+            width: '70%',
+            margin: 0
+          }}
+        >
         <div className="d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-3 flex-grow-1">
             <div style={{ fontSize: '2rem' }}>
@@ -113,7 +120,7 @@ export const WelcomePackBanner: React.FC<WelcomePackBannerProps> = ({
             <div className="flex-grow-1">
               <div className="d-flex align-items-center gap-2 mb-1">
                 <h6 className="mb-0" style={{ fontWeight: '600', color: textColor }}>
-                  Pack de Bienvenue Actif
+                  Pack de Bienvenue
                 </h6>
                 <span 
                   className="badge"
@@ -130,8 +137,6 @@ export const WelcomePackBanner: React.FC<WelcomePackBannerProps> = ({
               <p className="mb-1" style={{ fontSize: '0.9rem', color: textColor }}>
                 {isExpiringSoon && '⚠️ '}
                 {formatTimeRemaining(welcomePack.hours_remaining)} restantes
-                {' • '}
-                <strong>{monthlyRemaining + welcomePack.quota_remaining} fiches disponibles au total</strong>
               </p>
               {/* Progress bar */}
               <div 
@@ -161,7 +166,8 @@ export const WelcomePackBanner: React.FC<WelcomePackBannerProps> = ({
             </div>
           </div>
         </div>
-      </Alert>
+        </Alert>
+      </div>
     );
   }
 

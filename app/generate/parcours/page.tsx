@@ -162,6 +162,7 @@ export default function ParcoursPage() {
                           type="text"
                           value={config.name}
                           onChange={(e) => setConfig(prev => ({ ...prev, name: e.target.value }))}
+                          onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                           placeholder="Ex: Révision grammaire CE1"
                         />
                       </Form.Group>

@@ -434,6 +434,22 @@
   background: #a8a8a8;
 }
 
+/* Bounce animation for premium features alert */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-5px);
+  }
+}
+
 /* PDF Actions styling */
 .pdf-actions {
   display: flex;

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Container, Row, Col, Card, Alert, Button, Badge, Spinner, Modal } from "react-bootstrap";
 import ProtectedPage from "../../components/ProtectedPage";
 import { useAuth } from "../../context/AuthContext";
+import { useSubscription } from "../../context/SubscriptionContext";
 import { filesService, GeneratedFile } from "../../services/filesService";
 import api from "../../services/api";
 import SkeletonFileCard from "../../components/SkeletonFileCard";
@@ -81,7 +82,8 @@ const saveFiltersToStorage = (filters: SavedFilters): void => {
 
 export default function SessionsPage() {
   const { t } = useTranslation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, userPreferences } = useAuth();
+  const { status } = useSubscription();
   
   // Phase 6: Load saved filters on initialization (before early return, safe because it only reads localStorage)
   const savedFilters = loadSavedFilters();
@@ -116,11 +118,18 @@ export default function SessionsPage() {
   const [filtersRestored, setFiltersRestored] = useState(false);
   const [showRestoredNotification, setShowRestoredNotification] = useState(false);
   
-  // Filter states - Phase 6: Initialize from localStorage
-  const [selectedDomain, setSelectedDomain] = useState<string>(savedFilters.selectedDomain);
-  const [selectedLevel, setSelectedLevel] = useState<string>(savedFilters.selectedLevel);
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string>(savedFilters.selectedTimeRange);
+  // Filter states - Phase 6: Initialize from localStorage only
+  const [selectedDomain, setSelectedDomain] = useState<string>(savedFilters.selectedDomain || '');
+  const [selectedLevel, setSelectedLevel] = useState<string>(savedFilters.selectedLevel || '');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>(savedFilters.selectedTimeRange || 'week');
   const [selectedTag, setSelectedTag] = useState<string>(''); // Keep for backwards compatibility
+  
+  // Enforce 'week' for freemium users
+  useEffect(() => {
+    if (status?.tier === 'freemium' && selectedTimeRange !== 'week') {
+      setSelectedTimeRange('week');
+    }
+  }, [status?.tier, selectedTimeRange]);
   
   // Enhanced tag filtering states - Phase 6: Initialize from localStorage
   const [selectedTags, setSelectedTags] = useState<string[]>(savedFilters.selectedTags);
@@ -591,6 +600,9 @@ export default function SessionsPage() {
 
   // Add a tag to the selected tags
   const addTagToFilter = (tag: string) => {
+    // Only allow Famille+ users to add tags
+    if (status?.tier !== 'famille_plus') return;
+    
     if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
     }
@@ -600,11 +612,17 @@ export default function SessionsPage() {
 
   // Remove a specific tag from the filter
   const removeTagFromFilter = (tagToRemove: string) => {
+    // Only allow Famille+ users to remove tags
+    if (status?.tier !== 'famille_plus') return;
+    
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
   };
 
   // Clear all selected tags
   const clearAllTagFilters = () => {
+    // Only allow Famille+ users to clear tags
+    if (status?.tier !== 'famille_plus') return;
+    
     setSelectedTags([]);
     setTagInput('');
     setShowTagSuggestions(false);
@@ -895,7 +913,6 @@ export default function SessionsPage() {
                             <option value="">Tous</option>
                             <option value="francais">Français</option>
                             <option value="math">Mathématiques</option>
-                            <option value="anglais">Anglais</option>
                           </select>
                         </div>
 
@@ -924,59 +941,27 @@ export default function SessionsPage() {
                             className="form-select form-select-sm"
                             value={selectedTimeRange}
                             onChange={(e) => setSelectedTimeRange(e.target.value)}
-                            style={{ width: '130px' }}
+                            disabled={status?.tier === 'freemium'}
+                            style={{ width: '160px' }}
                           >
-                            <option value="">Toutes</option>
-                            <option value="today">Aujourd'hui</option>
-                            <option value="week">7 derniers jours</option>
-                            <option value="month">Ce mois</option>
-                            <option value="3months">3 derniers mois</option>
+                            {status?.tier === 'freemium' ? (
+                              <option value="week">7 derniers jours</option>
+                            ) : status?.tier === 'famille_plus' ? (
+                              <>
+                                <option value="week">7 derniers jours</option>
+                                <option value="month">30 derniers jours</option>
+                                <option value="3months">90 derniers jours</option>
+                                <option value="unlimited">Illimité</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="week">7 derniers jours</option>
+                                <option value="month">30 derniers jours</option>
+                                <option value="3months">90 derniers jours</option>
+                              </>
+                            )}
                           </select>
                         </div>
-                      </div>
-
-                      {/* Phase 3: Search Input with Debounce */}
-                      <div className="d-flex align-items-center gap-2">
-                        <label className="form-label mb-0 fw-semibold" style={{ fontSize: '0.9rem' }}>
-                          <i className="bi bi-search me-1"></i>
-                          Rechercher:
-                        </label>
-                        <div className="position-relative flex-grow-1" style={{ maxWidth: '400px' }}>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Nom de la fiche..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            style={{ paddingRight: '30px' }}
-                          />
-                          {searchInput && (
-                            <button
-                              onClick={() => setSearchInput('')}
-                              style={{
-                                position: 'absolute',
-                                right: '8px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                padding: '2px 6px',
-                                color: '#6c757d',
-                                fontSize: '1.1rem'
-                              }}
-                              title="Effacer la recherche"
-                            >
-                              <i className="bi bi-x"></i>
-                            </button>
-                          )}
-                        </div>
-                        {isSearching && (
-                          <small className="text-muted" style={{ fontSize: '0.8rem' }}>
-                            <Spinner animation="border" size="sm" style={{ width: '12px', height: '12px', marginRight: '4px' }} />
-                            Recherche en cours...
-                          </small>
-                        )}
                       </div>
 
                       {/* Second line: Tags Filter */}
@@ -991,14 +976,17 @@ export default function SessionsPage() {
                           <input
                             type="text"
                             className="form-control form-control-sm"
-                            placeholder={loadingTags ? "Chargement des tags..." : "Tapez pour filtrer par tags..."}
+                            placeholder={status?.tier !== 'famille_plus' ? "✨ Fonctionnalité Famille+" : (loadingTags ? "Chargement des tags..." : "Tapez pour filtrer par tags...")}
                             value={tagInput}
-                            disabled={loadingTags}
+                            disabled={loadingTags || status?.tier !== 'famille_plus'}
+                            title={status?.tier !== 'famille_plus' ? "✨ Fonctionnalité Famille+\nDébloquez les tags pour classer vos fiches,\nretrouver les exercices rapidement\net gagner du temps au quotidien." : ""}
                             onChange={(e) => {
                               setTagInput(e.target.value);
                               setShowTagSuggestions(true);
                             }}
-                            onFocus={() => {
+                            onFocus={(e) => {
+                              e.preventDefault();
+                              window.scrollTo(0, 0);
                               setShowTagSuggestions(true);
                               // Lazy load tags on first focus
                               if (availableTags.length === 0 && !loadingTags) {
@@ -1388,34 +1376,36 @@ export default function SessionsPage() {
                           >
                             <i className="bi bi-tag-fill" style={{ fontSize: '0.7rem' }}></i>
                             <span>Tag: {tag}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeTagFromFilter(tag)}
-                              style={{
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                padding: '0 2px',
-                                marginLeft: '4px',
-                                color: '#155724',
-                                fontSize: '1rem',
-                                lineHeight: '1',
-                                opacity: 0.7,
-                                transition: 'opacity 0.2s ease'
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
-                              aria-label={`Retirer tag ${tag}`}
-                            >
-                              <i className="bi bi-x"></i>
-                            </button>
+                            {status?.tier === 'famille_plus' && (
+                              <button
+                                type="button"
+                                onClick={() => removeTagFromFilter(tag)}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  cursor: 'pointer',
+                                  padding: '0 2px',
+                                  marginLeft: '4px',
+                                  color: '#155724',
+                                  fontSize: '1rem',
+                                  lineHeight: '1',
+                                  opacity: 0.7,
+                                  transition: 'opacity 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                                aria-label={`Retirer tag ${tag}`}
+                              >
+                                <i className="bi bi-x"></i>
+                              </button>
+                            )}
                           </span>
                         ))}
 
                         {/* Clear All Button */}
                         <button
                           onClick={clearFilters}
-                          className="btn btn-sm"
+                          className={`btn btn-sm ${styles['filter-btn']}`}
                           style={{
                             backgroundColor: 'white',
                             color: '#dc3545',
@@ -1426,7 +1416,6 @@ export default function SessionsPage() {
                             fontWeight: '500',
                             marginLeft: 'auto'
                           }}
-                          className={styles['filter-btn']}
                         >
                           <i className="bi bi-x-circle me-1"></i>
                           Tout effacer
@@ -1722,25 +1711,32 @@ export default function SessionsPage() {
                                       <span className="d-none d-lg-inline">Visualiser</span>
                                     </button>
                                     <button
-                                      onClick={() => openTagsModal(file)}
+                                      onClick={() => status?.tier === 'famille_plus' && openTagsModal(file)}
+                                      disabled={status?.tier !== 'famille_plus'}
+                                      title={status?.tier !== 'famille_plus' ? "✨ Fonctionnalité Famille+\nDébloquez les tags pour classer vos fiches,\nretrouver les exercices rapidement\net gagner du temps au quotidien." : ""}
                                       style={{
-                                        backgroundColor: 'white',
-                                        color: '#495057',
+                                        backgroundColor: status?.tier !== 'famille_plus' ? '#f3f4f6' : 'white',
+                                        color: status?.tier !== 'famille_plus' ? '#9ca3af' : '#495057',
                                         border: '2px solid #dee2e6',
                                         padding: '6px 12px',
                                         borderRadius: '8px',
                                         fontSize: '0.85rem',
-                                        cursor: 'pointer',
+                                        cursor: status?.tier !== 'famille_plus' ? 'default' : 'pointer',
                                         transition: 'all 0.2s ease',
-                                        fontWeight: '500'
+                                        fontWeight: '500',
+                                        opacity: status?.tier !== 'famille_plus' ? 0.6 : 1
                                       }}
                                       onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                        e.currentTarget.style.borderColor = '#adb5bd';
+                                        if (status?.tier === 'famille_plus') {
+                                          e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                          e.currentTarget.style.borderColor = '#adb5bd';
+                                        }
                                       }}
                                       onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'white';
-                                        e.currentTarget.style.borderColor = '#dee2e6';
+                                        if (status?.tier === 'famille_plus') {
+                                          e.currentTarget.style.backgroundColor = 'white';
+                                          e.currentTarget.style.borderColor = '#dee2e6';
+                                        }
                                       }}
                                     >
                                       <i className="bi bi-tags me-1"></i>
@@ -1949,24 +1945,52 @@ export default function SessionsPage() {
                   <small className="text-muted">{selectedFile.filename}</small>
                 </div>
 
+                {status?.tier !== 'famille_plus' && (
+                  <Alert variant="info" className="mb-3" style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none',
+                    color: 'white',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                  }}>
+                    <div className="d-flex align-items-start">
+                      <div style={{
+                        fontSize: '2rem',
+                        marginRight: '12px',
+                        animation: 'bounce 2s infinite'
+                      }}>✨</div>
+                      <div>
+                        <h6 className="mb-2" style={{ fontWeight: '600' }}>Fonctionnalité Famille+ 🌟</h6>
+                        <p className="mb-0" style={{ fontSize: '0.95rem', lineHeight: '1.5' }}>
+                          Débloquez les tags pour classer vos fiches, retrouver les exercices rapidement et gagner du temps au quotidien.
+                        </p>
+                      </div>
+                    </div>
+                  </Alert>
+                )}
                 <div className="mb-3">
                   <label className="form-label fw-semibold">Ajouter un tag</label>
                   <div className="input-group">
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Nouveau tag (max 30 caractères)"
+                      placeholder={status?.tier !== 'famille_plus' ? "✨ Fonctionnalité Famille+" : "Nouveau tag (max 30 caractères)"}
                       value={newTag}
-                      onChange={(e) => setNewTag(e.target.value.slice(0, 30))}
-                      onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                      onChange={(e) => status?.tier === 'famille_plus' && setNewTag(e.target.value.slice(0, 30))}
+                      onKeyPress={(e) => status?.tier === 'famille_plus' && e.key === 'Enter' && addTag()}
+                      onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                       maxLength={30}
+                      disabled={status?.tier !== 'famille_plus'}
+                      title={status?.tier !== 'famille_plus' ? "Fonctionnalité Famille+ : Débloquez les tags pour classer vos fiches, retrouver les exercices rapidement et gagner du temps au quotidien." : ""}
                     />
                     <Button 
                       variant="primary" 
                       onClick={addTag}
-                      disabled={!newTag.trim() || editingTags.includes(newTag.trim())}
+                      disabled={status?.tier !== 'famille_plus' || !newTag.trim() || editingTags.includes(newTag.trim())}
                       className="d-flex align-items-center justify-content-center"
-                      style={{ minWidth: '45px', height: '38px' }}
+                      style={{ minWidth: '45px', height: '38px', opacity: status?.tier !== 'famille_plus' ? 0.6 : 1 }}
+                      title={status?.tier !== 'famille_plus' ? "Fonctionnalité Famille+ : Débloquez les tags pour classer vos fiches, retrouver les exercices rapidement et gagner du temps au quotidien." : ""}
                     >
                       <span className="fs-5 fw-bold">+</span>
                     </Button>
@@ -1991,8 +2015,10 @@ export default function SessionsPage() {
                           <button
                             type="button"
                             className="btn-close"
-                            style={{ fontSize: '0.6rem', filter: 'invert(1)' }}
-                            onClick={() => removeTag(tag)}
+                            style={{ fontSize: '0.6rem', filter: 'invert(1)', opacity: status?.tier !== 'famille_plus' ? 0.5 : 1 }}
+                            onClick={() => status?.tier === 'famille_plus' && removeTag(tag)}
+                            disabled={status?.tier !== 'famille_plus'}
+                            title={status?.tier !== 'famille_plus' ? "Fonctionnalité Famille+ : Débloquez les tags pour classer vos fiches, retrouver les exercices rapidement et gagner du temps au quotidien." : ""}
                             aria-label="Supprimer ce tag"
                           ></button>
                         </span>
@@ -2010,7 +2036,9 @@ export default function SessionsPage() {
             <Button 
               variant="primary" 
               onClick={saveTags}
-              disabled={savingTags}
+              disabled={savingTags || status?.tier !== 'famille_plus'}
+              title={status?.tier !== 'famille_plus' ? "Fonctionnalité Famille+ : Débloquez les tags pour classer vos fiches, retrouver les exercices rapidement et gagner du temps au quotidien." : ""}
+              style={{ opacity: status?.tier !== 'famille_plus' ? 0.6 : 1 }}
             >
               {savingTags ? (
                 <>

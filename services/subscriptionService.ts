@@ -18,6 +18,32 @@ import {
 } from "../types/subscription";
 
 // ============================================================================
+// Admin Quota Update Types
+// ============================================================================
+
+export interface AdminQuotaUpdateRequest {
+  operation: 'set' | 'add' | 'subtract';
+  quota_amount: number;
+  quota_type: 'monthly' | 'addon';
+  reason: string;
+  admin_email?: string;
+}
+
+export interface AdminQuotaUpdateResponse {
+  success: boolean;
+  message: string;
+  user_email: string;
+  quota_type: string;
+  previous_value: number;
+  new_value: number;
+  operation: string;
+  amount: number;
+  reason: string;
+  admin_email: string | null;
+  updated_at: string;
+}
+
+// ============================================================================
 // Legacy Types (kept temporarily for backwards compatibility during migration)
 // ============================================================================
 
@@ -336,6 +362,37 @@ class SubscriptionService {
 
   getRemainingFiches(subscription: UserSubscription): number {
     return Math.max(0, subscription.monthlyLimit - subscription.usageThisMonth);
+  }
+
+  // Admin: Update user quota
+  async adminUpdateQuota(userEmail: string, request: AdminQuotaUpdateRequest): Promise<AdminQuotaUpdateResponse> {
+    try {
+      const response = await api.put<AdminQuotaUpdateResponse>(
+        `/api/subscription/admin/quota/${encodeURIComponent(userEmail)}`,
+        request
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Admin quota update error:', error);
+      console.error('Error response:', error.response);
+      
+      // Extract the most detailed error message available
+      let errorMessage = 'Failed to update quota';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
   }
 }
 

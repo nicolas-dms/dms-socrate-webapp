@@ -187,6 +187,7 @@ export default function LoginPage() {
           style={{ width: 40, fontSize: 24, borderRadius: 8, border: "1px solid #d6cbb3", background: "#f8f6f1" }}
           value={code[i] || ""}
           onChange={e => handleCodeBoxChange(e, i)}
+          onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
           autoFocus={i === 0}
         />
       );
@@ -219,6 +220,7 @@ export default function LoginPage() {
                     className={`form-control form-control-lg ${emailError ? 'is-invalid' : email && isValidEmail(email) ? 'is-valid' : ''}`}
                     value={email}
                     onChange={handleEmailChange}
+                    onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                     placeholder="example@domain.com"
                     required
                     disabled={sendingCode}

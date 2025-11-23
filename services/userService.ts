@@ -9,6 +9,16 @@ export interface UserModel {
   user_id: string; // Business-level user ID (email), also used as partition key
   email: string;
   username: string;
+  user_preferences?: {
+    default_level?: string;
+    default_domain?: string;
+    default_period?: string;
+  };
+  app_settings?: any;
+  feature_flags?: any;
+  metadata?: any;
+  updated_at?: string;
+  last_login?: string;
 }
 
 export interface UserCreate {
@@ -18,6 +28,14 @@ export interface UserCreate {
 
 export interface UserUpdate {
   username?: string | null;
+  user_preferences?: {
+    default_level?: string;
+    default_domain?: string;
+    default_period?: string;
+  };
+  app_settings?: any;
+  feature_flags?: any;
+  metadata?: any;
 }
 
 export interface AppCredits {
@@ -159,6 +177,34 @@ export const userService = {
       return response.data;
     } catch (error) {
       debugLog.error('Failed to delete user', error);
+      throw error;
+    }
+  },
+
+  // Get user with preferences - Uses GET /api/users/{user_id}
+  getUserWithPreferences: async (userId: string): Promise<UserModel> => {
+    try {
+      debugLog.user('Getting user with preferences', { userId });
+      const response = await api.get<UserModel>(`/api/users/${userId}`);
+      debugLog.user('User data with preferences retrieved', response.data);
+      return response.data;
+    } catch (error) {
+      debugLog.error('Failed to get user with preferences', error);
+      throw error;
+    }
+  },
+
+  // Update user preferences - Uses PUT /api/users/{user_id} with user_preferences field
+  updateUserPreferences: async (userId: string, preferences: { default_level?: string; default_domain?: string; default_period?: string }): Promise<UserModel> => {
+    try {
+      debugLog.user('Updating user preferences', { userId, preferences });
+      const response = await api.put<UserModel>(`/api/users/${userId}`, {
+        user_preferences: preferences
+      });
+      debugLog.user('User preferences updated successfully', response.data);
+      return response.data;
+    } catch (error) {
+      debugLog.error('Failed to update user preferences', error);
       throw error;
     }
   },

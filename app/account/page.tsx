@@ -9,20 +9,27 @@ import { useAuth } from "../../context/AuthContext";
 import { useSubscription } from "../../context/SubscriptionContext";
 import { SubscriptionPaymentModal } from "../../components/SubscriptionPaymentModal";
 import { AddonPackPaymentModal } from "../../components/AddonPackPaymentModal";
+import { userService, educationUserService } from "../../services/userService";
+import { subscriptionService } from "../../services/subscriptionService";
+import type { SubscriptionStatus } from "../../types/subscription";
 
 export default function AccountPage() {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, userPreferences, updateUserPreferences } = useAuth();
   const { status, usageView, plans, history, loading, changeTier, changeBillingPeriod, buyAddonPack, cancelSubscription, reactivateSubscription, refreshSubscription } = useSubscription();
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<"profile" | "subscription" | "settings" | "support" | "admin" | "logout">("subscription");
+  const [activeSection, setActiveSection] = useState<"profile" | "subscription" | "support" | "admin">("profile");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
+  // Profile edit mode states
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [savedFields, setSavedFields] = useState<{level: boolean; theme: boolean; duration: boolean}>({level: false, theme: false, duration: false});
+  const [savingField, setSavingField] = useState<'level' | 'theme' | 'duration' | null>(null);
+  
   // Addon pack purchase state
-  const [showAddonModal, setShowAddonModal] = useState(false);
-  const [addonQuantity, setAddonQuantity] = useState(1);
+
 
   // Cancel/Reactivate confirmation modals
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -37,15 +44,33 @@ export default function AccountPage() {
   // Support form states
   const [supportForm, setSupportForm] = useState({
     type: 'bug',
-    priority: 'medium',
     subject: '',
     message: ''
   });
   const [supportSubmitting, setSupportSubmitting] = useState(false);
   const [supportMessage, setSupportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // User Console states (Admin)
+  const [userConsoleEmail, setUserConsoleEmail] = useState('');
+  const [userConsoleData, setUserConsoleData] = useState<any>(null);
+  const [userConsoleSubscription, setUserConsoleSubscription] = useState<SubscriptionStatus | null>(null);
+  const [userConsoleCredits, setUserConsoleCredits] = useState<any>(null);
+  const [userConsoleLoading, setUserConsoleLoading] = useState(false);
+  const [userConsoleMessage, setUserConsoleMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingUserPrefs, setEditingUserPrefs] = useState(false);
+  const [editedPrefs, setEditedPrefs] = useState({ default_level: '', default_domain: '', default_period: '' });
+  
+  // Quota update states
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [quotaOperation, setQuotaOperation] = useState<'set' | 'add' | 'subtract'>('add');
+  const [quotaAmount, setQuotaAmount] = useState<number>(0);
+  const [quotaType, setQuotaType] = useState<'monthly' | 'addon'>('addon');
+  const [quotaReason, setQuotaReason] = useState('');
+  const [showQuotaConfirm, setShowQuotaConfirm] = useState(false);
+  const [quotaUpdating, setQuotaUpdating] = useState(false);
+
   // Vérifier si l'utilisateur est admin
-  const isAdmin = user?.email === 'admin@exominutes.com';
+  const isAdmin = user?.email === 'nicolas.pernot78@gmail.com';
 
   // Debug: log status changes
   useEffect(() => {
@@ -66,6 +91,174 @@ export default function AccountPage() {
       refreshSubscription();
     }
   }, [activeSection, user]); // Removed refreshSubscription from deps to avoid unnecessary re-runs
+
+  // User Console: Search for user by email
+  const handleUserConsoleSearch = async () => {
+    if (!userConsoleEmail.trim()) {
+      setUserConsoleMessage({ type: 'error', text: 'Veuillez saisir un email' });
+      return;
+    }
+
+    setUserConsoleLoading(true);
+    setUserConsoleMessage(null);
+    setUserConsoleData(null);
+    setUserConsoleSubscription(null);
+    setUserConsoleCredits(null);
+
+    try {
+      // Fetch user data with preferences
+      const userData = await userService.getUserWithPreferences(userConsoleEmail.trim());
+      setUserConsoleData(userData);
+      setEditedPrefs({
+        default_level: userData.user_preferences?.default_level || 'CE2',
+        default_domain: userData.user_preferences?.default_domain || 'tous',
+        default_period: userData.user_preferences?.default_period || '20 min'
+      });
+
+      // Fetch subscription status
+      try {
+        const subscriptionData = await subscriptionService.getStatus(userConsoleEmail.trim());
+        setUserConsoleSubscription(subscriptionData);
+      } catch (subError) {
+        console.warn('Subscription data not found for user');
+      }
+
+      // Fetch credits data
+      try {
+        const creditsData = await educationUserService.getAppData(userConsoleEmail.trim());
+        setUserConsoleCredits(creditsData.user_credits);
+      } catch (credError) {
+        console.warn('Credits data not found for user');
+      }
+
+      setUserConsoleMessage({ type: 'success', text: 'Utilisateur trouvé' });
+    } catch (error: any) {
+      console.error('Error fetching user:', error);
+      setUserConsoleMessage({ 
+        type: 'error', 
+        text: error.response?.data?.detail || 'Utilisateur non trouvé' 
+      });
+    } finally {
+      setUserConsoleLoading(false);
+    }
+  };
+
+  // User Console: Update user preferences
+  const handleUpdateUserPreferences = async () => {
+    if (!userConsoleData?.email) return;
+
+    setUserConsoleLoading(true);
+    setUserConsoleMessage(null);
+
+    try {
+      await userService.updateUserPreferences(userConsoleData.email, editedPrefs);
+      setUserConsoleMessage({ type: 'success', text: 'Préférences mises à jour avec succès' });
+      setEditingUserPrefs(false);
+      // Refresh user data
+      await handleUserConsoleSearch();
+    } catch (error: any) {
+      console.error('Error updating preferences:', error);
+      setUserConsoleMessage({ 
+        type: 'error', 
+        text: error.response?.data?.detail || 'Erreur lors de la mise à jour' 
+      });
+    } finally {
+      setUserConsoleLoading(false);
+    }
+  };
+
+  // Quota Update: Open modal
+  const handleOpenQuotaModal = () => {
+    setQuotaOperation('add');
+    setQuotaAmount(0);
+    setQuotaType('addon');
+    setQuotaReason('');
+    setShowQuotaModal(true);
+    setShowQuotaConfirm(false);
+  };
+
+  // Quota Update: First confirmation (show summary)
+  const handleQuotaFirstConfirm = () => {
+    if (!quotaReason.trim() || quotaReason.length < 10) {
+      setUserConsoleMessage({ 
+        type: 'error', 
+        text: 'La raison doit contenir au moins 10 caractères' 
+      });
+      return;
+    }
+    if (quotaAmount < 0) {
+      setUserConsoleMessage({ 
+        type: 'error', 
+        text: 'Le montant doit être positif' 
+      });
+      return;
+    }
+    setShowQuotaConfirm(true);
+  };
+
+  // Quota Update: Final confirmation and execution
+  const handleQuotaFinalConfirm = async () => {
+    if (!userConsoleData?.email) return;
+
+    setQuotaUpdating(true);
+    setUserConsoleMessage(null);
+
+    try {
+      console.log('🔧 Sending quota update request:', {
+        email: userConsoleData.email,
+        operation: quotaOperation,
+        quota_amount: quotaAmount,
+        quota_type: quotaType,
+        reason: quotaReason,
+        admin_email: user?.email
+      });
+
+      const result = await subscriptionService.adminUpdateQuota(userConsoleData.email, {
+        operation: quotaOperation,
+        quota_amount: quotaAmount,
+        quota_type: quotaType,
+        reason: quotaReason,
+        admin_email: user?.email
+      });
+
+      console.log('✅ Quota update success:', result);
+
+      setUserConsoleMessage({ 
+        type: 'success', 
+        text: `✅ ${result.message}\n${result.previous_value} → ${result.new_value} (${quotaType})` 
+      });
+      
+      // Close modal and refresh data
+      setShowQuotaModal(false);
+      setShowQuotaConfirm(false);
+      await handleUserConsoleSearch();
+      
+    } catch (error: any) {
+      console.error('❌ Error updating quota:', error);
+      
+      // Create detailed error message
+      let errorText = '❌ Erreur lors de la mise à jour du quota';
+      
+      if (error.message) {
+        errorText += `:\n\n${error.message}`;
+      }
+      
+      // Add suggestion if it's a backend error
+      if (error.message?.includes('metadata') || error.message?.includes('attribute')) {
+        errorText += '\n\n💡 Ceci semble être une erreur backend. Vérifiez que le modèle SubscriptionData a bien un champ "metadata" défini.';
+      }
+      
+      setUserConsoleMessage({ 
+        type: 'error', 
+        text: errorText
+      });
+      
+      // Keep modal open on error so user can see the error and try again
+      setShowQuotaConfirm(false); // Go back to step 1
+    } finally {
+      setQuotaUpdating(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -110,9 +303,16 @@ export default function AccountPage() {
   const handleTierChange = async (newTier: 'freemium' | 'standard' | 'famille_plus') => {
     if (!status) return;
     
-    // Check if Stripe payment is required (freemium -> paid tier)
-    if (status.tier === 'freemium' && (newTier === 'standard' || newTier === 'famille_plus')) {
-      // Open Stripe payment modal
+    // Determine if this is an upgrade that requires payment
+    const tierHierarchy = { 'freemium': 0, 'standard': 1, 'famille_plus': 2 };
+    const currentTierLevel = tierHierarchy[status.tier];
+    const newTierLevel = tierHierarchy[newTier];
+    const isUpgrade = newTierLevel > currentTierLevel;
+    
+    // Check if Stripe payment is required (any upgrade to a paid tier)
+    if (isUpgrade && (newTier === 'standard' || newTier === 'famille_plus')) {
+      // Open Stripe payment modal for upgrades
+      console.log(`Opening Stripe modal for upgrade from ${status.tier} to ${newTier}`);
       setPendingTier(newTier);
       setPendingBillingPeriod(status.billing_period || "monthly");
       setShowStripeSubscriptionModal(true);
@@ -198,35 +398,7 @@ export default function AccountPage() {
     }
   };
 
-  const handleBuyAddonPack = async () => {
-    if (!status) return;
-    
-    // Check if user has paid subscription - if yes, use Stripe
-    if (status.tier !== 'freemium') {
-      setShowStripeAddonModal(true);
-      return;
-    }
-    
-    setActionLoading(true);
-    setMessage(null);
-    
-    try {
-      await buyAddonPack(addonQuantity);
-      setMessage({
-        type: 'success',
-        text: `${addonQuantity} pack${addonQuantity > 1 ? 's' : ''} additionnel${addonQuantity > 1 ? 's' : ''} acheté${addonQuantity > 1 ? 's' : ''} avec succès`
-      });
-      setShowAddonModal(false);
-      setAddonQuantity(1);
-    } catch (error: any) {
-      setMessage({
-        type: 'error',
-        text: error.message || 'Une erreur inattendue s\'est produite'
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
+
 
   // Stripe Subscription Payment Success Handler
   const handleStripeSubscriptionSuccess = () => {
@@ -253,12 +425,13 @@ export default function AccountPage() {
   // Stripe Addon Pack Payment Success Handler
   const handleStripeAddonSuccess = (packsAdded: number, quotasAdded: number) => {
     setShowStripeAddonModal(false);
-    setShowAddonModal(false);
-    setAddonQuantity(1);
-    setMessage({
-      type: 'success',
-      text: `${packsAdded} pack${packsAdded > 1 ? 's' : ''} acheté${packsAdded > 1 ? 's' : ''} avec succès ! ${quotasAdded} fiches ajoutées.`
-    });
+    // Only show message if we have valid data from backend
+    if (packsAdded && quotasAdded) {
+      setMessage({
+        type: 'success',
+        text: `${packsAdded} pack${packsAdded > 1 ? 's' : ''} acheté${packsAdded > 1 ? 's' : ''} avec succès ! ${quotasAdded} fiches ajoutées.`
+      });
+    }
     // Refresh subscription status
     refreshSubscription();
   };
@@ -332,13 +505,27 @@ export default function AccountPage() {
     }
   };
 
+  // Translate backend feature keys to user-friendly French text
+  const translateFeatures = (features: string[]): string[] => {
+    const featureMap: Record<string, string> = {
+      'basic_exercises': 'Exercices de base',
+      'pdf_download': 'Téléchargement PDF',
+      'advanced_exercises': 'Exercices avancés',
+      'statistics': 'Statistiques',
+      'multi_user': 'Multi-utilisateur',
+      'priority_support': 'Support prioritaire'
+    };
+
+    return features.map(feature => featureMap[feature] || feature);
+  };
+
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!supportForm.subject.trim() || !supportForm.message.trim()) {
+    if (!supportForm.subject.trim()) {
       setSupportMessage({
         type: 'error',
-        text: 'Veuillez remplir tous les champs obligatoires'
+        text: 'Veuillez renseigner l\'objet de votre demande'
       });
       return;
     }
@@ -347,6 +534,14 @@ export default function AccountPage() {
     setSupportMessage(null);
 
     try {
+      // Get browser and device info
+      const browserInfo = navigator.userAgent;
+      const deviceInfo = {
+        platform: navigator.platform,
+        language: navigator.language,
+        screenResolution: `${window.screen.width}x${window.screen.height}`
+      };
+
       // Simulate API call to support system
       await new Promise(resolve => setTimeout(resolve, 1500));
       
@@ -354,18 +549,19 @@ export default function AccountPage() {
       console.log('Support ticket submitted:', {
         ...supportForm,
         user: user?.email,
+        browserInfo,
+        deviceInfo,
         timestamp: new Date().toISOString()
       });
 
       setSupportMessage({
         type: 'success',
-        text: 'Votre demande de support a été envoyée avec succès. Nous vous répondrons dans les plus brefs délais.'
+        text: '✅ Votre demande a été envoyée avec succès ! Nous vous répondrons sous 24h en semaine.'
       });
 
       // Reset form
       setSupportForm({
         type: 'bug',
-        priority: 'medium',
         subject: '',
         message: ''
       });
@@ -389,7 +585,8 @@ export default function AccountPage() {
             <div className="mb-4">
               <div className="d-flex gap-2 flex-wrap justify-content-center">
                 <button
-                  onClick={(e) => { e.preventDefault(); setActiveSection("profile"); }}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setActiveSection("profile"); window.scrollTo(0, 0); }}
                   style={{
                     backgroundColor: activeSection === "profile" ? '#eff6ff' : 'white',
                     color: activeSection === "profile" ? '#1e40af' : '#6b7280',
@@ -419,10 +616,11 @@ export default function AccountPage() {
                   }}
                 >
                   <i className="bi bi-person me-1"></i>
-                  Profil utilisateur
+                  Profil
                 </button>
                 <button
-                  onClick={(e) => { e.preventDefault(); setActiveSection("subscription"); }}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setActiveSection("subscription"); window.scrollTo(0, 0); }}
                   style={{
                     backgroundColor: activeSection === "subscription" ? '#fef3c7' : 'white',
                     color: activeSection === "subscription" ? '#92400e' : '#6b7280',
@@ -452,65 +650,42 @@ export default function AccountPage() {
                   }}
                 >
                   <i className="bi bi-star me-1"></i>
-                  Mon abonnement
+                  Abonnement
                 </button>
                 <button
-                  onClick={(e) => { e.preventDefault(); setActiveSection("settings"); }}
-                  style={{
-                    backgroundColor: activeSection === "settings" ? '#eff6ff' : 'white',
-                    color: activeSection === "settings" ? '#1e40af' : '#6b7280',
-                    border: `2px solid ${activeSection === "settings" ? '#3b82f6' : '#e5e7eb'}`,
-                    padding: '10px 18px',
-                    borderRadius: '10px',
-                    fontSize: '0.9rem',
-                    fontWeight: activeSection === "settings" ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    transform: activeSection === "settings" ? 'translateY(-2px)' : 'none',
-                    boxShadow: activeSection === "settings" ? '0 4px 8px rgba(59, 130, 246, 0.2)' : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (activeSection !== "settings") {
-                      e.currentTarget.style.backgroundColor = '#f0f9ff';
-                      e.currentTarget.style.borderColor = '#93c5fd';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
+                  type="button"
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    if (status?.tier === 'famille_plus') {
+                      setActiveSection("support");
+                      window.scrollTo(0, 0);
                     }
                   }}
-                  onMouseLeave={(e) => {
-                    if (activeSection !== "settings") {
-                      e.currentTarget.style.backgroundColor = 'white';
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.transform = 'none';
-                    }
-                  }}
-                >
-                  <i className="bi bi-sliders me-1"></i>
-                  Paramètres
-                </button>
-                <button
-                  onClick={(e) => { e.preventDefault(); setActiveSection("support"); }}
+                  disabled={status?.tier !== 'famille_plus'}
+                  title={status?.tier !== 'famille_plus' ? "✨ Fonctionnalité Famille+\nDébloquez le support prioritaire\npour une assistance rapide et personnalisée." : ""}
                   style={{
-                    backgroundColor: activeSection === "support" ? '#eff6ff' : 'white',
-                    color: activeSection === "support" ? '#1e40af' : '#6b7280',
-                    border: `2px solid ${activeSection === "support" ? '#3b82f6' : '#e5e7eb'}`,
+                    backgroundColor: status?.tier !== 'famille_plus' ? '#f3f4f6' : (activeSection === "support" ? '#eff6ff' : 'white'),
+                    color: status?.tier !== 'famille_plus' ? '#9ca3af' : (activeSection === "support" ? '#1e40af' : '#6b7280'),
+                    border: `2px solid ${status?.tier !== 'famille_plus' ? '#e5e7eb' : (activeSection === "support" ? '#3b82f6' : '#e5e7eb')}`,
                     padding: '10px 18px',
                     borderRadius: '10px',
                     fontSize: '0.9rem',
                     fontWeight: activeSection === "support" ? '600' : '500',
-                    cursor: 'pointer',
+                    cursor: status?.tier !== 'famille_plus' ? 'default' : 'pointer',
                     transition: 'all 0.3s ease',
-                    transform: activeSection === "support" ? 'translateY(-2px)' : 'none',
-                    boxShadow: activeSection === "support" ? '0 4px 8px rgba(59, 130, 246, 0.2)' : 'none'
+                    transform: activeSection === "support" && status?.tier === 'famille_plus' ? 'translateY(-2px)' : 'none',
+                    boxShadow: activeSection === "support" && status?.tier === 'famille_plus' ? '0 4px 8px rgba(59, 130, 246, 0.2)' : 'none',
+                    opacity: status?.tier !== 'famille_plus' ? 0.6 : 1
                   }}
                   onMouseEnter={(e) => {
-                    if (activeSection !== "support") {
+                    if (activeSection !== "support" && status?.tier === 'famille_plus') {
                       e.currentTarget.style.backgroundColor = '#f0f9ff';
                       e.currentTarget.style.borderColor = '#93c5fd';
                       e.currentTarget.style.transform = 'translateY(-2px)';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (activeSection !== "support") {
+                    if (activeSection !== "support" && status?.tier === 'famille_plus') {
                       e.currentTarget.style.backgroundColor = 'white';
                       e.currentTarget.style.borderColor = '#e5e7eb';
                       e.currentTarget.style.transform = 'none';
@@ -523,7 +698,8 @@ export default function AccountPage() {
                 {/* Section Admin - uniquement pour admin@exominutes.com */}
                 {isAdmin && (
                   <button
-                    onClick={(e) => { e.preventDefault(); setActiveSection("admin"); }}
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setActiveSection("admin"); window.scrollTo(0, 0); }}
                     style={{
                       backgroundColor: activeSection === "admin" ? '#f8f9fa' : 'white',
                       color: activeSection === "admin" ? '#2c3e50' : '#6c757d',
@@ -552,42 +728,11 @@ export default function AccountPage() {
                     Administration
                   </button>
                 )}
-                <button
-                  onClick={(e) => { e.preventDefault(); setActiveSection("logout"); }}
-                  style={{
-                    backgroundColor: activeSection === "logout" ? '#fff5f5' : 'white',
-                    color: activeSection === "logout" ? '#dc3545' : '#6c757d',
-                    border: `2px solid ${activeSection === "logout" ? '#f8d7da' : '#e9ecef'}`,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontSize: '0.9rem',
-                    fontWeight: activeSection === "logout" ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (activeSection !== "logout") {
-                      e.currentTarget.style.backgroundColor = '#fff5f5';
-                      e.currentTarget.style.borderColor = '#f8d7da';
-                      e.currentTarget.style.color = '#dc3545';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeSection !== "logout") {
-                      e.currentTarget.style.backgroundColor = 'white';
-                      e.currentTarget.style.borderColor = '#e9ecef';
-                      e.currentTarget.style.color = '#6c757d';
-                    }
-                  }}
-                >
-                  Se déconnecter
-                </button>
               </div>
             </div>
 
             {/* Profile Section */}
             {activeSection === "profile" && (
-              <>
               <Card style={{ 
                 border: '2px solid #3b82f6', 
                 borderRadius: '12px',
@@ -601,42 +746,176 @@ export default function AccountPage() {
                   padding: '16px 20px'
                 }}>
                   <h5 className="mb-0 fw-semibold" style={{ color: '#1e40af' }}>
-                    <i className="bi bi-person me-2" style={{ color: '#3b82f6' }}></i>
-                    Profil utilisateur
+                    📄 Profil utilisateur
                   </h5>
                 </Card.Header>
                 <Card.Body className="p-4">
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Email</Form.Label>
-                        <Form.Control
-                          type="email"
-                          value={user?.email || ""}
-                          disabled
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Nom d'utilisateur</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={user?.username || ""}
-                          disabled
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  
-                  <div className="mt-4">
-                    <small className="text-muted">
-                      Compte créé récemment
-                    </small>
+                  {/* View-only mode */}
+                  {!profileEditMode && (
+                    <div className="mb-4">
+                      <div className="mb-3">
+                        <strong>Email :</strong>
+                        <div className="ms-3" style={{ color: '#6b7280' }}>{user?.email || "N/A"}</div>
+                      </div>
+                      <div className="mb-3">
+                        <strong>Préférences :</strong>
+                        <div className="ms-3" style={{ color: '#6b7280' }}>
+                          <div>Niveau préféré : {userPreferences.default_level}</div>
+                          <div>Durée par défaut : {userPreferences.default_period}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Edit mode */}
+                  {profileEditMode && (
+                    <div className="mb-4">
+                      <div className="mb-3">
+                        <strong>Email :</strong>
+                        <div className="ms-3" style={{ color: '#6b7280' }}>{user?.email || "N/A"}</div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <strong>Niveau préféré :</strong>
+                        <div className="d-flex align-items-center gap-2 ms-3">
+                          <Form.Select
+                            value={userPreferences.default_level}
+                            disabled={savingField !== null}
+                            onChange={async (e) => {
+                              const newLevel = e.target.value;
+                              setSavingField('level');
+                              setSavedFields(prev => ({...prev, level: false}));
+                              
+                              try {
+                                await updateUserPreferences({ default_level: newLevel });
+                                console.log('✅ Level preference saved:', newLevel);
+                                setSavedFields(prev => ({...prev, level: true}));
+                                setTimeout(() => {
+                                  setSavedFields(prev => ({...prev, level: false}));
+                                }, 2000);
+                              } catch (error) {
+                                console.error('❌ Failed to save level preference:', error);
+                              } finally {
+                                setSavingField(null);
+                              }
+                            }}
+                            style={{ maxWidth: '200px' }}
+                          >
+                            <option value="CP">CP</option>
+                            <option value="CE1">CE1</option>
+                            <option value="CE2">CE2</option>
+                            <option value="CM1">CM1</option>
+                            <option value="CM2">CM2</option>
+                          </Form.Select>
+                          {savingField === 'level' && (
+                            <span style={{ color: '#f59e0b', fontSize: '0.9rem' }}>
+                              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                              Enregistrement...
+                            </span>
+                          )}
+                          {savedFields.level && (
+                            <span style={{ color: '#10b981', fontSize: '0.9rem' }}>
+                              ✔️ Enregistré
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <strong>Durée par défaut :</strong>
+                        <div className="d-flex align-items-center gap-2 ms-3">
+                          <Form.Select
+                            value={userPreferences.default_period}
+                            disabled={savingField !== null}
+                            onChange={async (e) => {
+                              const newDuration = e.target.value;
+                              setSavingField('duration');
+                              setSavedFields(prev => ({...prev, duration: false}));
+                              
+                              try {
+                                await updateUserPreferences({ default_period: newDuration });
+                                console.log('✅ Duration preference saved:', newDuration);
+                                setSavedFields(prev => ({...prev, duration: true}));
+                                setTimeout(() => {
+                                  setSavedFields(prev => ({...prev, duration: false}));
+                                }, 2000);
+                              } catch (error) {
+                                console.error('❌ Failed to save duration preference:', error);
+                              } finally {
+                                setSavingField(null);
+                              }
+                            }}
+                            style={{ maxWidth: '200px' }}
+                          >
+                            <option value="10 min">10 min</option>
+                            <option value="20 min">20 min</option>
+                            <option value="30 min">30 min</option>
+                          </Form.Select>
+                          {savingField === 'duration' && (
+                            <span style={{ color: '#f59e0b', fontSize: '0.9rem' }}>
+                              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                              Enregistrement...
+                            </span>
+                          )}
+                          {savedFields.duration && (
+                            <span style={{ color: '#10b981', fontSize: '0.9rem' }}>
+                              ✔️ Enregistré
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button 
+                    variant={profileEditMode ? "outline-primary" : "primary"}
+                    size="sm"
+                    className="mb-4"
+                    disabled={savingField !== null}
+                    onClick={() => setProfileEditMode(!profileEditMode)}
+                    style={{
+                      backgroundColor: profileEditMode ? 'white' : '#3b82f6',
+                      color: profileEditMode ? '#3b82f6' : 'white',
+                      border: profileEditMode ? '2px solid #3b82f6' : 'none',
+                      padding: '8px 16px'
+                    }}
+                  >
+                    {profileEditMode ? '✔️ Terminer' : '🟦 Modifier mes informations'}
+                  </Button>
+
+                  <hr style={{ 
+                    margin: '1.5rem 0',
+                    border: 'none',
+                    borderTop: '2px solid #e5e7eb'
+                  }} />
+
+                  <div style={{
+                    textAlign: 'center',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{
+                      color: '#9ca3af',
+                      fontSize: '0.85rem',
+                      marginBottom: '8px',
+                      fontWeight: '500'
+                    }}>
+                      Gestion du compte
+                    </div>
+                    <Button 
+                      variant="outline-danger"
+                      onClick={() => setShowLogoutConfirm(true)}
+                      style={{
+                        padding: '8px 18px',
+                        fontWeight: '500',
+                        maxWidth: '200px'
+                      }}
+                    >
+                      <i className="bi bi-box-arrow-right me-2"></i>
+                      Se déconnecter
+                    </Button>
                   </div>
                 </Card.Body>
               </Card>
-              </>
             )}
 
             {/* Subscription Section */}
@@ -809,7 +1088,7 @@ export default function AccountPage() {
                               <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#92400e' }}>
                                 {status.monthly_used} / {status.monthly_quota}
                                 {status.addon_quota_remaining > 0 && <> (+{status.addon_quota_remaining} addon)</>}
-                                {status.welcome_pack?.active && <> (+{status.welcome_pack.quota_remaining} 🎁)</>}
+                                {status.welcome_pack?.active && status.welcome_pack.quota_remaining > 0 && status.welcome_pack.hours_remaining > 0 && <> (+{status.welcome_pack.quota_remaining} 🎁)</>}
                               </span>
                             </div>
                             <div className="progress mb-2" style={{ 
@@ -833,13 +1112,13 @@ export default function AccountPage() {
                             </div>
                             <div className="text-center">
                               <small style={{ 
-                                color: status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0 && (!status.welcome_pack?.active || status.welcome_pack.quota_remaining <= 0) ? '#dc2626' : '#166534',
+                                color: status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0 && (!status.welcome_pack?.active || status.welcome_pack.quota_remaining <= 0 || status.welcome_pack.hours_remaining <= 0) ? '#dc2626' : '#166534',
                                 fontWeight: '600',
                                 fontSize: '0.85rem'
                               }}>
-                                {status.monthly_remaining <= 0 && status.addon_quota_remaining <= 0 && (!status.welcome_pack?.active || status.welcome_pack.quota_remaining <= 0)
+                                {status.monthly_remaining <= 0 && (!status.welcome_pack?.active || status.welcome_pack.quota_remaining <= 0 || !status.welcome_pack.hours_remaining || status.welcome_pack.hours_remaining <= 0)
                                   ? '⚠️ Limite atteinte' 
-                                  : `✓ ${status.monthly_remaining + status.addon_quota_remaining + (status.welcome_pack?.active ? status.welcome_pack.quota_remaining : 0)} fiches restantes`}
+                                  : `✓ ${status.monthly_remaining + (status.welcome_pack?.active && status.welcome_pack.quota_remaining > 0 && status.welcome_pack.hours_remaining && status.welcome_pack.hours_remaining > 0 ? status.welcome_pack.quota_remaining : 0)} fiches restantes`}
                               </small>
                             </div>
                           </div>
@@ -933,7 +1212,7 @@ export default function AccountPage() {
                               <Button 
                                 variant="success"
                                 size="sm"
-                                onClick={() => setShowAddonModal(true)}
+                                onClick={() => setShowStripeAddonModal(true)}
                                 style={{
                                   borderRadius: '8px',
                                   fontWeight: '600',
@@ -943,43 +1222,6 @@ export default function AccountPage() {
                                 <i className="bi bi-plus-circle me-2"></i>
                                 Acheter des packs additionnels
                               </Button>
-                            )}
-                            
-                            {/* Cancel/Reactivate button - only for paid subscriptions */}
-                            {status.tier !== 'freemium' && (
-                              status.auto_renewal ? (
-                                <Button 
-                                  variant="outline-danger"
-                                  size="sm"
-                                  onClick={() => setShowCancelConfirm(true)}
-                                  disabled={actionLoading}
-                                  style={{
-                                    borderWidth: '2px',
-                                    borderRadius: '8px',
-                                    fontWeight: '600',
-                                    padding: '8px 16px',
-                                    transition: 'all 0.2s ease'
-                                  }}
-                                >
-                                  {actionLoading ? 'Chargement...' : 'Annuler l\'abonnement'}
-                                </Button>
-                              ) : (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => setShowReactivateConfirm(true)}
-                                  disabled={actionLoading}
-                                  style={{
-                                    background: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: '600',
-                                    padding: '8px 16px',
-                                    color: 'white'
-                                  }}
-                                >
-                                  {actionLoading ? 'Chargement...' : 'Réactiver l\'abonnement'}
-                                </Button>
-                              )
                             )}
                           </div>
                         </Col>
@@ -1256,8 +1498,8 @@ export default function AccountPage() {
                           <tr>
                             <td><strong>Usage</strong></td>
                             <td className="text-center">1 fiche/jour<br/><small className="text-muted">+ 3 bonus/mois</small></td>
-                            <td className="text-center"><strong>60 fiches/mois</strong><br/><small className="text-muted">(soft cap)</small></td>
-                            <td className="text-center"><strong>120 fiches/mois</strong><br/><small className="text-muted">(soft cap)</small></td>
+                            <td className="text-center"><strong>50 fiches/mois</strong><br/><small className="text-muted">(soft cap)</small></td>
+                            <td className="text-center"><strong>150 fiches/mois</strong><br/><small className="text-muted">(soft cap)</small></td>
                           </tr>
                           <tr>
                             <td><strong>Historique</strong></td>
@@ -1278,22 +1520,10 @@ export default function AccountPage() {
                             <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> priorité</td>
                           </tr>
                           <tr>
-                            <td><strong>Thèmes personnalisés</strong></td>
-                            <td className="text-center">basiques</td>
-                            <td className="text-center">basiques</td>
-                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> premium</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Accès web / mobile</strong></td>
-                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span></td>
-                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span></td>
-                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span></td>
-                          </tr>
-                          <tr>
-                            <td><strong>Support PDF</strong></td>
-                            <td className="text-center">standard</td>
-                            <td className="text-center">standard</td>
-                            <td className="text-center">standard+</td>
+                            <td><strong>Support</strong></td>
+                            <td className="text-center">non</td>
+                            <td className="text-center">non</td>
+                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> Support Client disponible</td>
                           </tr>
                         </tbody>
                       </table>
@@ -1311,7 +1541,7 @@ export default function AccountPage() {
                           Passez à Standard
                         </strong>
                         <p className="mb-0 mt-2" style={{ color: '#78350f', fontSize: '0.9rem' }}>
-                          Générez jusqu'à 60 fiches par mois avec priorité de génération et conservez votre historique pendant 90 jours !
+                          Générez jusqu'à 50 fiches par mois avec priorité de génération et conservez votre historique pendant 90 jours !
                         </p>
                       </div>
                     )}
@@ -1326,7 +1556,7 @@ export default function AccountPage() {
                           Passez à Famille+
                         </strong>
                         <p className="mb-0 mt-2" style={{ color: '#1e3a8a', fontSize: '0.9rem' }}>
-                          Doublez votre quota, taggez vos fiches et conservez toutes vos créations indéfiniment !
+                          Tripler votre quota, taggez vos fiches et conservez toutes vos créations indéfiniment !
                         </p>
                       </div>
                     )}
@@ -1340,77 +1570,68 @@ export default function AccountPage() {
                         <li>Aucun engagement - vous pouvez modifier ou annuler à tout moment</li>
                       </ul>
                     </div>
+
+                    {/* Cancel Subscription - Sensitive Zone */}
+                    {status?.tier !== 'freemium' && status?.status === 'active' && (
+                      <div className="mt-4" style={{
+                        backgroundColor: '#fef2f2',
+                        border: '2px solid #fecaca',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{
+                          color: '#991b1b',
+                          fontSize: '0.9rem',
+                          marginBottom: '12px',
+                          lineHeight: '1.5'
+                        }}>
+                          <i className="bi bi-info-circle me-2"></i>
+                          {status?.auto_renewal ? (
+                            <>Vous conserverez l'accès à votre abonnement jusqu'à la fin de la période en cours.</>
+                          ) : (
+                            <>Réactivez votre abonnement pour continuer à profiter de tous les avantages de votre formule actuelle.</>
+                          )}
+                        </div>
+                        {status?.auto_renewal ? (
+                          <Button 
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => setShowCancelConfirm(true)}
+                            disabled={actionLoading}
+                            style={{
+                              borderWidth: '2px',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              padding: '10px 24px',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {actionLoading ? 'Chargement...' : 'Annuler l\'abonnement'}
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm"
+                            onClick={() => setShowReactivateConfirm(true)}
+                            disabled={actionLoading}
+                            style={{
+                              background: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              padding: '10px 24px',
+                              color: 'white'
+                            }}
+                          >
+                            {actionLoading ? 'Chargement...' : 'Réactiver l\'abonnement'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
                 </Card.Body>
               </Card>
-            )}
-
-            {/* Settings Section */}
-            {activeSection === "settings" && (
-              <>
-              <Card style={{ 
-                border: '2px solid #3b82f6', 
-                borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
-                backgroundColor: 'white'
-              }}>
-                <Card.Header style={{ 
-                  backgroundColor: '#eff6ff',
-                  borderBottom: '2px solid #93c5fd',
-                  borderRadius: '10px 10px 0 0',
-                  padding: '16px 20px'
-                }}>
-                  <h5 className="mb-0 fw-semibold" style={{ color: '#1e40af' }}>
-                    <i className="bi bi-sliders me-2" style={{ color: '#3b82f6' }}></i>
-                    Paramètres de l'application
-                  </h5>
-                </Card.Header>
-                <Card.Body className="p-4">
-                  <Form.Group className="mb-3">
-                    <Form.Label>Niveau par défaut</Form.Label>
-                    <Form.Select defaultValue="CE1">
-                      <option value="CP">CP</option>
-                      <option value="CE1">CE1</option>
-                      <option value="CE2">CE2</option>
-                      <option value="CM1">CM1</option>
-                      <option value="CM2">CM2</option>
-                    </Form.Select>
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Durée de séance par défaut</Form.Label>
-                    <Form.Select defaultValue="30 min">
-                      <option value="10 min">10 minutes</option>
-                      <option value="20 min">20 minutes</option>
-                      <option value="30 min">30 minutes</option>
-                    </Form.Select>
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Check
-                      type="checkbox"
-                      id="notifications"
-                      label="Recevoir des notifications par email"
-                      defaultChecked={true}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Check
-                      type="checkbox"
-                      id="newsletter"
-                      label="S'abonner à la newsletter"
-                      defaultChecked={false}
-                    />
-                  </Form.Group>
-
-                  <Button variant="primary" className="mt-3">
-                    Sauvegarder les paramètres
-                  </Button>
-                </Card.Body>
-              </Card>
-              </>
             )}
 
             {/* Support Section */}
@@ -1429,8 +1650,8 @@ export default function AccountPage() {
                   padding: '16px 20px'
                 }}>
                   <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#1e40af' }}>
-                    <i className="bi bi-headset me-2" style={{ color: '#3b82f6' }}></i>
-                    Support Technique
+                    <i className="bi bi-telephone me-2" style={{ color: '#3b82f6' }}></i>
+                    Besoin d'aide ?
                   </h5>
                 </Card.Header>
                 <Card.Body className="p-4">
@@ -1441,79 +1662,54 @@ export default function AccountPage() {
                   )}
 
                   <div className="mb-4">
-                    <p className="text-muted">
-                      Une question, un problème, ou besoin d'aide ? Notre équipe support est là pour vous aider.
-                      Décrivez votre problème et nous vous répondrons dans les plus brefs délais.
+                    <p className="text-muted mb-3">
+                      Nous sommes là pour vous aider.<br />
+                      Choisissez l'option qui correspond à votre demande :
                     </p>
                   </div>
 
                   <Form onSubmit={handleSupportSubmit}>
-                    <Row>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Type de demande</Form.Label>
-                          <Form.Select
-                            value={supportForm.type}
-                            onChange={(e) => setSupportForm({ ...supportForm, type: e.target.value })}
-                            required
-                          >
-                            <option value="bug">🐛 Signaler un bug</option>
-                            <option value="billing">💳 Problème de facturation</option>
-                            <option value="feature">💡 Demande de fonctionnalité</option>
-                            <option value="account">👤 Problème de compte</option>
-                            <option value="performance">⚡ Problème de performance</option>
-                            <option value="other">❓ Autre</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Priorité</Form.Label>
-                          <Form.Select
-                            value={supportForm.priority}
-                            onChange={(e) => setSupportForm({ ...supportForm, priority: e.target.value })}
-                            required
-                          >
-                            <option value="low">🟢 Basse - Question générale</option>
-                            <option value="medium">🟡 Moyenne - Problème gênant</option>
-                            <option value="high">🟠 Haute - Problème bloquant</option>
-                            <option value="urgent">🔴 Urgente - Service inutilisable</option>
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                    </Row>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Type de demande</Form.Label>
+                      <Form.Select
+                        value={supportForm.type}
+                        onChange={(e) => setSupportForm({ ...supportForm, type: e.target.value })}
+                        required
+                      >
+                        <option value="bug">🐞 Signaler un bug</option>
+                        <option value="question">❓ Poser une question</option>
+                        <option value="feature">💡 Suggérer une amélioration</option>
+                      </Form.Select>
+                    </Form.Group>
 
                     <Form.Group className="mb-3">
-                      <Form.Label>Objet</Form.Label>
+                      <Form.Label className="fw-semibold">
+                        📝 Votre message
+                      </Form.Label>
+                      <Form.Label className="d-block fw-normal">Objet</Form.Label>
                       <Form.Control
                         type="text"
-                        placeholder="Résumez votre problème en quelques mots..."
+                        placeholder="Décrivez brièvement votre demande..."
                         value={supportForm.subject}
                         onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
+                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                         required
-                        maxLength={100}
+                        maxLength={80}
                       />
                       <Form.Text className="text-muted">
-                        {supportForm.subject.length}/100 caractères
+                        {supportForm.subject.length}/80 caractères
                       </Form.Text>
                     </Form.Group>
 
                     <Form.Group className="mb-4">
-                      <Form.Label>Description détaillée</Form.Label>
+                      <Form.Label className="fw-normal">Description <span className="text-muted">(optionnelle mais recommandée)</span></Form.Label>
                       <Form.Control
                         as="textarea"
-                        rows={6}
-                        placeholder="Décrivez votre problème en détail. Plus vous serez précis, plus nous pourrons vous aider efficacement.
-
-Informations utiles :
-- Quelles étapes avez-vous suivies ?
-- Quel était le résultat attendu ?
-- Que s'est-il passé à la place ?
-- Avez-vous des messages d'erreur ?
-- Sur quel appareil/navigateur ?"
+                        rows={5}
+                        placeholder="Donnez-nous plus de détails sur votre demande..."
                         value={supportForm.message}
                         onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
-                        required
+                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                         maxLength={2000}
                       />
                       <Form.Text className="text-muted">
@@ -1521,14 +1717,17 @@ Informations utiles :
                       </Form.Text>
                     </Form.Group>
 
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div className="text-muted small">
-                        📧 Connecté en tant que: <strong>{user?.email}</strong>
-                      </div>
+                    <div className="alert alert-info mb-4" style={{ fontSize: '0.9rem' }}>
+                      <i className="bi bi-info-circle me-2"></i>
+                      <strong>👉 Nous recevrons automatiquement</strong> votre email, votre navigateur et votre appareil : pas besoin de nous les donner.
+                    </div>
+
+                    <div className="d-grid">
                       <Button 
                         type="submit" 
                         variant="primary"
-                        disabled={supportSubmitting || !supportForm.subject.trim() || !supportForm.message.trim()}
+                        size="lg"
+                        disabled={supportSubmitting || !supportForm.subject.trim()}
                       >
                         {supportSubmitting ? (
                           <>
@@ -1537,20 +1736,27 @@ Informations utiles :
                           </>
                         ) : (
                           <>
-                            📤 Envoyer la demande
+                            📤 Envoyer ma demande
                           </>
                         )}
                       </Button>
                     </div>
                   </Form>
 
-                  <div className="mt-4 p-3 bg-light rounded">
-                    <h6>📞 Autres moyens de nous contacter :</h6>
-                    <ul className="mb-0">
-                      <li>Email : support@exominutes.com</li>
-                      <li>Temps de réponse moyen : 24h en semaine</li>
-                      <li>Disponibilité : Lundi-Vendredi, 9h-18h</li>
-                    </ul>
+                  <div className="mt-4 p-4 bg-light rounded">
+                    <h6 className="mb-3" style={{ color: '#1e40af' }}>
+                      <i className="bi bi-mailbox me-2"></i>
+                      📬 Autres moyens de nous contacter
+                    </h6>
+                    <div className="mb-2">
+                      <strong>📧 Email :</strong> <a href="mailto:support@exominutes.com" style={{ color: '#3b82f6' }}>support@exominutes.com</a>
+                    </div>
+                    <div className="mb-2">
+                      <strong>⏱️ Réponse :</strong> Sous 24h en semaine
+                    </div>
+                    <div>
+                      <strong>📅 Disponibilité :</strong> Lun–Ven : 9h–18h
+                    </div>
                   </div>
                 </Card.Body>
               </Card>
@@ -1585,6 +1791,183 @@ Informations utiles :
                   </div>
 
                   <div className="d-grid gap-3">
+                    {/* User Console */}
+                    <div className="border rounded p-3 bg-light">
+                      <h6 className="mb-3">
+                        <i className="bi bi-person-gear me-2" style={{ color: '#3b82f6' }}></i>
+                        Console utilisateur
+                      </h6>
+                      <p className="text-muted small mb-3">
+                        Rechercher et gérer les informations d'un utilisateur par email.
+                      </p>
+
+                      {userConsoleMessage && (
+                        <Alert variant={userConsoleMessage.type === 'success' ? 'success' : 'danger'} className="mb-3">
+                          {userConsoleMessage.text}
+                        </Alert>
+                      )}
+
+                      <div className="mb-3">
+                        <Form.Group className="mb-2">
+                          <Form.Label className="small fw-semibold">Email utilisateur</Form.Label>
+                          <div className="d-flex gap-2">
+                            <Form.Control
+                              type="email"
+                              placeholder="exemple@email.com"
+                              value={userConsoleEmail}
+                              onChange={(e) => setUserConsoleEmail(e.target.value)}
+                              onKeyPress={(e) => e.key === 'Enter' && handleUserConsoleSearch()}
+                              onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
+                              disabled={userConsoleLoading}
+                            />
+                            <Button
+                              variant="primary"
+                              onClick={handleUserConsoleSearch}
+                              disabled={userConsoleLoading || !userConsoleEmail.trim()}
+                            >
+                              {userConsoleLoading ? (
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                              ) : (
+                                <i className="bi bi-search"></i>
+                              )}
+                            </Button>
+                          </div>
+                        </Form.Group>
+                      </div>
+
+                      {userConsoleData && (
+                        <div className="border rounded p-3 bg-white">
+                          <h6 className="mb-3 text-primary">Informations utilisateur</h6>
+                          
+                          <div className="mb-3">
+                            <strong className="d-block mb-1">Email:</strong>
+                            <code>{userConsoleData.email}</code>
+                          </div>
+
+                          <div className="mb-3">
+                            <strong className="d-block mb-1">User ID:</strong>
+                            <code>{userConsoleData.user_id || 'N/A'}</code>
+                          </div>
+
+                          <hr />
+
+                          {/* Subscription Information */}
+                          {userConsoleSubscription && (
+                            <div className="mb-3">
+                              <h6 className="mb-2 text-success">
+                                <i className="bi bi-credit-card me-2"></i>
+                                Abonnement
+                              </h6>
+                              <div className="ps-3">
+                                <div className="mb-1">
+                                  <small className="text-muted">Formule:</small>{' '}
+                                  <Badge bg={
+                                    userConsoleSubscription.tier === 'freemium' ? 'secondary' :
+                                    userConsoleSubscription.tier === 'standard' ? 'info' : 'warning'
+                                  }>
+                                    {userConsoleSubscription.tier === 'freemium' ? 'Freemium' :
+                                     userConsoleSubscription.tier === 'standard' ? 'Standard' : 'Famille+'}
+                                  </Badge>
+                                  {' '}
+                                  <small className="text-muted">
+                                    ({userConsoleSubscription.billing_period === 'monthly' ? 'Mensuel' : 'Annuel'})
+                                  </small>
+                                </div>
+                                <div className="mb-1">
+                                  <small className="text-muted">Statut:</small>{' '}
+                                  <Badge bg={userConsoleSubscription.status === 'active' ? 'success' : 'danger'}>
+                                    {userConsoleSubscription.status === 'active' ? 'Actif' : 
+                                     userConsoleSubscription.status === 'cancelled' ? 'Annulé' : 'Expiré'}
+                                  </Badge>
+                                </div>
+                                <div className="mb-1">
+                                  <small className="text-muted">Quota mensuel:</small>{' '}
+                                  <span className="fw-semibold">
+                                    {userConsoleSubscription.monthly_used} / {userConsoleSubscription.monthly_quota}
+                                  </span>
+                                  {' '}
+                                  <small className="text-muted">
+                                    ({Math.round((userConsoleSubscription.monthly_used / userConsoleSubscription.monthly_quota) * 100)}%)
+                                  </small>
+                                </div>
+                                {userConsoleSubscription.daily_quota && (
+                                  <div className="mb-1">
+                                    <small className="text-muted">Quota quotidien:</small>{' '}
+                                    <span className="fw-semibold">
+                                      {userConsoleSubscription.daily_used || 0} / {userConsoleSubscription.daily_quota}
+                                    </span>
+                                  </div>
+                                )}
+                                {userConsoleSubscription.addon_quota_remaining > 0 && (
+                                  <div className="mb-1">
+                                    <small className="text-muted">Packs addons restants:</small>{' '}
+                                    <span className="fw-semibold text-success">
+                                      {userConsoleSubscription.addon_quota_remaining}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="mb-1">
+                                  <small className="text-muted">Date de renouvellement:</small>{' '}
+                                  <span className="fw-semibold">
+                                    {new Date(userConsoleSubscription.renewal_date).toLocaleDateString('fr-FR')}
+                                  </span>
+                                </div>
+                                <div className="mb-1">
+                                  <small className="text-muted">Renouvellement automatique:</small>{' '}
+                                  <Badge bg={userConsoleSubscription.auto_renewal ? 'success' : 'warning'}>
+                                    {userConsoleSubscription.auto_renewal ? 'Oui' : 'Non'}
+                                  </Badge>
+                                </div>
+                                {userConsoleSubscription.pending_tier && (
+                                  <div className="mt-2">
+                                    <Alert variant="info" className="py-2 px-3 mb-0">
+                                      <small>
+                                        <i className="bi bi-info-circle me-1"></i>
+                                        Changement prévu: {userConsoleSubscription.pending_tier} au {new Date(userConsoleSubscription.renewal_date).toLocaleDateString('fr-FR')}
+                                      </small>
+                                    </Alert>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Quota Update Button */}
+                              <div className="mt-3">
+                                <Button
+                                  variant="warning"
+                                  size="sm"
+                                  onClick={handleOpenQuotaModal}
+                                  className="w-100"
+                                >
+                                  <i className="bi bi-gear-fill me-2"></i>
+                                  Ajuster le quota
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          <hr />
+
+                          {/* Préférences utilisateur */}
+                          <div className="mb-3">
+                            <h6 className="mb-2">
+                              <i className="bi bi-sliders me-2"></i>
+                              Préférences utilisateur
+                            </h6>
+                            <div className="ps-3">
+                              <div className="mb-1">
+                                <small className="text-muted">Niveau:</small>{' '}
+                                <span className="fw-semibold">{userConsoleData.user_preferences?.default_level || 'Non défini'}</span>
+                              </div>
+                              <div>
+                                <small className="text-muted">Durée:</small>{' '}
+                                <span className="fw-semibold">{userConsoleData.user_preferences?.default_period || 'Non défini'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Accès à la page d'administration */}
                     <div className="border rounded p-3">
                       <div className="d-flex justify-content-between align-items-center">
@@ -1632,180 +2015,11 @@ Informations utiles :
               </Card>
               </>
             )}
-
-            {/* Logout Section */}
-            {activeSection === "logout" && (
-              <>
-              <Card style={{ 
-                border: '2px solid #f8d7da', 
-                borderRadius: '12px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-              }}>
-                <Card.Header style={{ 
-                  backgroundColor: '#fff5f5',
-                  borderBottom: '2px solid #f8d7da',
-                  borderRadius: '10px 10px 0 0',
-                  padding: '16px 20px'
-                }}>
-                  <h5 className="mb-0 fw-semibold" style={{ color: '#dc3545' }}>
-                    <i className="bi bi-box-arrow-right me-2"></i>
-                    Se déconnecter
-                  </h5>
-                </Card.Header>
-                <Card.Body className="p-4">
-                  {!showLogoutConfirm ? (
-                    <div>
-                      <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
-                      <p className="text-muted">
-                        Vous devrez vous reconnecter pour accéder à votre compte.
-                      </p>
-                      <Button
-                        variant="danger"
-                        onClick={() => setShowLogoutConfirm(true)}
-                        className="me-2"
-                      >
-                        Oui, me déconnecter
-                      </Button>
-                      <Button
-                        variant="outline-secondary"
-                        onClick={() => setActiveSection("profile")}
-                      >
-                        Annuler
-                      </Button>
-                    </div>
-                  ) : (
-                    <Alert variant="warning">
-                      <Alert.Heading>Confirmation de déconnexion</Alert.Heading>
-                      <p>Cliquez sur "Confirmer" pour vous déconnecter définitivement.</p>
-                      <hr />
-                      <div className="d-flex justify-content-end gap-2">
-                        <Button
-                          variant="outline-warning"
-                          onClick={() => setShowLogoutConfirm(false)}
-                        >
-                          Annuler
-                        </Button>
-                        <Button variant="danger" onClick={handleLogout}>
-                          Confirmer la déconnexion
-                        </Button>
-                      </div>
-                    </Alert>
-                  )}
-                </Card.Body>
-              </Card>
-              </>
-            )}
           </Col>
         </Row>
       </Container>
 
-      {/* Addon Pack Purchase Modal */}
-      <Modal show={showAddonModal} onHide={() => setShowAddonModal(false)} centered>
-        <Modal.Header closeButton style={{ backgroundColor: '#f0fdf4', borderBottom: '2px solid #86efac' }}>
-          <Modal.Title style={{ color: '#166534', fontWeight: '700' }}>
-            <i className="bi bi-plus-circle-fill me-2" style={{ color: '#22c55e' }}></i>
-            Acheter des packs additionnels
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-4">
-          <div className="mb-4 p-3" style={{ 
-            backgroundColor: '#f0f9ff', 
-            borderRadius: '10px',
-            border: '1px solid #bae6fd'
-          }}>
-            <h6 style={{ color: '#0369a1', fontWeight: '600' }}>
-              <i className="bi bi-info-circle me-2"></i>
-              À propos des packs additionnels
-            </h6>
-            <p className="mb-0" style={{ fontSize: '0.9rem', color: '#0c4a6e' }}>
-              Les packs additionnels vous permettent d'augmenter votre quota de fiches au-delà de votre limite mensuelle. 
-              Ces fiches n'expirent pas et sont utilisées en priorité.
-            </p>
-          </div>
 
-          <Form.Group className="mb-3">
-            <Form.Label style={{ fontWeight: '600', color: '#1e40af' }}>
-              Nombre de packs à acheter
-            </Form.Label>
-            <Form.Control
-              type="number"
-              min="1"
-              max="20"
-              value={addonQuantity}
-              onChange={(e) => setAddonQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              style={{ 
-                borderWidth: '2px',
-                borderColor: '#93c5fd',
-                borderRadius: '8px'
-              }}
-            />
-            <Form.Text className="text-muted">
-              Chaque pack contient 15 fiches supplémentaires
-            </Form.Text>
-          </Form.Group>
-
-          <div className="p-3 mb-3" style={{ 
-            backgroundColor: '#fef3c7', 
-            borderRadius: '10px',
-            border: '2px solid #fcd34d'
-          }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <div style={{ fontSize: '0.85rem', color: '#92400e', fontWeight: '600' }}>
-                  Total de fiches
-                </div>
-                <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#b45309' }}>
-                  {addonQuantity * 15} fiches
-                </div>
-              </div>
-              <div className="text-end">
-                <div style={{ fontSize: '0.85rem', color: '#92400e', fontWeight: '600' }}>
-                  Prix total
-                </div>
-                <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#b45309' }}>
-                  {(addonQuantity * 0.99).toFixed(2)}€
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {status && status.addon_quota_remaining > 0 && (
-            <Alert variant="success" className="mb-0">
-              <small>
-                <i className="bi bi-check-circle-fill me-2"></i>
-                Vous avez actuellement <strong>{status.addon_quota_remaining} fiches</strong> de packs additionnels disponibles.
-              </small>
-            </Alert>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            variant="outline-secondary" 
-            onClick={() => setShowAddonModal(false)}
-            style={{ borderRadius: '8px', fontWeight: '600' }}
-          >
-            Annuler
-          </Button>
-          <Button 
-            variant="success"
-            onClick={handleBuyAddonPack}
-            disabled={actionLoading}
-            style={{ borderRadius: '8px', fontWeight: '600' }}
-          >
-            {actionLoading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Achat en cours...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-cart-check me-2"></i>
-                Confirmer l'achat
-              </>
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
 
       {/* Cancel Subscription Confirmation Modal */}
       <Modal 
@@ -2003,7 +2217,7 @@ Informations utiles :
           onError={handleStripeSubscriptionError}
           tierDisplayName={getTierDisplayName(pendingTier)}
           price={plans.find(p => p.tier === pendingTier)?.pricing[pendingBillingPeriod].price || 0}
-          features={plans.find(p => p.tier === pendingTier)?.features || []}
+          features={translateFeatures(plans.find(p => p.tier === pendingTier)?.features || [])}
           currentTier={status?.tier || 'freemium'}
           hasStripeSubscription={!!status?.stripe_subscription_id}
         />
@@ -2017,7 +2231,265 @@ Informations utiles :
         onError={handleStripeAddonError}
         packSize={15}
         packPrice={0.99}
+        userEmail={user?.email || ''}
       />
+
+      {/* Logout Confirmation Modal */}
+      <Modal show={showLogoutConfirm} onHide={() => setShowLogoutConfirm(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-box-arrow-right me-2"></i>
+            Confirmation de déconnexion
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+          <p className="text-muted">
+            Vous devrez vous reconnecter pour accéder à votre compte.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setShowLogoutConfirm(false)}>
+            Annuler
+          </Button>
+          <Button variant="danger" onClick={handleLogout}>
+            <i className="bi bi-box-arrow-right me-2"></i>
+            Me déconnecter
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Admin Quota Update Modal - Double Confirmation */}
+      <Modal 
+        show={showQuotaModal} 
+        onHide={() => {
+          setShowQuotaModal(false);
+          setShowQuotaConfirm(false);
+        }} 
+        centered
+        size="lg"
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            backgroundColor: '#fef3c7', 
+            borderBottom: '2px solid #fbbf24' 
+          }}
+        >
+          <Modal.Title style={{ color: '#92400e', fontWeight: '700' }}>
+            <i className="bi bi-gear-fill me-2" style={{ color: '#d97706' }}></i>
+            {!showQuotaConfirm ? 'Ajuster le quota utilisateur' : '⚠️ Confirmation requise'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '2rem' }}>
+          {!showQuotaConfirm ? (
+            <>
+              {/* Step 1: Configuration Form */}
+              <Alert variant="warning" className="mb-3">
+                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Action critique :</strong> Cette opération modifie directement le quota de l'utilisateur.
+              </Alert>
+
+              {userConsoleMessage?.type === 'error' && (
+                <Alert variant="danger" className="mb-3">
+                  <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem' }}>
+                    {userConsoleMessage.text}
+                  </div>
+                </Alert>
+              )}
+
+              <div className="mb-3">
+                <strong className="d-block mb-2">Utilisateur concerné :</strong>
+                <code className="p-2 bg-light rounded d-block">{userConsoleData?.email}</code>
+              </div>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Type d'opération *</Form.Label>
+                <Form.Select
+                  value={quotaOperation}
+                  onChange={(e) => setQuotaOperation(e.target.value as any)}
+                >
+                  <option value="add">➕ Ajouter au quota existant</option>
+                  <option value="subtract">➖ Soustraire du quota existant</option>
+                  <option value="set">🎯 Définir une valeur exacte</option>
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  {quotaOperation === 'add' && 'Ajoute le montant au quota actuel'}
+                  {quotaOperation === 'subtract' && 'Soustrait le montant du quota actuel (minimum 0)'}
+                  {quotaOperation === 'set' && 'Définit le quota à une valeur exacte'}
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Type de quota *</Form.Label>
+                <Form.Select
+                  value={quotaType}
+                  onChange={(e) => setQuotaType(e.target.value as any)}
+                >
+                  <option value="addon">📦 Packs addons (ne se réinitialise jamais)</option>
+                  <option value="monthly">📅 Quota mensuel (se réinitialise chaque mois)</option>
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  {quotaType === 'addon' && 'Les packs addons persistent jusqu\'à utilisation complète'}
+                  {quotaType === 'monthly' && 'Le quota mensuel se réinitialise à la date de renouvellement'}
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Montant *</Form.Label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  value={quotaAmount}
+                  onChange={(e) => setQuotaAmount(parseInt(e.target.value) || 0)}
+                  placeholder="Ex: 50"
+                />
+                <Form.Text className="text-muted">
+                  Nombre de fiches à {quotaOperation === 'add' ? 'ajouter' : quotaOperation === 'subtract' ? 'soustraire' : 'définir'}
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Raison * (minimum 10 caractères)</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={quotaReason}
+                  onChange={(e) => setQuotaReason(e.target.value)}
+                  placeholder="Ex: Compensation pour interruption de service - Ticket #12345"
+                  minLength={10}
+                />
+                <Form.Text className="text-muted">
+                  {quotaReason.length}/10 caractères minimum - Justification obligatoire pour traçabilité
+                </Form.Text>
+              </Form.Group>
+
+              {userConsoleSubscription && (
+                <div className="p-3 bg-light rounded">
+                  <h6 className="mb-2">📊 État actuel</h6>
+                  <div className="d-flex justify-content-between mb-1">
+                    <span>Quota mensuel:</span>
+                    <strong>{userConsoleSubscription.monthly_used} / {userConsoleSubscription.monthly_quota}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Packs addons:</span>
+                    <strong>{userConsoleSubscription.addon_quota_remaining}</strong>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Step 2: Double Confirmation */}
+              <Alert variant="danger" className="mb-3">
+                <Alert.Heading as="h6">
+                  <i className="bi bi-exclamation-octagon-fill me-2"></i>
+                  Confirmation finale requise
+                </Alert.Heading>
+                <p className="mb-0">
+                  Vous êtes sur le point de modifier le quota utilisateur. Cette action sera enregistrée dans l'audit trail.
+                </p>
+              </Alert>
+
+              <div className="border rounded p-3 mb-3 bg-light">
+                <h6 className="mb-3 fw-bold">Récapitulatif de l'opération</h6>
+                
+                <div className="mb-2">
+                  <strong>Utilisateur :</strong>
+                  <div className="ms-3 mt-1">
+                    <code>{userConsoleData?.email}</code>
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <strong>Opération :</strong>
+                  <div className="ms-3 mt-1">
+                    <Badge bg={
+                      quotaOperation === 'add' ? 'success' :
+                      quotaOperation === 'subtract' ? 'danger' : 'warning'
+                    }>
+                      {quotaOperation === 'add' ? '➕ AJOUTER' :
+                       quotaOperation === 'subtract' ? '➖ SOUSTRAIRE' : '🎯 DÉFINIR'}
+                    </Badge>
+                    {' '}
+                    <span className="fw-bold">{quotaAmount} fiches</span>
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <strong>Type de quota :</strong>
+                  <div className="ms-3 mt-1">
+                    <Badge bg={quotaType === 'addon' ? 'info' : 'primary'}>
+                      {quotaType === 'addon' ? '📦 PACKS ADDONS' : '📅 QUOTA MENSUEL'}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <strong>Raison :</strong>
+                  <div className="ms-3 mt-1 p-2 bg-white rounded border">
+                    <small>{quotaReason}</small>
+                  </div>
+                </div>
+
+                <div className="mb-0">
+                  <strong>Administrateur :</strong>
+                  <div className="ms-3 mt-1">
+                    <code>{user?.email}</code>
+                  </div>
+                </div>
+              </div>
+
+              <Alert variant="info" className="mb-0">
+                <small>
+                  <i className="bi bi-info-circle me-1"></i>
+                  L'opération sera tracée avec horodatage, email admin et raison fournie.
+                </small>
+              </Alert>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="outline-secondary" 
+            onClick={() => {
+              setShowQuotaModal(false);
+              setShowQuotaConfirm(false);
+            }}
+            disabled={quotaUpdating}
+          >
+            Annuler
+          </Button>
+          {!showQuotaConfirm ? (
+            <Button 
+              variant="warning" 
+              onClick={handleQuotaFirstConfirm}
+              disabled={!quotaReason.trim() || quotaReason.length < 10 || quotaAmount < 0}
+            >
+              <i className="bi bi-arrow-right-circle me-2"></i>
+              Continuer
+            </Button>
+          ) : (
+            <Button 
+              variant="danger" 
+              onClick={handleQuotaFinalConfirm}
+              disabled={quotaUpdating}
+            >
+              {quotaUpdating ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Mise à jour...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-check-circle-fill me-2"></i>
+                  Confirmer la modification
+                </>
+              )}
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
     </ProtectedPage>
   );
 }

@@ -88,12 +88,24 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
               {user ? (
                 <>
                   {/* Authenticated Menu Items */}
-                  <Nav.Link as={Link} href="/generate" scroll={false} className="d-flex align-items-center mx-2">
+                  <Nav.Link 
+                    as={Link} 
+                    href="/generate" 
+                    scroll={false} 
+                    className="d-flex align-items-center mx-2"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
                     <i className="bi bi-pencil-square me-2" style={{ fontSize: '1rem' }}></i>
                     Générer
                   </Nav.Link>
 
-                  <Nav.Link as={Link} href="/sessions" scroll={false} className="d-flex align-items-center mx-2">
+                  <Nav.Link 
+                    as={Link} 
+                    href="/sessions" 
+                    scroll={false} 
+                    className="d-flex align-items-center mx-2"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
                     <i className="bi bi-folder2-open me-2" style={{ fontSize: '1rem' }}></i>
                     Mes fiches
                   </Nav.Link>
@@ -116,7 +128,13 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                   </Nav.Link>
 
                   {/* Account Button with User Email */}
-                  <Nav.Link as={Link} href="/account" scroll={false} className="d-flex align-items-center mx-2 account-link">
+                  <Nav.Link 
+                    as={Link} 
+                    href="/account" 
+                    scroll={false} 
+                    className="d-flex align-items-center mx-2 account-link"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
                     <i className="bi bi-person-circle me-2" style={{ fontSize: '1rem' }}></i>
                     <div className="d-flex flex-column align-items-start">
                       <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>Mon compte</span>

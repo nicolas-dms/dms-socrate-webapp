@@ -25,13 +25,20 @@ const durations = ["10 min", "20 min", "30 min"];
 
 export default function GenerateMathPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, userPreferences } = useAuth();
   const { status, usageView, canGenerateMore, getRemainingFiches, updateStatusFromQuotaInfo } = useSubscription();
   
-  // Form state
-  const [level, setLevel] = useState("CE1");
-  const [duration, setDuration] = useState("30 min");
+  // Form state - Initialize with user preferences from AuthContext
+  const [level, setLevel] = useState(userPreferences.default_level);
+  const [duration, setDuration] = useState(userPreferences.default_period);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  
+  // Sync with global preferences when they change
+  useEffect(() => {
+    setLevel(userPreferences.default_level);
+    setDuration(userPreferences.default_period);
+    console.log('👤 [Math] Using user preferences:', userPreferences);
+  }, [userPreferences]);
   
   // Exercise type parameters
   const [exerciceTypeParams, setExerciceTypeParams] = useState<ExerciceTypeParam>({});
@@ -1315,6 +1322,7 @@ export default function GenerateMathPage() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagInputKeyDown}
+                    onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                     style={{ fontSize: '0.9rem' }}
                   />
                   <Button 
@@ -1643,6 +1651,7 @@ export default function GenerateMathPage() {
                     placeholder="🔍 Rechercher un exercice..."
                     value={exerciseGuideSearch}
                     onChange={(e) => setExerciseGuideSearch(e.target.value)}
+                    onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                     style={{
                       paddingLeft: '2.5rem',
                       borderRadius: '8px',

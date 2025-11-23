@@ -44,12 +44,19 @@ interface ExercisePreview {
 export default function GenerateFrenchPage() {
   const { t } = useTranslation();
   const { status, usageView, canGenerateMore, getRemainingFiches, updateStatusFromQuotaInfo } = useSubscription();
-  const { user } = useAuth();
+  const { user, userPreferences } = useAuth();
   const router = useRouter();
   
-  // Form state
-  const [level, setLevel] = useState("CE1");
-  const [duration, setDuration] = useState("30 min");
+  // Form state - Initialize with user preferences from AuthContext
+  const [level, setLevel] = useState(userPreferences.default_level);
+  const [duration, setDuration] = useState(userPreferences.default_period);
+  
+  // Sync with global preferences when they change
+  useEffect(() => {
+    setLevel(userPreferences.default_level);
+    setDuration(userPreferences.default_period);
+    console.log('👤 [French] Using user preferences:', userPreferences);
+  }, [userPreferences]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
   // Exercise type parameters
@@ -1720,6 +1727,7 @@ export default function GenerateFrenchPage() {
                         value={ficheTheme}
                         readOnly
                         disabled
+                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                         style={{ fontSize: '0.9rem', backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
                       />
                       <small className="text-muted">
@@ -1792,6 +1800,7 @@ export default function GenerateFrenchPage() {
                             setFicheTheme(value);
                           }
                         }}
+                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                         maxLength={60}
                         style={{ fontSize: '0.9rem' }}
                       />
@@ -1846,6 +1855,7 @@ export default function GenerateFrenchPage() {
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleTagInputKeyDown}
+                      onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                       style={{ fontSize: '0.9rem' }}
                     />
                     <Button 
@@ -2186,6 +2196,7 @@ export default function GenerateFrenchPage() {
                     placeholder="🔍 Rechercher un exercice..."
                     value={exerciseGuideSearch}
                     onChange={(e) => setExerciseGuideSearch(e.target.value)}
+                    onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
                     style={{
                       paddingLeft: '2.5rem',
                       borderRadius: '8px',

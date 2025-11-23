@@ -13,6 +13,7 @@ interface AddonPackPaymentModalProps {
   onError: (error: string) => void;
   packSize: number;
   packPrice: number;
+  userEmail: string;
 }
 
 /**
@@ -31,6 +32,7 @@ export const AddonPackPaymentModal: React.FC<AddonPackPaymentModalProps> = ({
   onError,
   packSize = 15,
   packPrice = 0.99,
+  userEmail,
 }) => {
   const stripe = useStripe();
   const [numPacks, setNumPacks] = useState(1);
@@ -40,31 +42,63 @@ export const AddonPackPaymentModal: React.FC<AddonPackPaymentModalProps> = ({
   const totalQuotas = numPacks * packSize;
 
   const handlePaymentSuccess = async (paymentMethodId: string) => {
-    if (!stripe) return;
+    if (!stripe) {
+      console.error('❌ [AddonPackPaymentModal] Stripe not initialized');
+      return;
+    }
+
+    console.log('🎁 [AddonPackPaymentModal] Starting addon pack purchase:', {
+      numPacks,
+      packSize,
+      packPrice,
+      totalPrice,
+      totalQuotas,
+      paymentMethodId: paymentMethodId ? `${paymentMethodId.substring(0, 10)}...` : 'null'
+    });
 
     setLoading(true);
     try {
       // Purchase addon packs via backend
-      const result = await stripeService.purchaseAddonPacks(numPacks, paymentMethodId);
+      console.log('📞 [AddonPackPaymentModal] Calling stripeService.purchaseAddonPacks...');
+      const result = await stripeService.purchaseAddonPacks(numPacks, paymentMethodId, userEmail);
+      
+      console.log('✅ [AddonPackPaymentModal] Backend response received:', result);
+      console.log('✅ [AddonPackPaymentModal] Backend response FULL:', JSON.stringify(result, null, 2));
 
       // Handle 3D Secure if needed
       if (result.client_secret) {
+        console.log('🔐 [AddonPackPaymentModal] 3D Secure confirmation required');
         const { error: confirmError } = await stripe.confirmCardPayment(
           result.client_secret
         );
 
         if (confirmError) {
+          console.error('❌ [AddonPackPaymentModal] 3D Secure confirmation failed:', confirmError);
           throw new Error(confirmError.message || 'Échec de la confirmation du paiement');
         }
+        console.log('✅ [AddonPackPaymentModal] 3D Secure confirmation successful');
       }
 
       // Success!
+      console.log('🎉 [AddonPackPaymentModal] Purchase completed successfully:', {
+        packs_purchased: result.packs_purchased,
+        quotas_added: result.quotas_added
+      });
+      
       onSuccess(result.packs_purchased, result.quotas_added);
       onHide();
       
       // Reset form
       setNumPacks(1);
     } catch (error: any) {
+      console.error('❌ [AddonPackPaymentModal] Purchase failed:', {
+        error,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
       const errorMessage = error.response?.data?.detail || error.message || 'Erreur lors de l\'achat des packs';
       onError(errorMessage);
     } finally {
