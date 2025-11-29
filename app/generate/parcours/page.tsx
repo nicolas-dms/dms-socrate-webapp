@@ -117,7 +117,7 @@ export default function ParcoursPage() {
 
   return (
     <ProtectedPage>
-      <Container className="mt-3">
+      <Container style={{ marginTop: '0.65rem' }}>
         <Row className="justify-content-center">
           <Col lg={8}>
             {/* Enhanced Main Title */}

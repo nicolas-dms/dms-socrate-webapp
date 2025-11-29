@@ -107,6 +107,7 @@ export default function SessionsPage() {
   const [selectedFile, setSelectedFile] = useState<GeneratedFile | null>(null);
   const [showPDFViewerModal, setShowPDFViewerModal] = useState(false);
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
+  const [loadingPdfViewer, setLoadingPdfViewer] = useState(false);
   
   // Tags editing state
   const [showTagsModal, setShowTagsModal] = useState(false);
@@ -694,6 +695,8 @@ export default function SessionsPage() {
       return;
     }
     
+    setLoadingPdfViewer(true);
+    
     try {
       setError(null);
       console.log('Attempting to view file:', { 
@@ -735,6 +738,8 @@ export default function SessionsPage() {
       }
       
       setError(errorMessage);
+    } finally {
+      setLoadingPdfViewer(false);
     }
   };
 
@@ -831,6 +836,16 @@ export default function SessionsPage() {
         );
         return deduplicateAndSortFiles(updatedFiles);
       });
+
+      // Also update filteredFiles to reflect the change immediately
+      setFilteredFiles(prevFilteredFiles => {
+        const updatedFilteredFiles = prevFilteredFiles.map(file => 
+          file.file_id === selectedFile.file_id 
+            ? { ...file, tags: editingTags }
+            : file
+        );
+        return updatedFilteredFiles;
+      });
       
       setShowTagsModal(false);
       setSelectedFile(null);
@@ -849,13 +864,21 @@ export default function SessionsPage() {
 
   return (
     <ProtectedPage>
-      <Container className="mt-3">
+      <Container style={{ marginTop: '0.65rem' }}>
         <Row className="justify-content-center">
           <Col lg={10}>
             {/* Enhanced Main Title */}
             <div className="text-center mb-4">
-              <h2 className="fw-bold mb-2" style={{ color: '#2c3e50' }}>
-                <i className="bi bi-folder2-open me-2" style={{ color: '#6c757d' }}></i>
+              <h2 className="fw-bold mb-2" style={{ 
+                color: '#2c3e50',
+                fontSize: '2rem'
+              }}>
+                <i className="bi bi-folder2-open me-2" style={{ 
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #87ceeb 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}></i>
                 Mes Fiches
               </h2>
               <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
@@ -864,21 +887,24 @@ export default function SessionsPage() {
             </div>
 
             <Card style={{ 
-              border: '2px solid #e9ecef', 
+              border: '2px solid #e9ecef',
               borderRadius: '12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              background: 'linear-gradient(135deg, rgba(251,191,36,0.03) 0%, rgba(135,206,235,0.03) 100%)',
+              backgroundAttachment: 'fixed'
             }}>
               <Card.Body className="p-4">
                 {/* Filters Card */}
                 <Card className="mb-4" style={{ 
-                  backgroundColor: '#f8f9fa',
+                  background: 'linear-gradient(135deg, rgba(251,191,36,0.05) 0%, rgba(135,206,235,0.05) 100%)',
                   border: '1px solid #e9ecef',
-                  borderRadius: '10px'
+                  borderRadius: '10px',
+                  boxShadow: '0 1px 3px rgba(251,191,36,0.1)'
                 }}>
                   <Card.Body className="p-3">
                     <div className="d-flex align-items-center justify-content-between mb-3">
                       <h6 className="mb-0 fw-semibold" style={{ color: '#495057', fontSize: '0.9rem' }}>
-                        <i className="bi bi-funnel me-2"></i>
+                        <i className="bi bi-funnel me-2" style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #87ceeb 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}></i>
                         Filtres
                       </h6>
                       {/* Phase 6: Notification de restauration des filtres */}
@@ -1556,14 +1582,33 @@ export default function SessionsPage() {
 
                     {/* List View - One file per row */}
                     <div className="d-flex flex-column gap-3">
-                      {filteredFiles.map((file) => (
+                      {filteredFiles.map((file) => {
+                        // Determine color theme based on domain
+                        const isDomainFrench = file.exercice_domain === 'francais';
+                        const borderColor = isDomainFrench ? '#fbbf24' : '#87ceeb';
+                        const accentColor = isDomainFrench ? 'rgba(251,191,36,0.08)' : 'rgba(135,206,235,0.08)';
+                        const shadowColor = isDomainFrench ? 'rgba(251,191,36,0.15)' : 'rgba(135,206,235,0.15)';
+                        
+                        return (
                         <Card 
                           key={file.file_id}
                           className={styles['file-card']}
                           style={{ 
-                            border: '2px solid #e9ecef',
+                            border: `2px solid ${borderColor}`,
                             borderRadius: '10px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                            boxShadow: `0 4px 12px ${shadowColor}`,
+                            background: `linear-gradient(135deg, ${accentColor} 0%, transparent 100%)`,
+                            transition: 'all 0.3s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            const element = e.currentTarget as HTMLElement;
+                            element.style.boxShadow = `0 6px 16px ${shadowColor}`;
+                            element.style.transform = 'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            const element = e.currentTarget as HTMLElement;
+                            element.style.boxShadow = `0 4px 12px ${shadowColor}`;
+                            element.style.transform = 'translateY(0)';
                           }}
                         >
                           <Card.Body className="p-3">
@@ -1773,7 +1818,8 @@ export default function SessionsPage() {
                             </Row>
                           </Card.Body>
                         </Card>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Phase 2: Backend Pagination - Loading Indicator */}
@@ -2053,6 +2099,19 @@ export default function SessionsPage() {
               )}
             </Button>
           </Modal.Footer>
+        </Modal>
+
+        {/* PDF Loading Modal */}
+        <Modal 
+          show={loadingPdfViewer} 
+          centered 
+          backdrop="static"
+          className="loading-modal"
+        >
+          <Modal.Body className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+            <p className="mt-3 mb-0">Chargement du fichier...</p>
+          </Modal.Body>
         </Modal>
 
         {/* PDF Viewer Modal */}

@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [showTempError, setShowTempError] = useState(false);
   const [sendingCode, setSendingCode] = useState(false); // Loading state for sending magic code
   const [verifyingCode, setVerifyingCode] = useState(false); // Loading state for verifying code
+  const [preparingExperience, setPreparingExperience] = useState(false); // Loading state after successful login
 
   // Redirect if already logged in AND subscription is loaded
   useEffect(() => {
@@ -35,9 +36,32 @@ export default function LoginPage() {
     }
   }, [user, loading, subscriptionLoading, router]);
 
-  // Don't render login form if user is authenticated (silent redirect)
-  if (user) {
-    return null;
+  // Show loading animation if preparing experience or user authenticated
+  if (user || preparingExperience) {
+    return (
+      <div className="container-fluid py-4" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #fef3c7 100%)', minHeight: 'calc(100vh - 76px)' }}>
+        <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
+          <div className="mb-4" style={{ fontSize: '3rem', animation: 'bounce 1s ease-in-out infinite' }}>
+            ✨
+          </div>
+          <div className="spinner-border text-warning mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
+            <span className="visually-hidden">Chargement...</span>
+          </div>
+          <h4 className="text-center" style={{ color: '#854d0e', fontWeight: '600' }}>
+            Préparation de votre expérience...
+          </h4>
+          <p className="text-center text-muted mt-2">
+            Nous configurons tout pour vous
+          </p>
+        </div>
+        <style jsx>{`
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+          }
+        `}</style>
+      </div>
+    );
   }
   // Email validation function
   const isValidEmail = (email: string): boolean => {
@@ -105,18 +129,13 @@ export default function LoginPage() {
       const result = await login(email, code);
       if (result.success) {
         setShowCodeModal(false);
-        // Show welcome message for new users
-        if (result.isNewUser) {
-          setSuccess(result.message || t('auth.welcomeNewUser'));
-        } else {
-          setSuccess(result.message || t('auth.welcomeBackUser'));
-        }
+        setPreparingExperience(true);
         
         // Wait a moment for subscription context to load before redirecting
-        console.log('Login successful, waiting for subscription data...');
+        console.log('Login successful, preparing experience...');
         setTimeout(() => {
           router.push("/generate");
-        }, 500); // Small delay to allow subscription context to initialize
+        }, 1500); // Delay to show loading animation and allow subscription context to initialize
       } else {
         // Authentication failed - show temp error and clear input
         setShowTempError(true);

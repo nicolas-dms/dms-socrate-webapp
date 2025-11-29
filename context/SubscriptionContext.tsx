@@ -7,6 +7,7 @@ import {
   toUsageView
 } from "../services/subscriptionService";
 import { stripeService } from "../services/stripeService";
+import initializationService from "../services/initializationService";
 import { 
   SubscriptionStatus, 
   SubscriptionUsageView,
@@ -28,6 +29,7 @@ interface SubscriptionContextType {
   
   // Actions
   refreshSubscription: () => Promise<void>;
+  refreshQuotaAfterGeneration: () => Promise<void>;
   updateStatusFromQuotaInfo: (quotaInfo: SubscriptionStatus) => void;
   changeTier: (newTier: "freemium" | "standard" | "famille_plus", billingPeriod?: "monthly" | "yearly") => Promise<{ success: boolean; message: string }>;
   changeBillingPeriod: (newPeriod: "monthly" | "yearly") => Promise<{ success: boolean; message: string }>;
@@ -83,15 +85,34 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       setLoading(true);
       
-      // Load plans and status in parallel
-      const [plansData, statusData] = await Promise.all([
-        subscriptionService.getPlans(),
+      // FIRST: Try to use cached initialization data from login/session
+      const cachedInit = initializationService.getCachedInitData();
+      
+      if (cachedInit) {
+        console.log('✅ [SubscriptionContext] Using cached initialization data');
+        setStatus(cachedInit.data.subscription as any);
+        setUsageView(toUsageView(cachedInit.data.subscription as any));
+        setPlans(cachedInit.data.plans as any);
+        
+        // Load history in background (non-critical)
+        subscriptionService.getHistory(userId, 10)
+          .then((historyData: HistoryResponse) => setHistory(historyData.transactions))
+          .catch(err => console.error("Failed to load history:", err));
+        
+        setLoading(false);
+        return;
+      }
+      
+      // FALLBACK: No cache - fetch fresh data
+      console.log('🔄 [SubscriptionContext] No cached data, fetching fresh subscription data');
+      const [statusData, plansData] = await Promise.all([
         subscriptionService.getStatus(userId),
+        subscriptionService.getPlans()
       ]);
       
-      setPlans(plansData.plans);
       setStatus(statusData);
       setUsageView(toUsageView(statusData));
+      setPlans(plansData.plans);
       
       // Load history in background (non-critical)
       subscriptionService.getHistory(userId, 10)
@@ -101,38 +122,68 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error("Failed to load subscription data:", error);
       
-      // If user has no subscription, try to initialize freemium
+      // If user has no subscription (404), initialize freemium in background
+      // Don't block the UI - set default freemium state immediately
       if ((error as any)?.response?.status === 404) {
-        try {
-          const initResponse: InitializeFreemiumResponse = await subscriptionService.initializeFreemium(userId);
-          // Note: initializeFreemium returns a nested structure
-          const initStatus: SubscriptionStatus = {
-            tier: initResponse.subscription.tier,
-            status: initResponse.subscription.status,
-            billing_period: "monthly",
-            renewal_type: "calendar",
-            monthly_quota: initResponse.subscription.monthly_quota,
-            monthly_used: 0,
-            monthly_remaining: initResponse.subscription.monthly_quota,
-            daily_quota: initResponse.subscription.daily_quota,
-            daily_used: 0,
-            daily_remaining: initResponse.subscription.daily_quota,
-            addon_quota_remaining: 0,
-            addon_packs_purchased: 0,
-            renewal_date: initResponse.subscription.renewal_date,
-            start_date: new Date().toISOString(),
-            features: [],
-            auto_renewal: false,
-            pending_tier: null,
-            pending_billing_period: null
-          };
-          setStatus(initStatus);
-          setUsageView(toUsageView(initStatus));
-        } catch (initError) {
-          console.error("Failed to initialize freemium:", initError);
-          setStatus(null);
-          setUsageView(null);
-        }
+        console.log('⚠️ No subscription found, initializing freemium...');
+        
+        // Set optimistic default freemium state immediately
+        const defaultFreemiumStatus: SubscriptionStatus = {
+          tier: "freemium",
+          status: "active",
+          billing_period: "monthly",
+          renewal_type: "calendar",
+          monthly_quota: 1,
+          monthly_used: 0,
+          monthly_remaining: 1,
+          daily_quota: 1,
+          daily_used: 0,
+          daily_remaining: 1,
+          addon_quota_remaining: 0,
+          addon_packs_purchased: 0,
+          renewal_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+          start_date: new Date().toISOString(),
+          features: [],
+          auto_renewal: true,
+          pending_tier: null,
+          pending_billing_period: null,
+          welcome_pack: null
+        };
+        setStatus(defaultFreemiumStatus);
+        setUsageView(toUsageView(defaultFreemiumStatus));
+        
+        // Initialize freemium in background
+        subscriptionService.initializeFreemium(userId)
+          .then((initResponse: InitializeFreemiumResponse) => {
+            console.log('✅ Freemium initialized successfully');
+            const initStatus: SubscriptionStatus = {
+              tier: initResponse.subscription.tier,
+              status: initResponse.subscription.status,
+              billing_period: "monthly",
+              renewal_type: "calendar",
+              monthly_quota: initResponse.subscription.monthly_quota,
+              monthly_used: 0,
+              monthly_remaining: initResponse.subscription.monthly_quota,
+              daily_quota: initResponse.subscription.daily_quota,
+              daily_used: 0,
+              daily_remaining: initResponse.subscription.daily_quota,
+              addon_quota_remaining: 0,
+              addon_packs_purchased: 0,
+              renewal_date: initResponse.subscription.renewal_date,
+              start_date: new Date().toISOString(),
+              features: [],
+              auto_renewal: false,
+              pending_tier: null,
+              pending_billing_period: null,
+              welcome_pack: null
+            };
+            setStatus(initStatus);
+            setUsageView(toUsageView(initStatus));
+          })
+          .catch(initError => {
+            console.error("Failed to initialize freemium in background:", initError);
+            // Keep the optimistic default state
+          });
       } else {
         setStatus(null);
         setUsageView(null);
@@ -164,6 +215,22 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
+  // NEW: Refresh quota after generation (lightweight, no history reload)
+  const refreshQuotaAfterGeneration = async (): Promise<void> => {
+    if (!user?.user_id && !user?.email) return;
+    
+    const userId = user.user_id || user.email;
+    
+    try {
+      const statusData = await subscriptionService.getStatus(userId);
+      setStatus(statusData);
+      setUsageView(toUsageView(statusData));
+      console.log('✅ [SubscriptionContext] Quota refreshed after generation');
+    } catch (error) {
+      console.error("Failed to refresh quota after generation:", error);
+    }
+  };
+
   // Update status from quota_info returned by exercise generation API
   const updateStatusFromQuotaInfo = (quotaInfo: SubscriptionStatus): void => {
     console.log("Updating subscription status from quota_info:", quotaInfo);
@@ -190,7 +257,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       });
       
       if (result.success) {
-        // Force immediate refresh of subscription status
+        // Clear cached initialization data
+        initializationService.clearInitCache();
+        
+        // Targeted refresh of subscription status only
         console.log("Tier change successful, refreshing subscription status...");
         const updatedStatus = await subscriptionService.getStatus(userId);
         console.log("Updated status received:", updatedStatus);
@@ -232,7 +302,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       });
       
       if (result.success) {
-        // Force immediate refresh of subscription status
+        // Clear cached initialization data
+        initializationService.clearInitCache();
+        
+        // Targeted refresh of subscription status
         console.log("Billing period change successful, refreshing subscription status...");
         const updatedStatus = await subscriptionService.getStatus(userId);
         console.log("Updated status received:", updatedStatus);
@@ -272,7 +345,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       });
       
       if (result.success) {
-        // Force immediate refresh of subscription status
+        // Clear cached initialization data
+        initializationService.clearInitCache();
+        
+        // Targeted refresh of subscription status
         console.log("Addon pack purchase successful, refreshing subscription status...");
         const updatedStatus = await subscriptionService.getStatus(userId);
         console.log("Updated status received:", updatedStatus);
@@ -498,8 +574,15 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       setLoading(true);
 
+      if (!user.email) {
+        return {
+          success: false,
+          message: "Email utilisateur non disponible"
+        };
+      }
+
       // Purchase addon packs via Stripe
-      const stripeResult = await stripeService.purchaseAddonPacks(quantity, paymentMethodId);
+      const stripeResult = await stripeService.purchaseAddonPacks(quantity, paymentMethodId, user.email);
 
       if (!stripeResult.success) {
         return {
@@ -586,6 +669,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       const result = await subscriptionService.cancelAutoRenewal(userId);
       
       if (result.success) {
+        // Clear cached initialization data
+        initializationService.clearInitCache();
+        
         // Refresh subscription status to get updated auto_renewal flag
         console.log("Auto-renewal cancelled, refreshing subscription status...");
         const updatedStatus = await subscriptionService.getStatus(userId);
@@ -694,6 +780,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       
       // New actions
       refreshSubscription,
+      refreshQuotaAfterGeneration,
       updateStatusFromQuotaInfo,
       changeTier,
       changeBillingPeriod,

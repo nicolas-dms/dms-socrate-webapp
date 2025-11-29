@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authService, User } from "../services/authService";
 import { userService } from "../services/userService";
+import initializationService from "../services/initializationService";
 
 interface UserPreferences {
   default_level: string;
@@ -39,15 +40,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initializeAuth = async () => {
       try {
         if (authService.isAuthenticated()) {
-          // Try to get current user info
-          const userData = await authService.getCurrentUser();
-          setUser(userData);
+          console.log('🔄 [AuthContext] Initializing session with combined endpoint...');
+          const startTime = performance.now();
           
-          // Load user preferences
-          await loadUserPreferences(userData.email);
+          // Single API call gets everything
+          const initData = await initializationService.initializeSession();
           
-          // Check if user is new by counting their files
-          await checkIfNewUser(userData.user_id);
+          const endTime = performance.now();
+          console.log(`✅ [AuthContext] Session initialized in ${(endTime - startTime).toFixed(0)}ms`);
+          
+          // Set all state at once
+          setUser(initData.user as unknown as User);
+          setIsNewUser(initData.is_new_user);
+          
+          // Set preferences from user data
+          if (initData.user.preferences) {
+            const prefs = initData.user.preferences;
+            setUserPreferences({
+              default_level: prefs.default_level || 'CE2',
+              default_domain: prefs.default_domain || 'tous',
+              default_period: prefs.default_period || '20 min'
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to initialize auth:", error);
@@ -60,78 +74,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
   }, []);
-
-  // Function to load user preferences
-  const loadUserPreferences = async (email: string): Promise<void> => {
-    try {
-      console.log('👤 [AuthContext] Loading user preferences...');
-      const userData = await userService.getUserWithPreferences(email);
-      
-      if (userData.user_preferences) {
-        const prefs = userData.user_preferences;
-        const newPrefs = {
-          default_level: prefs.default_level || 'CE2',
-          default_domain: prefs.default_domain || 'tous',
-          default_period: prefs.default_period || '20 min'
-        };
-        setUserPreferences(newPrefs);
-        console.log('✅ [AuthContext] User preferences loaded:', newPrefs);
-        
-        // Auto-save default preferences if any are missing
-        if (!prefs.default_level || !prefs.default_domain || !prefs.default_period) {
-          console.log('🔄 [AuthContext] Auto-saving default preferences...');
-          await userService.updateUserPreferences(email, newPrefs);
-        }
-      } else {
-        // No preferences - create defaults
-        console.log('🔄 [AuthContext] Creating default preferences...');
-        const defaultPrefs = {
-          default_level: 'CE2',
-          default_domain: 'tous',
-          default_period: '20 min'
-        };
-        await userService.updateUserPreferences(email, defaultPrefs);
-        setUserPreferences(defaultPrefs);
-      }
-    } catch (error) {
-      console.error('❌ [AuthContext] Failed to load user preferences:', error);
-      // Keep default values on error
-    }
-  };
-
-  // Function to check if user has less than 2 files
-  const checkIfNewUser = async (userId: string): Promise<void> => {
-    try {
-      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const encodedUserId = encodeURIComponent(userId);
-      const response = await fetch(
-        `${baseURL}/api/education/exercises/files/${encodedUserId}/count?active_only=false`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        const fileCount = data.total_count || 0;
-        
-        // User is considered "new" if they have less than 2 files
-        const isNew = fileCount < 2;
-        setIsNewUser(isNew);
-        
-        console.log(`✅ User file count: ${fileCount}, isNewUser: ${isNew}`);
-      } else {
-        console.warn('⚠️ Failed to fetch file count, defaulting isNewUser to null');
-        setIsNewUser(null);
-      }
-    } catch (error) {
-      console.error('❌ Error checking new user status:', error);
-      setIsNewUser(null);
-    }
-  };
 
   const sendMagicCode = async (email: string): Promise<{ success: boolean; message?: string }> => {
     try {
@@ -151,38 +93,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, code: string): Promise<{ success: boolean; isNewUser?: boolean; message?: string }> => {
     try {
       setLoading(true);
+      console.log('🔐 [AuthContext] Logging in...');
+      
+      // Step 1: Authenticate and get token
       const loginResponse = await authService.login(email, code);
-      setUser(loginResponse.user_data as User);
+      const token = loginResponse.access_token;
       
-      // Log user data structure to debug
-      console.log('📊 Login response user_data:', loginResponse.user_data);
+      console.log('🔄 [AuthContext] Initializing session with combined endpoint...');
+      const startTime = performance.now();
       
-      // Load user preferences immediately after login
-      await loadUserPreferences(email);
+      // Step 2: Initialize everything with single API call
+      const initData = await initializationService.initializeSession(token);
       
-      // Check file count to determine if user is new
-      // Try multiple possible user ID fields
-      const userId = loginResponse.user_data?.user_id 
-        || loginResponse.user_data?.id 
-        || loginResponse.user_data?.email;
+      const endTime = performance.now();
+      console.log(`✅ [AuthContext] Session initialized in ${(endTime - startTime).toFixed(0)}ms`);
       
-      if (userId) {
-        console.log('🔑 Using user ID for file count check:', userId);
-        await checkIfNewUser(userId);
-      } else {
-        console.warn('⚠️ No user ID found in login response, using backend is_new_user flag');
-        // Fallback to backend's is_new_user flag if available
-        setIsNewUser(loginResponse.is_new_user || false);
+      // Step 3: Set all state at once
+      setUser(initData.user as unknown as User);
+      setIsNewUser(initData.is_new_user);
+      
+      // Set preferences from user data
+      if (initData.user.preferences) {
+        const prefs = initData.user.preferences;
+        setUserPreferences({
+          default_level: prefs.default_level || 'CE2',
+          default_domain: prefs.default_domain || 'tous',
+          default_period: prefs.default_period || '20 min'
+        });
       }
-      
-      // Important: Keep loading state until subscription data is ready
-      // The SubscriptionContext will load in parallel via its useEffect
-      // Wait a brief moment to allow subscription context to initialize
-      console.log('✅ Login successful, waiting for subscription context to load...');
       
       return { 
         success: true, 
-        isNewUser: loginResponse.is_new_user, 
+        isNewUser: initData.is_new_user, 
         message: loginResponse.message 
       };
     } catch (error: any) {
@@ -200,6 +142,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const result = await authService.logout();
       console.log('Logout successful:', result.message);
+      
+      // Clear initialization cache
+      initializationService.clearInitCache();
+      
       setUser(null);
       setIsNewUser(null);
       // Reset preferences to defaults
@@ -210,6 +156,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     } catch (error) {
       console.error("Logout failed:", error);
+      
+      // Clear cache even on error
+      initializationService.clearInitCache();
+      
       // Still clear user state even if backend call fails
       setUser(null);
       setIsNewUser(null);

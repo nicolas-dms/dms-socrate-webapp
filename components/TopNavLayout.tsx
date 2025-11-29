@@ -7,16 +7,23 @@ import { Container, Nav, Navbar, Button, Modal, Form, Row, Col, Alert } from "re
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
-import { feedbackService, FeedbackSubmission } from "../services/feedbackService";
+import { useSubscription } from "../context/SubscriptionContext";
+import messageService from "../services/messageService";
+import { MessageCategory } from "../types/message";
 
 export default function TopNavLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
+  const { loading: subscriptionLoading } = useSubscription();
   const pathname = usePathname();
 
   // Feedback modal state
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedback, setFeedback] = useState<Partial<FeedbackSubmission>>({
+  const [feedback, setFeedback] = useState<{
+    type: 'general' | 'bug' | 'feature' | 'improvement';
+    rating?: number;
+    message: string;
+  }>({
     type: 'general',
     rating: 5,
     message: ''
@@ -27,32 +34,37 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
 
   // Always show navigation now
   const isHomePage = pathname === '/';
+  
+  // Check if system is preparing/loading - hide nav items during this phase
+  const isSystemLoading = user && (authLoading || subscriptionLoading);
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!feedback.message?.trim()) {
+    if (!feedback.message?.trim() || !user?.email) {
       return;
     }
 
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    const submission: FeedbackSubmission = {
-      type: feedback.type as FeedbackSubmission['type'],
-      rating: feedback.rating,
-      message: feedback.message,
-      page: window.location.pathname,
-      userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString()
-    };
+    try {
+      // Submit feedback to backend via messageService
+      await messageService.submitMessage(user.email, {
+        category: MessageCategory.FEEDBACK,
+        subject: feedback.type.charAt(0).toUpperCase() + feedback.type.slice(1),
+        content: feedback.message,
+        metadata: {
+          type: feedback.type,
+          rating: feedback.rating,
+          page: window.location.pathname,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      setSubmitStatus('success');
 
-    const success = await feedbackService.submitFeedback(submission);
-    
-    setIsSubmitting(false);
-    setSubmitStatus(success ? 'success' : 'error');
-
-    if (success) {
       // Reset form and close modal after delay
       setTimeout(() => {
         setFeedback({ type: 'general', rating: 5, message: '' });
@@ -60,6 +72,11 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
         setShowFeedbackModal(false);
         setSubmitStatus(null);
       }, 2000);
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -85,7 +102,10 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto d-flex align-items-center">
-              {user ? (
+              {isSystemLoading ? (
+                // Show nothing while system is preparing
+                null
+              ) : user ? (
                 <>
                   {/* Authenticated Menu Items */}
                   <Nav.Link 

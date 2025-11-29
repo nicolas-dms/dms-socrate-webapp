@@ -129,7 +129,9 @@ export function computeRemainingForToday(
     0,
     status.monthly_quota - status.monthly_used
   );
-  const dailyLimit = status.daily_quota ?? Infinity;
+  
+  // Handle daily quota: null means no daily limit (use 0 for calculation)
+  const dailyLimit = status.daily_quota ?? 0;
   const dailyUsed = status.daily_used ?? 0;
   const dailyRemaining = Math.max(0, dailyLimit - dailyUsed);
 
@@ -137,7 +139,7 @@ export function computeRemainingForToday(
   const monthlyAndAddonTotal = addonRemaining + monthlyRemaining;
   const totalRemainingForToday = monthlyAndAddonTotal > 0 
     ? monthlyAndAddonTotal  // If we have monthly/addon quota, use it (ignore daily limit)
-    : dailyRemaining;        // Only use daily quota when monthly is fully consumed
+    : dailyRemaining;        // Only use daily quota when monthly is fully consumed (will be 0 if no daily quota)
 
   return {
     addonRemaining,

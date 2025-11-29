@@ -1,7 +1,9 @@
 "use client";
 import React, { useState } from 'react';
 import { Button, Modal, Form, Row, Col, Alert } from 'react-bootstrap';
-import { feedbackService, FeedbackSubmission } from '../services/feedbackService';
+import messageService from '../services/messageService';
+import { MessageCategory } from '../types/message';
+import { useAuth } from '../context/AuthContext';
 
 interface FloatingFeedbackButtonProps {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -10,8 +12,13 @@ interface FloatingFeedbackButtonProps {
 const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({ 
   position = 'bottom-right' 
 }) => {
+  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const [feedback, setFeedback] = useState<Partial<FeedbackSubmission>>({
+  const [feedback, setFeedback] = useState<{
+    type: 'general' | 'bug' | 'feature' | 'improvement';
+    rating?: number;
+    message: string;
+  }>({
     type: 'general',
     rating: 5,
     message: ''
@@ -23,28 +30,30 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!feedback.message?.trim()) {
+    if (!feedback.message?.trim() || !user?.email) {
       return;
     }
 
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    const submission: FeedbackSubmission = {
-      type: feedback.type as FeedbackSubmission['type'],
-      rating: feedback.rating,
-      message: feedback.message,
-      page: window.location.pathname,
-      userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString()
-    };
+    try {
+      // Submit feedback to backend via messageService
+      await messageService.submitMessage(user.email, {
+        category: MessageCategory.FEEDBACK,
+        subject: feedback.type.charAt(0).toUpperCase() + feedback.type.slice(1),
+        content: feedback.message,
+        metadata: {
+          type: feedback.type,
+          rating: feedback.rating,
+          page: window.location.pathname,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      setSubmitStatus('success');
 
-    const success = await feedbackService.submitFeedback(submission);
-    
-    setIsSubmitting(false);
-    setSubmitStatus(success ? 'success' : 'error');
-
-    if (success) {
       // Reset form and close modal after delay
       setTimeout(() => {
         setFeedback({ type: 'general', rating: 5, message: '' });
@@ -52,6 +61,11 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
         setShowModal(false);
         setSubmitStatus(null);
       }, 2000);
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -129,7 +143,7 @@ const FloatingFeedbackButton: React.FC<FloatingFeedbackButtonProps> = ({
                 <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Type de retour</Form.Label>
                 <Form.Select
                   value={feedback.type}
-                  onChange={(e) => setFeedback({ ...feedback, type: e.target.value as FeedbackSubmission['type'] })}
+                  onChange={(e) => setFeedback({ ...feedback, type: e.target.value as 'general' | 'bug' | 'feature' | 'improvement' })}
                   style={{ borderColor: '#dee2e6', borderRadius: '8px' }}
                 >
                   <option value="general">Commentaire général</option>

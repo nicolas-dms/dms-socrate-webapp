@@ -41,15 +41,6 @@ export default function AccountPage() {
   const [pendingTier, setPendingTier] = useState<"standard" | "famille_plus" | null>(null);
   const [pendingBillingPeriod, setPendingBillingPeriod] = useState<"monthly" | "yearly">("monthly");
 
-  // Support form states
-  const [supportForm, setSupportForm] = useState({
-    type: 'bug',
-    subject: '',
-    message: ''
-  });
-  const [supportSubmitting, setSupportSubmitting] = useState(false);
-  const [supportMessage, setSupportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
   // User Console states (Admin)
   const [userConsoleEmail, setUserConsoleEmail] = useState('');
   const [userConsoleData, setUserConsoleData] = useState<any>(null);
@@ -83,6 +74,15 @@ export default function AccountPage() {
       console.log("===================================");
     }
   }, [status]);
+
+  // Detect hash on mount and switch to appropriate tab
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#subscription') {
+      setActiveSection('subscription');
+      window.scrollTo(0, 0);
+    }
+  }, []);
 
   // Refresh subscription status when switching to subscription tab or on mount if already on subscription tab
   useEffect(() => {
@@ -519,65 +519,11 @@ export default function AccountPage() {
     return features.map(feature => featureMap[feature] || feature);
   };
 
-  const handleSupportSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!supportForm.subject.trim()) {
-      setSupportMessage({
-        type: 'error',
-        text: 'Veuillez renseigner l\'objet de votre demande'
-      });
-      return;
-    }
-
-    setSupportSubmitting(true);
-    setSupportMessage(null);
-
-    try {
-      // Get browser and device info
-      const browserInfo = navigator.userAgent;
-      const deviceInfo = {
-        platform: navigator.platform,
-        language: navigator.language,
-        screenResolution: `${window.screen.width}x${window.screen.height}`
-      };
-
-      // Simulate API call to support system
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In a real application, this would send to your support system
-      console.log('Support ticket submitted:', {
-        ...supportForm,
-        user: user?.email,
-        browserInfo,
-        deviceInfo,
-        timestamp: new Date().toISOString()
-      });
-
-      setSupportMessage({
-        type: 'success',
-        text: '✅ Votre demande a été envoyée avec succès ! Nous vous répondrons sous 24h en semaine.'
-      });
-
-      // Reset form
-      setSupportForm({
-        type: 'bug',
-        subject: '',
-        message: ''
-      });
-    } catch (error) {
-      setSupportMessage({
-        type: 'error',
-        text: 'Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.'
-      });
-    } finally {
-      setSupportSubmitting(false);
-    }
-  };
+  // Support handler removed - now using FAQ + email
 
   return (
     <ProtectedPage>
-      <Container className="mt-3">
+      <Container style={{ marginTop: '0.65rem' }}>
         <Row>
           <Col lg={10} className="mx-auto">
 
@@ -1395,11 +1341,11 @@ export default function AccountPage() {
                           <Card.Body className="text-center d-flex flex-column p-4">
                             <h5 className="card-title fw-bold mb-2" style={{ color: '#1e40af' }}>Famille+</h5>
                             <div className="display-6 mb-2" style={{ color: '#3b82f6', fontWeight: '700' }}>
-                              {plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '4.99'}€
+                              {plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '3.99'}€
                             </div>
                             <p className="text-muted small mb-3">par mois</p>
                             <p className="card-text mb-3" style={{ fontSize: '0.9rem', color: '#1e40af' }}>
-                              Pour une utilisation intensive
+                              Pour un usage confortable et sans limite
                             </p>
                             
                             <div className="mt-auto">
@@ -1491,7 +1437,7 @@ export default function AccountPage() {
                               fontWeight: '600',
                               backgroundColor: '#eff6ff',
                               borderBottom: '2px solid #93c5fd'
-                            }}>Famille+ ({plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '4.99'}€)</th>
+                            }}>Famille+ ({plans.find(p => p.tier === 'famille_plus')?.pricing.monthly.price || '3.99'}€)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1505,7 +1451,7 @@ export default function AccountPage() {
                             <td><strong>Historique</strong></td>
                             <td className="text-center">7 dernières</td>
                             <td className="text-center">90 jours</td>
-                            <td className="text-center"><span style={{ color: '#10b981', fontWeight: '600' }}>illimité</span></td>
+                            <td className="text-center"><strong>illimité</strong></td>
                           </tr>
                           <tr>
                             <td><strong>Tags</strong></td>
@@ -1521,9 +1467,9 @@ export default function AccountPage() {
                           </tr>
                           <tr>
                             <td><strong>Support</strong></td>
-                            <td className="text-center">non</td>
-                            <td className="text-center">non</td>
-                            <td className="text-center"><span style={{ color: '#10b981' }}>✅</span> Support Client disponible</td>
+                            <td className="text-center">Feedback rapide</td>
+                            <td className="text-center">Email disponible</td>
+                            <td className="text-center"><strong>Assistance prioritaire</strong></td>
                           </tr>
                         </tbody>
                       </table>
@@ -1650,113 +1596,49 @@ export default function AccountPage() {
                   padding: '16px 20px'
                 }}>
                   <h5 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#1e40af' }}>
-                    <i className="bi bi-telephone me-2" style={{ color: '#3b82f6' }}></i>
-                    Besoin d'aide ?
+                    <i className="bi bi-question-circle me-2" style={{ color: '#3b82f6' }}></i>
+                    Aide & Support
                   </h5>
                 </Card.Header>
                 <Card.Body className="p-4">
-                  {supportMessage && (
-                    <Alert variant={supportMessage.type === 'success' ? 'success' : 'danger'} className="mb-4">
-                      {supportMessage.text}
-                    </Alert>
-                  )}
-
+                  {/* Mini FAQ Section */}
                   <div className="mb-4">
-                    <p className="text-muted mb-3">
-                      Nous sommes là pour vous aider.<br />
-                      Choisissez l'option qui correspond à votre demande :
-                    </p>
+                    <h6 className="fw-semibold mb-3" style={{ color: '#1e40af' }}>
+                      ❓ Questions fréquentes
+                    </h6>
+                    
+                    <div className="mb-3">
+                      <p className="fw-semibold mb-1">Comment générer une fiche ?</p>
+                      <p className="text-muted mb-0">
+                        Cliquez sur "Générer une fiche", choisissez le domaine et le niveau.
+                      </p>
+                    </div>
+
+                    <div className="mb-3">
+                      <p className="fw-semibold mb-1">Où sont mes fiches ?</p>
+                      <p className="text-muted mb-0">
+                        Dans "Mes Fiches", accessible depuis le menu.
+                      </p>
+                    </div>
+
+                    <div className="mb-3">
+                      <p className="fw-semibold mb-1">Comment fonctionnent les crédits ?</p>
+                      <p className="text-muted mb-0">
+                        1 fiche = 1 crédit. Standard : 100/mois. Famille+ : illimité.
+                      </p>
+                    </div>
                   </div>
 
-                  <Form onSubmit={handleSupportSubmit}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Type de demande</Form.Label>
-                      <Form.Select
-                        value={supportForm.type}
-                        onChange={(e) => setSupportForm({ ...supportForm, type: e.target.value })}
-                        required
-                      >
-                        <option value="bug">🐞 Signaler un bug</option>
-                        <option value="question">❓ Poser une question</option>
-                        <option value="feature">💡 Suggérer une amélioration</option>
-                      </Form.Select>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">
-                        📝 Votre message
-                      </Form.Label>
-                      <Form.Label className="d-block fw-normal">Objet</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Décrivez brièvement votre demande..."
-                        value={supportForm.subject}
-                        onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
-                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                        required
-                        maxLength={80}
-                      />
-                      <Form.Text className="text-muted">
-                        {supportForm.subject.length}/80 caractères
-                      </Form.Text>
-                    </Form.Group>
-
-                    <Form.Group className="mb-4">
-                      <Form.Label className="fw-normal">Description <span className="text-muted">(optionnelle mais recommandée)</span></Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={5}
-                        placeholder="Donnez-nous plus de détails sur votre demande..."
-                        value={supportForm.message}
-                        onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
-                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                        maxLength={2000}
-                      />
-                      <Form.Text className="text-muted">
-                        {supportForm.message.length}/2000 caractères
-                      </Form.Text>
-                    </Form.Group>
-
-                    <div className="alert alert-info mb-4" style={{ fontSize: '0.9rem' }}>
-                      <i className="bi bi-info-circle me-2"></i>
-                      <strong>👉 Nous recevrons automatiquement</strong> votre email, votre navigateur et votre appareil : pas besoin de nous les donner.
-                    </div>
-
-                    <div className="d-grid">
-                      <Button 
-                        type="submit" 
-                        variant="primary"
-                        size="lg"
-                        disabled={supportSubmitting || !supportForm.subject.trim()}
-                      >
-                        {supportSubmitting ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Envoi en cours...
-                          </>
-                        ) : (
-                          <>
-                            📤 Envoyer ma demande
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </Form>
-
-                  <div className="mt-4 p-4 bg-light rounded">
-                    <h6 className="mb-3" style={{ color: '#1e40af' }}>
-                      <i className="bi bi-mailbox me-2"></i>
-                      📬 Autres moyens de nous contacter
-                    </h6>
-                    <div className="mb-2">
-                      <strong>📧 Email :</strong> <a href="mailto:support@exominutes.com" style={{ color: '#3b82f6' }}>support@exominutes.com</a>
-                    </div>
-                    <div className="mb-2">
-                      <strong>⏱️ Réponse :</strong> Sous 24h en semaine
-                    </div>
-                    <div>
-                      <strong>📅 Disponibilité :</strong> Lun–Ven : 9h–18h
-                    </div>
+                  {/* Contact Section */}
+                  <div className="p-4 bg-light rounded">
+                    <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
+                      Nous lisons tous les messages. Les parents Famille+ bénéficient d'une assistance prioritaire.
+                      <br />
+                      <br />
+                      📧 <a href="mailto:support@exominute.com" style={{ color: '#3b82f6', textDecoration: 'none' }}>
+                        support@exominute.com
+                      </a>
+                    </p>
                   </div>
                 </Card.Body>
               </Card>

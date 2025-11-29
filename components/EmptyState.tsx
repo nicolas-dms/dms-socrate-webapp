@@ -20,32 +20,33 @@ const EmptyState: React.FC<EmptyStateProps> = ({ type, onShowAll, onClearFilters
       case 'no-recent-files':
         return (
           <div className="text-center py-5">
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
-            <h4 style={{ color: '#6c757d', marginBottom: '1.5rem' }}>
+            <h4 style={{ color: '#6c757d', marginBottom: '1.5rem', marginTop: '2rem' }}>
               Aucune fiche trouvée
             </h4>
             <div className="d-flex gap-2 justify-content-center">
-              {onShowAll && (
-                <Button
-                  variant="outline-primary"
-                  onClick={onShowAll}
-                  style={{
-                    borderRadius: '8px',
-                    padding: '0.5rem 1.25rem',
-                    fontWeight: '500'
-                  }}
-                >
-                  <i className="bi bi-clock-history me-2"></i>
-                  Afficher tout l'historique
-                </Button>
-              )}
               <Link href="/generate">
                 <Button
-                  variant="primary"
                   style={{
-                    borderRadius: '8px',
-                    padding: '0.5rem 1.25rem',
-                    fontWeight: '500'
+                    backgroundColor: '#fbbf24',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '0.75rem 2rem',
+                    fontWeight: '600',
+                    fontSize: '1rem',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(251, 191, 36, 0.3)',
+                    transition: 'all 0.3s ease',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(251, 191, 36, 0.4)';
+                    e.currentTarget.style.backgroundColor = '#f59e0b';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(251, 191, 36, 0.3)';
+                    e.currentTarget.style.backgroundColor = '#fbbf24';
                   }}
                 >
                   <i className="bi bi-plus-circle me-2"></i>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { StripePaymentForm } from './StripePaymentForm';
 import { stripeService } from '../services/stripeService';
 
@@ -34,7 +34,6 @@ export const AddonPackPaymentModal: React.FC<AddonPackPaymentModalProps> = ({
   packPrice = 0.99,
   userEmail,
 }) => {
-  const stripe = useStripe();
   const [numPacks, setNumPacks] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -42,10 +41,6 @@ export const AddonPackPaymentModal: React.FC<AddonPackPaymentModalProps> = ({
   const totalQuotas = numPacks * packSize;
 
   const handlePaymentSuccess = async (paymentMethodId: string) => {
-    if (!stripe) {
-      console.error('❌ [AddonPackPaymentModal] Stripe not initialized');
-      return;
-    }
 
     console.log('🎁 [AddonPackPaymentModal] Starting addon pack purchase:', {
       numPacks,
@@ -68,6 +63,35 @@ export const AddonPackPaymentModal: React.FC<AddonPackPaymentModalProps> = ({
       // Handle 3D Secure if needed
       if (result.client_secret) {
         console.log('🔐 [AddonPackPaymentModal] 3D Secure confirmation required');
+        
+        // Load Stripe dynamically for 3D Secure confirmation
+        // Fetch key from backend API to ensure we get the correct key
+        let stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
+        
+        // Try to fetch from backend if env var not available or to ensure latest key
+        try {
+          const configResponse = await fetch('/api/subscription/stripe/config');
+          if (configResponse.ok) {
+            const configData = await configResponse.json();
+            stripeKey = (configData.publishableKey || configData.publishable_key || '').trim();
+            console.log('🔑 [AddonPackPaymentModal] Fetched Stripe key from backend');
+          }
+        } catch (fetchError) {
+          console.warn('⚠️ [AddonPackPaymentModal] Could not fetch Stripe key from backend, using env var');
+        }
+        
+        if (!stripeKey || stripeKey.trim() === '') {
+          throw new Error('Stripe publishable key not configured');
+        }
+        
+        // Ensure no whitespace/newlines in the key
+        stripeKey = stripeKey.trim();
+        
+        const stripe = await loadStripe(stripeKey);
+        if (!stripe) {
+          throw new Error('Failed to load Stripe');
+        }
+        
         const { error: confirmError } = await stripe.confirmCardPayment(
           result.client_secret
         );

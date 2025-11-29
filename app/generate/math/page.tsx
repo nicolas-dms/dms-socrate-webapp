@@ -799,7 +799,7 @@ export default function GenerateMathPage() {
           transition: all 0.2s ease;
         }
       `}</style>
-      <Container className="mt-3">
+      <Container style={{ marginTop: '0.65rem' }}>
         <Row className="justify-content-center">
           <Col lg={10}>
             {/* Enhanced Main Title with Clickable Calculator Icon */}
@@ -835,20 +835,71 @@ export default function GenerateMathPage() {
               </div>
             </div>
             
-            {/* Subscription info - only show when low */}
-            {usageView && (() => {
+            {/* Subscription info - show when low or exhausted */}
+            {usageView && status && (() => {
               const remainingFiches = getRemainingFiches();
               const monthlyLimit = usageView.monthly_limit || 0;
               const tenPercentLimit = Math.floor(monthlyLimit * 0.1);
               
-              return remainingFiches <= tenPercentLimit && remainingFiches > 0 && (
-                <div className="alert alert-warning mb-4" style={{ borderRadius: '12px', border: '2px solid #f59e0b' }}>
-                  <strong><i className="bi bi-exclamation-triangle me-2"></i>Attention : Il vous reste {remainingFiches} fiche{remainingFiches > 1 ? 's' : ''} ce mois</strong>
-                  {usageView.addon_remaining > 0 && (
-                    <div className="mt-2">
-                      <small>Dont {usageView.addon_remaining} pack{usageView.addon_remaining > 1 ? 's' : ''} additionnel{usageView.addon_remaining > 1 ? 's' : ''}</small>
+              // Show banner when limit reached (0) or approaching limit (< 10%)
+              // Important: Always show if remaining is 0
+              if (remainingFiches === 0) {
+                // Continue to show exhausted banner
+              } else if (remainingFiches > tenPercentLimit) {
+                return null; // Hide banner when above 10%
+              }
+              
+              // Format renewal date
+              const renewalDate = status.renewal_date ? new Date(status.renewal_date) : null;
+              const renewalDateStr = renewalDate ? renewalDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '';
+              
+              // Different banner for completely exhausted vs approaching limit
+              if (remainingFiches === 0) {
+                return (
+                  <div className="alert alert-warning mb-4" style={{ borderRadius: '12px', border: '2px solid #f59e0b', backgroundColor: '#fffbeb' }}>
+                    <div>
+                      <div className="fw-bold mb-1" style={{ fontSize: '1rem' }}>
+                        Quota mensuel atteint
+                      </div>
+                      <div className="text-muted" style={{ fontSize: '0.9rem', marginBottom: '0.75rem' }}>
+                        {renewalDateStr ? `Votre quota se renouvellera le ${renewalDateStr}` : 'Votre quota se renouvellera bientôt'}
+                      </div>
+                      <div className="text-muted" style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
+                        Envie de continuer maintenant ? Boostez votre compte avec un pack supplémentaire ! 🚀
+                      </div>
+                      <a 
+                        href="/account#subscription" 
+                        className="btn btn-sm text-white text-decoration-none" 
+                        style={{ backgroundColor: '#f59e0b', fontWeight: '500', padding: '0.5rem 1rem', borderRadius: '8px' }}
+                      >
+                        ✨ Acheter 15 fiches supplémentaires — 0,99€
+                      </a>
                     </div>
-                  )}
+                  </div>
+                );
+              }
+              
+              return (
+                <div className="alert alert-warning mb-4" style={{ borderRadius: '12px', border: '2px solid #f59e0b', backgroundColor: '#fffbeb' }}>
+                  <div className="d-flex align-items-start">
+                    <span style={{ fontSize: '1.5rem', marginRight: '12px' }}>⚠️</span>
+                    <div className="flex-grow-1">
+                      <div className="fw-bold mb-1" style={{ fontSize: '1rem' }}>
+                        Plus que {remainingFiches} fiche{remainingFiches > 1 ? 's' : ''} ce mois
+                      </div>
+                      <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+                        {renewalDateStr && `Renouvellement le ${renewalDateStr} • `}
+                        Vous pouvez encore générer {remainingFiches} fiche{remainingFiches > 1 ? 's' : ''}
+                      </div>
+                      {status.tier !== 'famille_plus' && (
+                        <div className="mt-2">
+                          <a href="/account#subscription" className="text-decoration-none" style={{ color: '#f59e0b', fontWeight: '500' }}>
+                            ✨ Besoin de plus ? Ajouter 15 fiches — 0,99€
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               );
             })()}
@@ -1237,15 +1288,6 @@ export default function GenerateMathPage() {
                     <small className="text-muted d-block text-center mt-2" style={{ fontSize: '0.8rem' }}>
                       <i className="bi bi-info-circle me-1"></i>
                       Veuillez sélectionner au moins un domaine d'exercice
-                    </small>
-                  )}
-                  
-                  {!canGenerate && selectedTypes.length > 0 && !canGenerateMore() && (
-                    <small className="text-danger d-block text-center mt-2" style={{ fontSize: '0.8rem' }}>
-                      <i className="bi bi-exclamation-circle me-1"></i>
-                      {status && status.monthly_remaining === 0 && status.addon_quota_remaining === 0 && status.daily_remaining === 0
-                        ? "Limite quotidienne atteinte (1 fiche/jour). Revenez demain !"
-                        : "Limite d'abonnement atteinte ce mois"}
                     </small>
                   )}
                 </form>

@@ -61,6 +61,12 @@
       "description": "Propositions indépendantes et subordonnées"
     },
     {
+      "id": "Nature des mots",
+      "label": "Identifier la nature des mots",
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
+      "description": "Classer les mots selon leur nature : nom, verbe, adjectif, déterminant."
+    },
+    {
       "id": "voix_active_passive",
       "label": "Voix active/passive",
       "levels": ["CM2"],
@@ -211,10 +217,16 @@
       "description": "Distinguer 'est' (verbe être) de 'et' (conjonction de coordination)"
     },
     {
-      "id": "homophones",
-      "label": "Homophones (a/à, et/est, son/sont)",
-      "levels": ["CE2"],
-      "description": "Homophones grammaticaux simples"
+      "id": "a_à",
+      "label": "a/à, verbe avoir ou préposition",
+      "levels": ["CE1", "CE2"],
+      "description": "Distinguer 'a' (verbe avoir) de 'à' (préposition)"
+    },
+    {
+      "id": "sont_son",
+      "label": "sont/son, verbe être ou pronom possessif",
+      "levels": ["CE1", "CE2"],
+      "description": "Distinguer 'sont' (verbe être) de 'son' (pronom possessif)"
     },
     {
       "id": "pluriels",
@@ -227,18 +239,6 @@
       "label": "Féminins des mots",
       "levels": ["CE2"],
       "description": "Formation du féminin"
-    },
-    {
-      "id": "g_gu",
-      "label": "g/gu devant e, i",
-      "levels": ["CE2"],
-      "description": "Utilisation de g et gu"
-    },
-    {
-      "id": "homophones_complexes",
-      "label": "Homophones complexes",
-      "levels": ["CM1"],
-      "description": "Homophones grammaticaux avancés"
     },
     {
       "id": "accord_participe",
