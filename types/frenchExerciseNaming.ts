@@ -15,12 +15,22 @@ export interface ExerciseDefinition {
   isCustom?: boolean;
 }
 
+export interface ComprehensionExerciseDefinition {
+  id: string;
+  label: string;
+  levels: string[];
+  description: string;
+  text_types: string[];
+  examples: string[];
+}
+
 export interface ExerciseNamingConfig {
   grammaire: ExerciseDefinition[];
   conjugaison: ExerciseDefinition[];
   verb_groups: ExerciseDefinition[];
   orthographe: ExerciseDefinition[];
-  comprehension: ExerciseDefinition[];
+  lecture: ExerciseDefinition[];
+  comprehension: ComprehensionExerciseDefinition[];
   vocabulaire?: ExerciseDefinition[];
 }
 
@@ -30,8 +40,8 @@ const exerciseNaming: ExerciseNamingConfig = frenchExerciseNamingData as Exercis
 /**
  * Get all exercises for a specific type
  */
-export function getExercisesByType(type: keyof ExerciseNamingConfig): ExerciseDefinition[] {
-  return exerciseNaming[type] || [];
+export function getExercisesByType(type: keyof ExerciseNamingConfig): (ExerciseDefinition | ComprehensionExerciseDefinition)[] {
+  return (exerciseNaming[type] || []) as (ExerciseDefinition | ComprehensionExerciseDefinition)[];
 }
 
 /**
@@ -40,7 +50,7 @@ export function getExercisesByType(type: keyof ExerciseNamingConfig): ExerciseDe
 export function getExercisesByTypeAndLevel(
   type: keyof ExerciseNamingConfig, 
   level: string
-): ExerciseDefinition[] {
+): (ExerciseDefinition | ComprehensionExerciseDefinition)[] {
   const exercises = getExercisesByType(type);
   return exercises.filter(ex => ex.levels.includes(level));
 }
@@ -77,7 +87,7 @@ export function getExerciseId(
 export function getExerciseDefinition(
   type: keyof ExerciseNamingConfig, 
   id: string
-): ExerciseDefinition | undefined {
+): ExerciseDefinition | ComprehensionExerciseDefinition | undefined {
   const exercises = getExercisesByType(type);
   return exercises.find(ex => ex.id === id);
 }
@@ -131,14 +141,14 @@ export function exerciseLabelsToIds(
 export function formatExercisesForModal(
   type: keyof ExerciseNamingConfig,
   level: string
-): Array<{ key: string; label: string; examples?: string; description?: string; isCustom?: boolean }> {
+): Array<{ key: string; label: string; examples?: string | string[]; description?: string; isCustom?: boolean }> {
   const exercises = getExercisesByTypeAndLevel(type, level);
   return exercises.map(ex => ({
     key: ex.id,
     label: ex.label,
-    examples: ex.examples,
-    description: ex.description,
-    isCustom: ex.isCustom
+    examples: 'examples' in ex ? ex.examples : undefined,
+    description: 'description' in ex ? ex.description : undefined,
+    isCustom: 'isCustom' in ex ? ex.isCustom : undefined
   }));
 }
 
