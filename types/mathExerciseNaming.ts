@@ -18,7 +18,7 @@ export interface MathExerciseNamingConfig {
   calculs: MathExerciseDefinition[];
   grandeurs: MathExerciseDefinition[];
   geometrie: MathExerciseDefinition[];
-  problemes: MathExerciseDefinition[];
+  problemes?: MathExerciseDefinition[];
 }
 
 // Load the configuration
