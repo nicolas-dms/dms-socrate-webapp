@@ -1599,23 +1599,9 @@ export default function GenerateFrenchPage() {
                                 backgroundColor: 'white',
                                 border: '1px solid #fcd34d',
                                 minWidth: '150px',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease',
                                 borderRadius: '10px',
                                 boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
                               }}
-                              onClick={handleEditVocabularyParams}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
-                                e.currentTarget.style.borderColor = '#fbbf24';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
-                                e.currentTarget.style.borderColor = '#fcd34d';
-                              }}
-                              title="Cliquer pour modifier"
                             >
                               <div className="flex-grow-1">
                                 <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
