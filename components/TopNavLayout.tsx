@@ -217,7 +217,7 @@ export default function TopNavLayout({ children }: { children: React.ReactNode }
                 <Form.Label style={{ color: '#2c3e50', fontWeight: '500' }}>Type de retour</Form.Label>
                 <Form.Select
                   value={feedback.type}
-                  onChange={(e) => setFeedback({ ...feedback, type: e.target.value as FeedbackSubmission['type'] })}
+                  onChange={(e) => setFeedback({ ...feedback, type: e.target.value as 'general' | 'bug' | 'feature' | 'improvement' })}
                   style={{ borderColor: '#dee2e6', borderRadius: '8px' }}
                 >
                   <option value="general">Commentaire général</option>
