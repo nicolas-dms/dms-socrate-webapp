@@ -1,0 +1,147 @@
+name: Build and Deploy WebApp
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_SUBSCRIPTION_ID: dc247650-4ab3-4b8e-bec7-2286ecf3ff7c
+  ACR_NAME: exominutesacr
+  ACR_LOGIN_SERVER: exominutesacr.azurecr.io
+  WEBAPP_IMAGE_NAME: exominutes-webapp
+
+jobs:
+
+  # ---------------------------------------------------------
+  #  BUILD & PUSH DOCKER IMAGE
+  # ---------------------------------------------------------
+  build:
+    name: Build & Push WebApp Image
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.tag.outputs.IMAGE_TAG }}
+      revision-tag: ${{ steps.tag.outputs.REV_TAG }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ✨ HUMAN READABLE TAG: 20251201-1545-abc1234
+      - name: Set image tag (YYYYMMDD-HHMM-SHORTSHA)
+        id: tag
+        run: |
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          VERSION="$(date +%Y%m%d-%H%M)-${SHORT_SHA}"
+          echo "IMAGE_TAG=$VERSION" >> $GITHUB_OUTPUT
+          echo "REV_TAG=webapp-$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name $ACR_NAME
+
+      - name: Build & Push WebApp Image (Test)
+        run: |
+          docker build \
+            -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ steps.tag.outputs.IMAGE_TAG }} \
+            -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test \
+            --build-arg NEXT_PUBLIC_API_URL=https://aca-exominutes-api-test.kindocean-d336a5c4.francecentral.azurecontainerapps.io \
+            --build-arg NEXT_PUBLIC_ENVIRONMENT=test \
+            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_TEST }} \
+            -f Dockerfile .
+
+          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ steps.tag.outputs.IMAGE_TAG }}
+          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test
+
+  # ---------------------------------------------------------
+  #  DEPLOY TO TEST (AUTOMATIC)
+  # ---------------------------------------------------------
+  deploy-test:
+    name: Deploy WebApp to Test
+    runs-on: ubuntu-latest
+    needs: build
+    environment: test
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ✨ readable revision name
+      - name: Deploy Test Revision
+        run: |
+          az containerapp update \
+            --name aca-exominutes-webapp-test \
+            --resource-group rg-exominute-test \
+            --image $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test \
+            --revision-suffix "${{ needs.build.outputs.revision-tag }}"
+
+      - name: Output Test URL
+        run: |
+          URL=$(az containerapp show \
+            --name aca-exominutes-webapp-test \
+            --resource-group rg-exominute-test \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Test WebApp URL: https://$URL"
+          echo "Test Revision: ${{ needs.build.outputs.revision-tag }}"
+
+  # ---------------------------------------------------------
+  #  DEPLOY TO PROD (MANUAL APPROVAL)
+  # ---------------------------------------------------------
+  deploy-prod:
+    name: Deploy WebApp to Prod
+    runs-on: ubuntu-latest
+    needs: [build, deploy-test]
+
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name $ACR_NAME
+
+      # Build production image with production API URL
+      - name: Build & Push WebApp Image (Prod)
+        run: |
+          docker build \
+            -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ needs.build.outputs.image-tag }}-prod \
+            -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod \
+            --build-arg NEXT_PUBLIC_API_URL=https://aca-exominutes-api-prod.kindocean-d336a5c4.francecentral.azurecontainerapps.io \
+            --build-arg NEXT_PUBLIC_ENVIRONMENT=production \
+            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_PROD }} \
+            -f Dockerfile .
+
+          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ needs.build.outputs.image-tag }}-prod
+          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod
+
+      # ✨ readable revision name
+      - name: Deploy Prod Revision
+        run: |
+          az containerapp update \
+            --name aca-exominutes-webapp-prod \
+            --resource-group rg-exominute-prod \
+            --image $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod \
+            --revision-suffix "${{ needs.build.outputs.revision-tag }}"
+
+      - name: Output Prod URL
+        run: |
+          URL=$(az containerapp show \
+            --name aca-exominutes-webapp-prod \
+            --resource-group rg-exominute-prod \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Prod WebApp URL: https://$URL"
+          echo "Prod Revision: ${{ needs.build.outputs.revision-tag }}"

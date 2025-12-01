@@ -34,14 +34,47 @@ DMS Socrate is a modern educational web application designed to provide a clean,
 - `npm run dev` — Start development server (http://localhost:3000)
 - `npm run build` — Build for production
 - `npm run start` — Start production server
+- `npm run sync-api` — Sync OpenAPI schema from backend
 - `git add .` — Stage all changes
 - `git commit -m "message"` — Commit changes
-- `git push` — Push to remote repository
+- `git push` — Push to remote repository (triggers deployment to Azure)
+
+## Deployment
+
+This project uses **GitHub Actions** for automated deployment to **Azure Container Apps**.
+
+- 📚 **[Full Deployment Guide](DEPLOYMENT.md)** - Complete setup and configuration
+- 🚀 **[Quick Reference](DEPLOYMENT_QUICK_REF.md)** - Common commands and troubleshooting
+
+### Quick Start
+
+1. **Local Docker Test:**
+   ```bash
+   # Windows
+   scripts\build-docker-local.bat
+   
+   # Linux/Mac
+   ./scripts/build-docker-local.sh
+   ```
+
+2. **Deploy to Azure:**
+   - Push to `main` branch → Auto-deploys to **Test** environment
+   - Approve in GitHub Actions → Deploys to **Production** environment
+
+### Environments
+
+| Environment | Auto-Deploy | URL |
+|------------|-------------|-----|
+| **Test** | ✅ Yes | `https://aca-exominutes-webapp-test...` |
+| **Production** | ❌ Manual approval | `https://aca-exominutes-webapp-prod...` |
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete setup instructions.
 
 ## Notes
-- The login flow is currently mocked for development. Integrate with your FastAPI backend for production.
+- Authentication integrates with FastAPI backend via magic link (email + code).
 - Update translation files in `i18n/locales/` for more languages or new keys.
 - Customize the sidebar and theme in `SidebarLayout.tsx` and `globals.css`.
+- Environment variables prefixed with `NEXT_PUBLIC_*` are embedded at build time.
 
 ---
 For any questions or contributions, please contact the project maintainer.

@@ -82,9 +82,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { success: true, message: response.message };
     } catch (error: any) {
       console.error("Failed to send magic code:", error);
+      
+      // Check if it's a 500 error (backend configuration issue)
+      if (error.response?.status === 500) {
+        return { 
+          success: false, 
+          message: "Le service d'email n'est pas configuré. Contactez l'administrateur."
+        };
+      }
+      
       return { 
         success: false, 
-        message: error.response?.data?.detail || error.message || "Failed to send verification code" 
+        message: error.response?.data?.detail || error.message || "Échec de l'envoi du code. Veuillez vérifier votre email." 
       };
     } finally {
       setLoading(false);

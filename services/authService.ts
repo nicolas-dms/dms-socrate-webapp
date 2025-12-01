@@ -56,14 +56,24 @@ export const authService = {
   sendMagicCode: async (email: string): Promise<SendCodeResponse> => {
     debugLog.auth('Sending magic code', { email });
     
-    // CORRIGÉ: URL et paramètres conformes au backend
-    const response = await api.post<SendCodeResponse>(
-      '/api/auth/send-code', 
-      { email },
-      { timeout: 60000 }
-    );
-    debugLog.auth('Magic code response', response.data);
-    return response.data;
+    try {
+      // CORRIGÉ: URL et paramètres conformes au backend
+      const response = await api.post<SendCodeResponse>(
+        '/api/auth/send-code', 
+        { email },
+        { timeout: 60000 }
+      );
+      debugLog.auth('Magic code response', response.data);
+      return response.data;
+    } catch (error: any) {
+      debugLog.auth('Send magic code failed', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
   },
 
   // Verify code and login
