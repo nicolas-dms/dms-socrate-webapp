@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Container, Row, Col, Card, Form, Button, Alert, Badge } from "react-bootstrap";
 import ProtectedPage from "../../../components/ProtectedPage";
@@ -28,7 +28,7 @@ const mathTypes = [
   { key: "problemes", label: "Résolution de problèmes" }
 ];
 
-export default function ParcoursPage() {
+function ParcoursPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get('template');
@@ -285,5 +285,22 @@ export default function ParcoursPage() {
         </Row>
       </Container>
     </ProtectedPage>
+  );
+}
+
+export default function ParcoursPage() {
+  return (
+    <Suspense fallback={
+      <ProtectedPage>
+        <Container className="py-4">
+          <div className="text-center">
+            <i className="bi bi-hourglass-split" style={{ fontSize: '2rem' }}></i>
+            <p>Chargement...</p>
+          </div>
+        </Container>
+      </ProtectedPage>
+    }>
+      <ParcoursPageContent />
+    </Suspense>
   );
 }
