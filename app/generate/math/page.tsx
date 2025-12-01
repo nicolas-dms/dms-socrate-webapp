@@ -18,7 +18,9 @@ import GeometrieModal, { GeometrieParams } from "../../../components/GeometrieMo
 import MesuresModal, { MesuresParams } from "../../../components/MesuresModal";
 import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
 import { getMathExerciseLabel, MathExerciseNamingConfig } from "../../../types/mathExerciseNaming";
-import mathExerciseNaming from "../../../config/mathExerciseNaming.json";
+import mathExerciseNamingData from "../../../config/mathExerciseNaming.json";
+
+const mathExerciseNaming = mathExerciseNamingData as MathExerciseNamingConfig;
 
 const levels = ["CP", "CE1", "CE2", "CM1", "CM2"];
 const durations = ["10 min", "20 min", "30 min"];
