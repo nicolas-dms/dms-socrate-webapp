@@ -23,7 +23,7 @@ interface NombresExercise {
   id: string;
   label: string;
   levels: string[];
-  description: string;
+  description?: string;
 }
 
 export default function NombresModal({ 
@@ -55,7 +55,7 @@ export default function NombresModal({
   // Get available exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): NombresExercise[] => {
     const nombresExercises = mathExerciseNaming.nombres || [];
-    return nombresExercises.filter((ex: NombresExercise) => 
+    return nombresExercises.filter(ex => 
       ex.levels.includes(level)
     );
   };

@@ -11,7 +11,7 @@ interface CalculExercise {
   id: string;
   label: string;
   levels: string[];
-  description: string;
+  description?: string;
 }
 
 export interface CalculParams {
@@ -52,7 +52,7 @@ export default function CalculModal({
   // Get exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): CalculExercise[] => {
     const calculExercises = mathExerciseNaming.calculs || [];
-    return calculExercises.filter((ex: CalculExercise) => ex.levels.includes(level));
+    return calculExercises.filter(ex => ex.levels.includes(level));
   };
   
   useEffect(() => {

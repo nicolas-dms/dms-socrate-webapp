@@ -28,7 +28,7 @@ interface GeometryExercise {
   id: string;
   label: string;
   levels: string[];
-  description: string;
+  description?: string;
   modality?: string;
 }
 
@@ -52,7 +52,7 @@ export default function GeometrieModal({
   // Get exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): GeometryExercise[] => {
     const geometryExercises = mathExerciseNaming.geometrie || [];
-    return geometryExercises.filter((ex: GeometryExercise) => 
+    return geometryExercises.filter(ex => 
       ex.levels.includes(level)
     );
   };

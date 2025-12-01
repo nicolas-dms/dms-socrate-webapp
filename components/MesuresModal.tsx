@@ -11,7 +11,7 @@ interface GrandeursExercise {
   id: string;
   label: string;
   levels: string[];
-  description: string;
+  description?: string;
 }
 
 export interface MesuresParams {
@@ -51,7 +51,7 @@ export default function MesuresModal({
   // Get exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): GrandeursExercise[] => {
     const grandeursExercises = mathExerciseNaming.grandeurs || [];
-    return grandeursExercises.filter((ex: GrandeursExercise) => ex.levels.includes(level));
+    return grandeursExercises.filter(ex => ex.levels.includes(level));
   };
   
   useEffect(() => {
