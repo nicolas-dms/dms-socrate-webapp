@@ -702,11 +702,11 @@ export default function GenerateFrenchPage() {
 
   const handleComprehensionSave = (params: ComprehensionParams) => {
     // Parse the types string to count exercises
-    const typesArray = params.types.split(',').map(t => t.trim()).filter(t => t);
+    const typesArray = params.types.split(',').map((t: string) => t.trim()).filter((t: string) => t);
     
     // Calculate how the total would change with this new comprehension configuration
     const currentComprehensionCount = selectedTypes.includes("comprehension") && exerciceTypeParams.comprehension 
-      ? exerciceTypeParams.comprehension.types.split(',').map(t => t.trim()).filter(t => t).length
+      ? exerciceTypeParams.comprehension.types.split(',').map((t: string) => t.trim()).filter((t: string) => t).length
       : 0;
     const currentTotalWithoutComprehension = getTotalSelectedExercises() - currentComprehensionCount;
     const comprehensionExerciseCount = typesArray.length; // Count each comprehension type as an exercise
