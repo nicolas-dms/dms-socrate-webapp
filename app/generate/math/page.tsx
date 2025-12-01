@@ -17,7 +17,7 @@ import NombresModal from "../../../components/NombresModal";
 import GeometrieModal, { GeometrieParams } from "../../../components/GeometrieModal";
 import MesuresModal, { MesuresParams } from "../../../components/MesuresModal";
 import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
-import { getMathExerciseLabel } from "../../../types/mathExerciseNaming";
+import { getMathExerciseLabel, MathExerciseNamingConfig } from "../../../types/mathExerciseNaming";
 import mathExerciseNaming from "../../../config/mathExerciseNaming.json";
 
 const levels = ["CP", "CE1", "CE2", "CM1", "CM2"];
@@ -128,8 +128,9 @@ export default function GenerateMathPage() {
     if (exercisesList.length === 0) return "Configuré";
     
     // Map exercise IDs to their labels from mathExerciseNaming.json
+    const typeKey = type.toLowerCase() as keyof MathExerciseNamingConfig;
     const exerciseLabels = exercisesList.map((exerciseId: string) => {
-      const label = getMathExerciseLabel(exerciseId);
+      const label = getMathExerciseLabel(typeKey, exerciseId);
       return label || exerciseId; // Fallback to ID if label not found
     });
     
