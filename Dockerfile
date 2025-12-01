@@ -36,6 +36,9 @@ ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Skip API sync during Docker build (backend not available)
+ENV DOCKER_BUILD=1
+
 # Build the application
 RUN npm run build
 

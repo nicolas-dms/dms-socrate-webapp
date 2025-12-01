@@ -5,12 +5,14 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:docker": "next build",
     "start": "next start",
     "lint": "next lint",
     "sync-api": "node scripts/sync-openapi.js",
+    "sync-api:optional": "node scripts/sync-openapi.js || true",
     "sync-api:watch": "node scripts/sync-openapi.js && npm run sync-api:watch-files",
     "sync-api:watch-files": "echo 'Surveillance des changements... (Ctrl+C pour arrêter)' && (while true; do sleep 30; node scripts/sync-openapi.js --quiet 2>/dev/null || true; done)",
-    "prebuild": "npm run sync-api"
+    "prebuild": "node scripts/sync-openapi.js || echo 'Skipping API sync (backend not available)'"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^5.3.0",

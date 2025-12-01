@@ -250,6 +250,12 @@ async function main() {
     console.log('   3. Vérifiez votre connexion réseau');
     console.log(`   4. Testez manuellement: curl ${CONFIG.backendUrl}`);
     
+    // Exit with 0 if we're in a Docker build or CI environment (backend not available)
+    if (process.env.DOCKER_BUILD || process.env.CI || process.argv.includes('--optional')) {
+      console.log('\n⚠️  Environnement de build détecté - continuant sans synchronisation API');
+      process.exit(0);
+    }
+    
     process.exit(1);
   }
 }
