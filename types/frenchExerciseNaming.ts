@@ -21,7 +21,7 @@ export interface ExerciseNamingConfig {
   verb_groups: ExerciseDefinition[];
   orthographe: ExerciseDefinition[];
   comprehension: ExerciseDefinition[];
-  vocabulaire: ExerciseDefinition[];
+  vocabulaire?: ExerciseDefinition[];
 }
 
 // Load the configuration

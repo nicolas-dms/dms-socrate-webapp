@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Badge } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
-import mathExerciseNaming from "../config/mathExerciseNaming.json";
+import mathExerciseNamingData from "../config/mathExerciseNaming.json";
+import { MathExerciseNamingConfig } from "../types/mathExerciseNaming";
+
+const mathExerciseNaming = mathExerciseNamingData as MathExerciseNamingConfig;
 
 interface CalculExercise {
   id: string;
@@ -48,7 +51,7 @@ export default function CalculModal({
   
   // Get exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): CalculExercise[] => {
-    const calculExercises = (mathExerciseNaming as any).calculs || [];
+    const calculExercises = mathExerciseNaming.calculs || [];
     return calculExercises.filter((ex: CalculExercise) => ex.levels.includes(level));
   };
   

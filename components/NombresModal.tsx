@@ -1,8 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Modal, Button, Row, Col, Badge } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Badge, Card } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
-import mathExerciseNaming from "../config/mathExerciseNaming.json";
+import mathExerciseNamingData from "../config/mathExerciseNaming.json";
+import { MathExerciseNamingConfig } from "../types/mathExerciseNaming";
+
+const mathExerciseNaming = mathExerciseNamingData as MathExerciseNamingConfig;
 
 interface NombresModalProps {
   show: boolean;
@@ -51,7 +54,7 @@ export default function NombresModal({
 
   // Get available exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): NombresExercise[] => {
-    const nombresExercises = (mathExerciseNaming as any).nombres || [];
+    const nombresExercises = mathExerciseNaming.nombres || [];
     return nombresExercises.filter((ex: NombresExercise) => 
       ex.levels.includes(level)
     );

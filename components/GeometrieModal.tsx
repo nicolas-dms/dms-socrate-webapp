@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Badge, Card } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
-import mathExerciseNaming from "../config/mathExerciseNaming.json";
+import mathExerciseNamingData from "../config/mathExerciseNaming.json";
+import { MathExerciseNamingConfig } from "../types/mathExerciseNaming";
+
+const mathExerciseNaming = mathExerciseNamingData as MathExerciseNamingConfig;
 
 export interface GeometrieParams {
   types: string;
@@ -48,7 +51,7 @@ export default function GeometrieModal({
   
   // Get exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): GeometryExercise[] => {
-    const geometryExercises = (mathExerciseNaming as any).geometrie || [];
+    const geometryExercises = mathExerciseNaming.geometrie || [];
     return geometryExercises.filter((ex: GeometryExercise) => 
       ex.levels.includes(level)
     );

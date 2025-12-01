@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Badge, Card } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
-import mathExerciseNaming from "../config/mathExerciseNaming.json";
+import mathExerciseNamingData from "../config/mathExerciseNaming.json";
+import { MathExerciseNamingConfig } from "../types/mathExerciseNaming";
+
+const mathExerciseNaming = mathExerciseNamingData as MathExerciseNamingConfig;
 
 interface GrandeursExercise {
   id: string;
@@ -47,7 +50,7 @@ export default function MesuresModal({
   
   // Get exercises for current level from mathExerciseNaming.json
   const getAvailableExercises = (): GrandeursExercise[] => {
-    const grandeursExercises = (mathExerciseNaming as any).grandeurs || [];
+    const grandeursExercises = mathExerciseNaming.grandeurs || [];
     return grandeursExercises.filter((ex: GrandeursExercise) => ex.levels.includes(level));
   };
   

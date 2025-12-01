@@ -4,7 +4,7 @@ import { Modal, Button, Form, Badge } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 
 // Import theme suggestions
-import lectureThemesData from "../config/lectureThemes.json";
+import lectureThemesRaw from "../config/lectureThemes.json";
 
 export interface LectureParams {
   theme: string;
@@ -19,6 +19,13 @@ interface ThemeSuggestion {
   description: string;
   tags: string[];
 }
+
+interface LectureThemeLevel {
+  niveau: string;
+  themes: ThemeSuggestion[];
+}
+
+const lectureThemesData = lectureThemesRaw as LectureThemeLevel[];
 
 interface LectureModalProps {
   show: boolean;
@@ -45,13 +52,13 @@ export default function LectureModal({
 
   // Get theme suggestions filtered by level and style
   const themeSuggestions = useMemo(() => {
-    const levelData = lectureThemesData.find((item: any) => item.niveau === level);
+    const levelData = lectureThemesData.find(item => item.niveau === level);
     if (!levelData) return [];
 
-    const allThemes = levelData.themes as ThemeSuggestion[];
+    const allThemes = levelData.themes;
     
     // Filter themes by text type (style)
-    return allThemes.filter((t: ThemeSuggestion) => 
+    return allThemes.filter(t => 
       t.types_de_textes.includes(style)
     );
   }, [level, style]);
@@ -118,9 +125,9 @@ export default function LectureModal({
       setStyle(defaultStyle);
       
       // Pick a random theme from the level's themes that match the default style
-      const levelData = lectureThemesData.find((item: any) => item.niveau === level);
+      const levelData = lectureThemesData.find(item => item.niveau === level);
       const allThemes = levelData?.themes || [];
-      const filteredThemes = allThemes.filter((t: ThemeSuggestion) => 
+      const filteredThemes = allThemes.filter(t => 
         t.types_de_textes.includes(defaultStyle)
       );
       
@@ -153,9 +160,9 @@ export default function LectureModal({
     const defaultStyle = availableStyles[0]?.value || "histoire";
     
     // Pick a random theme from the level's themes that match the default style
-    const levelData = lectureThemesData.find((item: any) => item.niveau === level);
+    const levelData = lectureThemesData.find(item => item.niveau === level);
     const allThemes = levelData?.themes || [];
-    const filteredThemes = allThemes.filter((t: ThemeSuggestion) => 
+    const filteredThemes = allThemes.filter(t => 
       t.types_de_textes.includes(defaultStyle)
     );
     
