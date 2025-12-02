@@ -1,4 +1,4 @@
-name: Build and Deploy WebApp
+name: Build and Deploy WebApp to Test
 
 on:
   push:
@@ -91,57 +91,4 @@ jobs:
           echo "Test WebApp URL: https://$URL"
           echo "Test Revision: ${{ needs.build.outputs.revision-tag }}"
 
-  # ---------------------------------------------------------
-  #  DEPLOY TO PROD (MANUAL APPROVAL)
-  # ---------------------------------------------------------
-  deploy-prod:
-    name: Deploy WebApp to Prod
-    runs-on: ubuntu-latest
-    needs: [build, deploy-test]
-
-    environment:
-      name: production
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Login to ACR
-        run: az acr login --name $ACR_NAME
-
-      # Build production image with production API URL
-      - name: Build & Push WebApp Image (Prod)
-        run: |
-          docker build \
-            -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ needs.build.outputs.image-tag }}-prod \
-            -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod \
-            --build-arg NEXT_PUBLIC_API_URL=https://aca-exominutes-api-prod.kindocean-d336a5c4.francecentral.azurecontainerapps.io \
-            --build-arg NEXT_PUBLIC_ENVIRONMENT=production \
-            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_PROD }} \
-            -f Dockerfile .
-
-          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ needs.build.outputs.image-tag }}-prod
-          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod
-
-      # ✨ readable revision name
-      - name: Deploy Prod Revision
-        run: |
-          az containerapp update \
-            --name aca-exominutes-webapp-prod \
-            --resource-group rg-exominute-prod \
-            --image $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod \
-            --revision-suffix "${{ needs.build.outputs.revision-tag }}"
-
-      - name: Output Prod URL
-        run: |
-          URL=$(az containerapp show \
-            --name aca-exominutes-webapp-prod \
-            --resource-group rg-exominute-prod \
-            --query properties.configuration.ingress.fqdn -o tsv)
-          echo "Prod WebApp URL: https://$URL"
-          echo "Prod Revision: ${{ needs.build.outputs.revision-tag }}"
+ 
