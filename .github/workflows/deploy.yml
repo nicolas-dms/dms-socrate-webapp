@@ -35,7 +35,7 @@ jobs:
           SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
           VERSION="$(date +%Y%m%d-%H%M)-${SHORT_SHA}"
           echo "IMAGE_TAG=$VERSION" >> $GITHUB_OUTPUT
-          echo "REV_TAG=webapp-$VERSION" >> $GITHUB_OUTPUT
+          echo "REV_TAG=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: azure/login@v2
