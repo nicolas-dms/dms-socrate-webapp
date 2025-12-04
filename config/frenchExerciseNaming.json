@@ -288,6 +288,12 @@
       "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
       "description": "Dictée avec mots personnalisés",
       "isCustom": true
+    },
+    {
+      "id": "dictee_flash",
+      "label": "Dictée Flash",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Quelques phrases sur le thème de la fiche"
     }
   ],
   "lecture": [

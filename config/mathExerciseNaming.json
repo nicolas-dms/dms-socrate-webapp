@@ -177,6 +177,12 @@
       "description": "Divisions"
     },
     {
+      "id": "calcul_mental",
+      "label": "Calcul Mental",
+      "levels": ["CP", "CE1", "CE2","CM1","CM2"],
+      "description": "Séries de calculs rapides"
+    },
+    {
       "id": "decimaux_addition_soustraction",
       "label": "Décimaux - Addition et soustraction",
       "levels": ["CM1", "CM2"],
