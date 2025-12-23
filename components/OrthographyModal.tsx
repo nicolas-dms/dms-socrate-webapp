@@ -202,6 +202,20 @@ export default function OrthographyModal({
               ))}
             </Row>
             
+            <div className="mt-3 p-2" style={{ 
+              backgroundColor: '#fef3c7',
+              borderRadius: '8px',
+              border: '1px solid #fcd34d'
+            }}>
+              <small style={{ color: '#92400e' }}>
+                <i className="bi bi-list-check me-1"></i>
+                <strong>Sélectionnés:</strong> {selectedRules.length > 0 
+                  ? orthographyRules.filter(r => selectedRules.includes(r.key)).map(r => r.label).join(", ")
+                  : "Aucun exercice sélectionné"
+                }
+              </small>
+            </div>
+            
             {/* Custom Words Input - Show when dictée is selected */}
             {selectedRules.includes("dictee") && (
               <div className="mt-3 p-3" style={{ 

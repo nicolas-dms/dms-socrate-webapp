@@ -165,10 +165,10 @@
       "description": "Compléter des grilles de calcul avec additions, soustractions, multiplications selon le niveau"
     },
     {
-      "id": "partage",
-      "label": "Partage",
-      "levels": ["CP"],
-      "description": "Découvrir la notion de partage équitable et de division simple"
+      "id": "operations_illustrees",
+      "label": "Opérations illustrées",
+      "levels": ["CP","CE1","CE2","CM1","CM2"],
+      "description": "Découvrir les operations à travers des illustrations et des mises en situation"
     },
     {
       "id": "division",
@@ -189,28 +189,10 @@
       "description": "Additions et soustractions avec des nombres décimaux"
     },
     {
-      "id": "decimaux_multiplication",
-      "label": "Décimaux - Multiplication",
-      "levels": ["CM1"],
-      "description": "Multiplications avec des nombres décimaux"
-    },
-    {
       "id": "proportionnalite",
       "label": "Proportionnalité",
       "levels": ["CM1", "CM2"],
-      "description": "Problèmes de proportionnalité, tableaux, graphiques, pourcentages"
-    },
-    {
-      "id": "operations_entieres",
-      "label": "Opérations entières",
-      "levels": ["CM2"],
-      "description": "Additions, soustractions, multiplications et divisions avec des entiers"
-    },
-    {
-      "id": "decimaux_multiplication_division",
-      "label": "Décimaux - Multiplication et division",
-      "levels": ["CM2"],
-      "description": "Multiplications et divisions avec des nombres décimaux"
+      "description": "Problèmes de proportionnalité"
     },
     {
       "id" : "problemes",
@@ -230,7 +212,13 @@
       "id": "temps",
       "label": "Temps",
       "levels": ["CP", "CE1", "CE2"],
-      "description": "Se repérer dans le temps, lire l'heure"
+      "description": "Se repérer dans le temps"
+    },
+   {
+      "id": "lire_heure",
+      "label": "Lire l'heure",
+      "levels": [ "CE1", "CE2"],
+      "description": "Lire l'heure"
     },
     {
       "id": "longueurs",

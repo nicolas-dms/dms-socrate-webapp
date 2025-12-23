@@ -30,6 +30,7 @@ export interface ExerciseNamingConfig {
   verb_groups: ExerciseDefinition[];
   orthographe: ExerciseDefinition[];
   lecture: ExerciseDefinition[];
+  ecriture: ExerciseDefinition[];
   comprehension: ComprehensionExerciseDefinition[];
   vocabulaire?: ExerciseDefinition[];
 }

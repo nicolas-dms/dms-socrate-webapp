@@ -401,6 +401,26 @@
       "text_type": "syllabique"
     }
   ],
+  "ecriture": [
+    {
+      "id": "recopie",
+      "label": "Recopie de mots ou de phrases",
+      "levels": ["CP", "CE1"],
+      "description": "Recopier pour écrire correctement"
+    },
+    {
+      "id": "ecriture_phrases",
+      "label": "Écriture de phrases",
+      "levels": ["CP", "CE1","CE2","CM1","CM2"],
+      "description": "Expression écrite guidée"
+    },
+    {
+      "id": "reecriture_texte",
+      "label": "Réécriture de textes",
+      "levels": ["CE2","CM1","CM2"],
+      "description": "Réécrire un texte avec ses propres mots"
+    }
+  ],
   "comprehension": [
   {
     "id": "sens_global",

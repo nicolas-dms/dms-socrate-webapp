@@ -9,6 +9,7 @@ import ConjugationModal, { ConjugationParams } from "../../../components/Conjuga
 import GrammarModal, { GrammarParams } from "../../../components/GrammarModal";
 import OrthographyModal, { OrthographyParams } from "../../../components/OrthographyModal";
 import ComprehensionModal, { ComprehensionParams } from "../../../components/ComprehensionModal";
+import EcritureModal, { EcritureParams } from "../../../components/EcritureModal";
 import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
 import { useSubscription } from "../../../context/SubscriptionContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -68,6 +69,7 @@ export default function GenerateFrenchPage() {
   const [showGrammarModal, setShowGrammarModal] = useState(false);
   const [showOrthographyModal, setShowOrthographyModal] = useState(false);
   const [showComprehensionModal, setShowComprehensionModal] = useState(false);
+  const [showEcritureModal, setShowEcritureModal] = useState(false);
   const [showExerciseGuideModal, setShowExerciseGuideModal] = useState(false);
   const [exerciseGuideSearch, setExerciseGuideSearch] = useState("");
   const [exerciseGuideLevel, setExerciseGuideLevel] = useState("");
@@ -106,6 +108,7 @@ export default function GenerateFrenchPage() {
   const frenchTypes = [
     { key: "lecture", label: "Lecture" },
     { key: "comprehension", label: "Compréhension" },
+    { key: "ecriture", label: "Écriture" },
     { key: "grammaire", label: "Grammaire" },
     { key: "conjugaison", label: "Conjugaison" },
     // { key: "vocabulaire", label: "Vocabulaire" }, // Temporarily disabled
@@ -117,6 +120,7 @@ export default function GenerateFrenchPage() {
     switch (type) {
       case "lecture": return "bi-book";
       case "comprehension": return "bi-lightbulb";
+      case "ecriture": return "bi-pen";
       case "grammaire": return "bi-pencil-square";
       case "conjugaison": return "bi-gear";
       case "orthographe": return "bi-check2-square";
@@ -166,6 +170,14 @@ export default function GenerateFrenchPage() {
         if (params.exerciseTypes && Array.isArray(params.exerciseTypes)) {
           const labels = params.exerciseTypes.map((exType: string) => 
             getExerciseLabel('orthographe', exType) || exType
+          );
+          return labels.slice(0, 2).join(", ") + (labels.length > 2 ? ` +${labels.length - 2}` : "");
+        }
+        break;
+      case "ecriture":
+        if (params.exerciseTypes && Array.isArray(params.exerciseTypes)) {
+          const labels = params.exerciseTypes.map((exType: string) => 
+            getExerciseLabel('ecriture', exType) || exType
           );
           return labels.slice(0, 2).join(", ") + (labels.length > 2 ? ` +${labels.length - 2}` : "");
         }
@@ -366,6 +378,14 @@ export default function GenerateFrenchPage() {
             
             totalExercises += orthographyCount;
             break;
+          case 'ecriture':
+            // Count ecriture exercises based on selected types
+            if (params.exerciseTypes && Array.isArray(params.exerciseTypes)) {
+              totalExercises += params.exerciseTypes.length;
+            } else {
+              totalExercises += 1; // Default if no specific types
+            }
+            break;
           default:
             totalExercises += 1;
         }
@@ -516,7 +536,7 @@ export default function GenerateFrenchPage() {
   };
 
   const toggleType = (type: string) => {
-    const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "orthographe", "comprehension"]; // Vocabulaire temporarily removed
+    const exerciseTypesWithModals = ["lecture", "conjugaison", "grammaire", "orthographe", "ecriture", "comprehension"]; // Vocabulaire temporarily removed
     
     // Check if trying to add a new exercise when at limit
     if (!selectedTypes.includes(type) && !canAddMoreExercises()) {
@@ -572,6 +592,9 @@ export default function GenerateFrenchPage() {
             break;
           case "orthographe":
             setShowOrthographyModal(true);
+            break;
+          case "ecriture":
+            setShowEcritureModal(true);
             break;
           case "comprehension":
             setShowComprehensionModal(true);
@@ -731,6 +754,33 @@ export default function GenerateFrenchPage() {
     });
   };
 
+  const handleEcritureSave = (params: EcritureParams) => {
+    // Check if adding this exercise would exceed the limit
+    const currentTotal = getTotalSelectedExercises();
+    const limit = getExerciseLimits(duration);
+    
+    // Calculate how many exercises this ecriture would add
+    const newExerciseCount = !selectedTypes.includes("ecriture") ? params.exerciseTypes.length : 
+      params.exerciseTypes.length - (exerciceTypeParams.ecriture?.exerciseTypes?.length || 0);
+    
+    const wouldExceedLimit = (currentTotal + newExerciseCount) > limit;
+    
+    if (wouldExceedLimit) {
+      return; // Silently prevent save - UI should have prevented this
+    }
+    
+    if (!selectedTypes.includes("ecriture")) {
+      setSelectedTypes([...selectedTypes, "ecriture"]);
+    }
+    
+    setExerciceTypeParams({
+      ...exerciceTypeParams,
+      ecriture: {
+        exerciseTypes: params.exerciseTypes
+      }
+    });
+  };
+
   const handleEditLectureParams = () => {
     setShowLectureModal(true);
   };
@@ -749,6 +799,10 @@ export default function GenerateFrenchPage() {
 
   const handleEditComprehensionParams = () => {
     setShowComprehensionModal(true);
+  };
+
+  const handleEditEcritureParams = () => {
+    setShowEcritureModal(true);
   };
   // Generate preview based on selections
   const generatePreview = (): ExercisePreview => {
@@ -927,6 +981,26 @@ export default function GenerateFrenchPage() {
           } else {
             exercicesByType['orthographe'] = [{
               exercice_id: 'orthographe_generale',
+              params: {}
+            }];
+          }
+        }
+        
+        if (type === 'ecriture') {
+          if (exerciceTypeParams.ecriture && exerciceTypeParams.ecriture.exerciseTypes) {
+            const ecritureExercises: ExerciseWithParams[] = [];
+            
+            exerciceTypeParams.ecriture.exerciseTypes.forEach((exerciseType: string) => {
+              ecritureExercises.push({
+                exercice_id: exerciseType,
+                params: {}
+              });
+            });
+            
+            exercicesByType['ecriture'] = ecritureExercises;
+          } else {
+            exercicesByType['ecriture'] = [{
+              exercice_id: 'ecriture_generale',
               params: {}
             }];
           }
@@ -1653,6 +1727,44 @@ export default function GenerateFrenchPage() {
                             </div>
                           )}
 
+                          {/* Ecriture parameters */}
+                          {selectedTypes.includes("ecriture") && exerciceTypeParams.ecriture && (
+                            <div 
+                              className="border rounded p-2 d-flex align-items-center gap-2" 
+                              style={{ 
+                                backgroundColor: 'white',
+                                border: '1px solid #fcd34d',
+                                minWidth: '150px',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                borderRadius: '10px',
+                                boxShadow: '0 2px 8px rgba(251, 191, 36, 0.1)'
+                              }}
+                              onClick={handleEditEcritureParams}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.2)';
+                                e.currentTarget.style.borderColor = '#fbbf24';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.1)';
+                                e.currentTarget.style.borderColor = '#fcd34d';
+                              }}
+                              title="Cliquer pour modifier"
+                            >
+                              <div className="flex-grow-1">
+                                <div className="fw-semibold" style={{ fontSize: '0.8rem', color: '#374151' }}>
+                                  <i className="bi bi-pen me-1" style={{ color: '#fbbf24' }}></i>
+                                  Écriture
+                                </div>
+                                <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>
+                                  {getConfiguredExerciseLabels("ecriture")}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Comprehension parameters */}
                           {selectedTypes.includes("comprehension") && exerciceTypeParams.comprehension && (
                             <div 
@@ -2170,6 +2282,16 @@ export default function GenerateFrenchPage() {
           textType={exerciceTypeParams.lecture?.style}
         />
 
+        <EcritureModal
+          show={showEcritureModal}
+          onHide={() => setShowEcritureModal(false)}
+          onSave={handleEcritureSave}
+          level={level}
+          initialParams={exerciceTypeParams.ecriture ? {
+            exerciseTypes: exerciceTypeParams.ecriture.exerciseTypes
+          } : undefined}
+        />
+
         {/* Level Change Confirmation Modal */}
         <Modal show={showLevelChangeModal} onHide={cancelLevelChange} centered size="sm">
           <Modal.Header closeButton>
@@ -2437,6 +2559,57 @@ export default function GenerateFrenchPage() {
             </div>
             )}
 
+            {/* Écriture Section */}
+            {frenchExerciseNaming.ecriture.filter(exercise => 
+              (exerciseGuideSearch === '' || 
+               exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+               exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+              (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+            ).length > 0 && (
+            <div className="mb-4">
+              <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: '#f59e0b' }}>
+                <i className="bi bi-pen me-2"></i>
+                Écriture
+                <Badge bg="warning" text="dark" className="ms-2">
+                  {frenchExerciseNaming.ecriture.filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  ).length} exercices
+                </Badge>
+              </h5>
+              <Row className="g-3">
+                {frenchExerciseNaming.ecriture
+                  .filter(exercise => 
+                    (exerciseGuideSearch === '' || 
+                     exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                     exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+                    (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+                  )
+                  .map((exercise) => (
+                  <Col md={6} key={exercise.id}>
+                    <Card className="h-100 border-warning shadow-sm" style={{ borderLeft: '4px solid #fbbf24' }}>
+                      <Card.Body>
+                        <h6 className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>
+                          {exercise.label}
+                        </h6>
+                        <p className="small text-muted mb-2">{exercise.description}</p>
+                        <div className="d-flex flex-wrap gap-1">
+                          {exercise.levels.map((lvl) => (
+                            <Badge key={lvl} bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                              {lvl}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+            )}
+
             {/* Compréhension Section */}
             {frenchExerciseNaming.comprehension.filter(exercise => 
               (exerciseGuideSearch === '' || 
@@ -2503,6 +2676,12 @@ export default function GenerateFrenchPage() {
                (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
              ).length === 0 &&
              frenchExerciseNaming.orthographe.filter(exercise => 
+               (exerciseGuideSearch === '' || 
+                exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
+                exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
+               (exerciseGuideLevel === '' || exercise.levels.includes(exerciseGuideLevel))
+             ).length === 0 &&
+             frenchExerciseNaming.ecriture.filter(exercise => 
                (exerciseGuideSearch === '' || 
                 exercise.label.toLowerCase().includes(exerciseGuideSearch.toLowerCase()) ||
                 exercise.description.toLowerCase().includes(exerciseGuideSearch.toLowerCase())) &&
