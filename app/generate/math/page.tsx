@@ -514,7 +514,8 @@ export default function GenerateMathPage() {
     setExerciceTypeParams({
       ...exerciceTypeParams,
       [domainKey]: {
-        exercises: params.operations
+        exercises: params.operations,
+        tableParams: params.tableParams // Store table parameters
       }
     });
   };
@@ -627,10 +628,47 @@ export default function GenerateMathPage() {
           // Split exercises and create ExerciseWithParams structure - use different delimiter for Nombres
           const delimiter = domainKey === "Nombres" ? "|||" : ",";
           const exercisesList = domainParams.exercises.split(delimiter).map((ex: string) => ex.trim()).filter((ex: string) => ex !== '');
-          exercicesByType[domainKey] = exercisesList.map((exerciseId: string) => ({
-            exercice_id: exerciseId,
-            params: {}
-          }));
+          exercicesByType[domainKey] = exercisesList.map((exerciseId: string) => {
+            // Check if this exercise has table parameters (for Tables d'addition, Tables de multiplication, Calcul Mental)
+            const tableParams = domainParams.tableParams?.[exerciseId];
+            
+            if (tableParams) {
+              // For calcul mental, send only difficulty
+              if (exerciseId === 'calcul_mental') {
+                return {
+                  exercice_id: exerciseId,
+                  params: {
+                    difficulty: tableParams.difficulty
+                  }
+                };
+              }
+              // For addition tables, send difficulty and fillPercentage
+              else if (exerciseId === 'tables_addition') {
+                return {
+                  exercice_id: exerciseId,
+                  params: {
+                    difficulty: tableParams.difficulty,
+                    fill_percentage: tableParams.fillPercentage
+                  }
+                };
+              }
+              // For multiplication tables, send numbers and fillPercentage
+              else if (exerciseId === 'tables_multiplication') {
+                return {
+                  exercice_id: exerciseId,
+                  params: {
+                    numbers: tableParams.numbers,
+                    fill_percentage: tableParams.fillPercentage
+                  }
+                };
+              }
+            }
+            
+            return {
+              exercice_id: exerciseId,
+              params: {}
+            };
+          });
         } else if (selectedTypes.includes(domainKey)) {
           // Domain selected but no specific exercises configured - use default
           exercicesByType[domainKey] = [{
@@ -1592,7 +1630,10 @@ export default function GenerateMathPage() {
           onHide={() => setShowCalculModal(false)}
           onSave={handleCalculSave}
           level={level}
-          initialParams={exerciceTypeParams["Calculs"] ? { operations: exerciceTypeParams["Calculs"].exercises } : undefined}
+          initialParams={exerciceTypeParams["Calculs"] ? {
+            operations: exerciceTypeParams["Calculs"].exercises,
+            tableParams: exerciceTypeParams["Calculs"].tableParams
+          } : undefined}
           exerciseLimit={getExerciseLimits(duration)}
           currentTotalExercises={getTotalSelectedExercises()}
           domainKey="Calculs"
