@@ -2093,11 +2093,11 @@ export default function GenerateFrenchPage() {
                         let matchedListName: string | null = null;
                         if (hasDictee) {
                           const dicteeWords = exerciceTypeParams.orthographe?.words?.replace("#dictee,", "").trim();
-                          const dicteeWordsArray = dicteeWords?.split(',').map(w => w.trim()).sort();
+                          const dicteeWordsArray = dicteeWords?.split(',').map((w: string) => w.trim()).sort();
                           
                           // Check each word list to see if it matches
                           for (const [listName, words] of Object.entries(wordLists)) {
-                            const listWordsArray = words.map(w => w.trim()).sort();
+                            const listWordsArray = words.map((w: string) => w.trim()).sort();
                             if (JSON.stringify(dicteeWordsArray) === JSON.stringify(listWordsArray)) {
                               matchedListName = listName;
                               break;
