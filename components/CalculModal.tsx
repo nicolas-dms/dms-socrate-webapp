@@ -71,7 +71,8 @@ export default function CalculModal({
   const getDefaultTableParams = (exerciseId?: string): TableExerciseParams => {
     if (exerciseId === 'calcul_mental') {
       return {
-        difficulty: 'moyen'
+        difficulty: 'moyen',
+        fillPercentage: 20
       };
     } else if (exerciseId === 'tables_addition') {
       return {
