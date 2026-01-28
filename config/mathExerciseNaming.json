@@ -1,130 +1,34 @@
 {
   "nombres": [
     {
-      "id": "lire_ecrire_decomposer_10",
-      "label": "Lire, écrire, décomposer jusqu'à 10",
-      "levels": ["CP"],
-      "description": "Lire, écrire et décomposer les nombres jusqu'à 10. Introduction aux dizaines et unités."
+      "id": "lire_ecrire_decomposer",
+      "label": "Lire, écrire, décomposer",
+      "levels": ["CP","CE1","CE2","CM1","CM2"],
+      "description": "Lire, écrire et décomposer les nombres."
     },
     {
-      "id": "ranger_comparer_10",
-      "label": "Ranger, comparer jusqu'à 10",
-      "levels": ["CP"],
-      "description": "Ranger et comparer les nombres jusqu'à 10. Ordonner de petites collections."
+      "id": "ranger_comparer_encadrer",
+      "label": "Ranger, comparer encadrer",
+      "levels": ["CP","CE1","CE2","CM1","CM2"],
+      "description": "Ranger et comparer les nombres. Ordonner des collections."
     },
-    {
-      "id": "lire_ecrire_decomposer_100",
-      "label": "Lire, écrire, décomposer jusqu'à 100",
-      "levels": ["CP", "CE1"],
-      "description": "Lire, écrire et décomposer les nombres jusqu'à 100"
-    },
-    {
-      "id": "ranger_comparer_100",
-      "label": "Ranger, comparer jusqu'à 100",
-      "levels": ["CP", "CE1"],
-      "description": "Ranger et comparer les nombres jusqu'à 100"
-    },
-    {
-      "id": "encadrer_dizaine",
-      "label": "Encadrer à la dizaine",
-      "levels": ["CE1"],
-      "description": "Encadrer un nombre à la dizaine près (ex: 20 < 23 < 30)"
-    },
-    {
-      "id": "lire_ecrire_decomposer_1000",
-      "label": "Lire, écrire, décomposer jusqu'à 1000",
-      "levels": ["CE1", "CE2"],
-      "description": "Lire, écrire et décomposer les nombres jusqu'à 1000"
-    },
-    {
-      "id": "encadrer_dizaine_centaine_millier",
-      "label": "Encadrer à la dizaine, centaine, millier",
-      "levels": ["CE2"],
-      "description": "Encadrer un nombre à la dizaine, centaine ou millier près selon le contexte"
-    },
-    {
-      "id": "ranger_comparer_1000",
-      "label": "Ranger, comparer jusqu'à 1000",
-      "levels": ["CE1", "CE2"],
-      "description": "Ranger et comparer les nombres jusqu'à 1000"
-    },
-    {
-      "id": "lire_ecrire_decomposer_10000",
-      "label": "Lire, écrire, décomposer jusqu'à 10 000",
-      "levels": ["CE2"],
-      "description": "Lire, écrire et décomposer les nombres jusqu'à 10 000"
-    },
-    {
-      "id": "ranger_comparer_10000",
-      "label": "Ranger, comparer jusqu'à 10 000",
-      "levels": ["CE2"],
-      "description": "Ranger et comparer les nombres jusqu'à 10 000"
-    },
-    {
+   {
       "id": "pair_impair",
       "label": "Nombres pairs et impairs",
-      "levels": ["CE2", "CM1"],
+      "levels": ["CE1","CE2"],
       "description": "Reconnaître les nombres pairs et impairs, identifier leurs propriétés et les utiliser dans des exercices"
-    },
-    {
-      "id": "grands_nombres_lire_ecrire",
-      "label": "Grands nombres - Lire et écrire",
-      "levels": ["CM1"],
-      "description": "Lire, écrire et décomposer des nombres jusqu'aux milliards"
-    },
-    {
-      "id": "grands_nombres_comparer_encadrer",
-      "label": "Grands nombres - Comparer et encadrer",
-      "levels": ["CM1"],
-      "description": "Comparer, encadrer et ordonner des nombres jusqu'aux milliards"
-    },
-    {
-      "id": "encadrer_grands_nombres",
-      "label": "Encadrer des grands nombres",
-      "levels": ["CM1", "CM2"],
-      "description": "Encadrer des nombres de plusieurs millions à différents ordres de grandeur (dizaine de millions, centaine de millions, etc.)"
     },
     {
       "id": "fractions",
       "label": "Fractions",
-      "levels": ["CM1", "CM2"],
+      "levels": ["CE2","CM1", "CM2"],
       "description": "Nommer, représenter, placer, comparer et ranger des fractions"
     },
     {
-      "id": "decimaux_lire_ecrire",
-      "label": "Décimaux - Lire et écrire",
-      "levels": ["CM1"],
+      "id": "decimaux",
+      "label": "Décimaux",
+      "levels": ["CM1","CM2"],
       "description": "Relier fractions et décimaux, lire et écrire des nombres décimaux"
-    },
-    {
-      "id": "decimaux_comparer_ranger",
-      "label": "Décimaux - Comparer et ranger",
-      "levels": ["CM1"],
-      "description": "Comparer, ranger et encadrer des nombres décimaux"
-    },
-    {
-      "id": "grands_nombres_lire_decomposer",
-      "label": "Grands nombres - Lire et décomposer",
-      "levels": ["CM2"],
-      "description": "Lire, écrire et décomposer des nombres jusqu'aux milliards"
-    },
-    {
-      "id": "grands_nombres_comparer_ordonner",
-      "label": "Grands nombres - Comparer et ordonner",
-      "levels": ["CM2"],
-      "description": "Encadrer, comparer et ordonner des nombres jusqu'aux milliards"
-    },
-    {
-      "id": "decimaux_lire_decomposer",
-      "label": "Décimaux - Lire et décomposer",
-      "levels": ["CM2"],
-      "description": "Lire, écrire et décomposer des nombres décimaux"
-    },
-    {
-      "id": "decimaux_comparer_encadrer",
-      "label": "Décimaux - Comparer et encadrer",
-      "levels": ["CM2"],
-      "description": "Comparer, ranger et encadrer des nombres décimaux"
     }
   ],
   "calculs": [
@@ -159,15 +63,9 @@
       "description": "Mémoriser et s'entraîner aux tables de multiplication"
     },
     {
-      "id": "grille_calcul_logique",
-      "label": "Grille de calcul et de logique",
-      "levels": [],
-      "description": "Compléter des grilles de calcul avec additions, soustractions, multiplications selon le niveau"
-    },
-    {
       "id": "operations_illustrees",
       "label": "Opérations illustrées",
-      "levels": ["CP","CE1","CE2","CM1","CM2"],
+      "levels": ["CP","CE1"],
       "description": "Découvrir les operations à travers des illustrations et des mises en situation"
     },
     {
@@ -181,18 +79,6 @@
       "label": "Calcul Mental",
       "levels": ["CP", "CE1", "CE2","CM1","CM2"],
       "description": "Séries de calculs rapides"
-    },
-    {
-      "id": "decimaux_addition_soustraction",
-      "label": "Décimaux - Addition et soustraction",
-      "levels": ["CM1", "CM2"],
-      "description": "Additions et soustractions avec des nombres décimaux"
-    },
-    {
-      "id": "proportionnalite",
-      "label": "Proportionnalité",
-      "levels": ["CM1", "CM2"],
-      "description": "Problèmes de proportionnalité"
     },
     {
       "id" : "problemes",
@@ -306,76 +192,6 @@
       "levels": ["CM1", "CM2"],
       "description": "Identifier et nommer les angles : droit, aigu, obtus, plat.",
       "modality": "identification"
-    },
-    {
-      "id": "tracer_segment",
-      "label": "Tracer un segment",
-      "levels": ["CP","CE1"],
-      "description": "Trace un segment [AB] de longueur donnée.",
-      "modality": "construction"
-    },
-    {
-      "id": "relier_points",
-      "label": "Relier des points pour fermer une figure",
-      "levels": ["CP"],
-      "description": "Relie les points pour former un triangle ou un carré.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_carre_rectangle",
-      "label": "Tracer un carré ou un rectangle",
-      "levels": ["CE1","CE2"],
-      "description": "Trace un carré ou un rectangle de dimensions données.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_cercle",
-      "label": "Tracer un cercle",
-      "levels": ["CE1","CE2"],
-      "description": "Trace un cercle de centre O et de rayon donné.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_triangle",
-      "label": "Tracer un triangle",
-      "levels": ["CE1","CE2"],
-      "description": "Trace un triangle ABC avec des côtés donnés.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_droites",
-      "label": "Tracer des droites parallèles et perpendiculaires",
-      "levels": ["CE2", "CM1", "CM2"],
-      "description": "Trace des droites parallèles ou perpendiculaires à une droite donnée.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_rectangle_losange",
-      "label": "Tracer un rectangle ou un losange",
-      "levels": ["CM1"],
-      "description": "Trace un rectangle ou un losange à partir de ses côtés ou diagonales.",
-      "modality": "construction"
-    },
-    {
-      "id": "symetrie",
-      "label": "Tracer une figure symétrique",
-      "levels": ["CM1","CM2"],
-      "description": "Trace une figure et son symétrique par rapport à une droite d.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_triangle_type",
-      "label": "Tracer un triangle particulier",
-      "levels": ["CM2"],
-      "description": "Trace un triangle isocèle, équilatéral ou rectangle selon les mesures données.",
-      "modality": "construction"
-    },
-    {
-      "id": "tracer_parallelogramme",
-      "label": "Tracer un parallélogramme",
-      "levels": ["CM2"],
-      "description": "Trace un parallélogramme ABCD dont AB et CD sont parallèles.",
-      "modality": "construction"
     }
-  ]
+    ]
  }

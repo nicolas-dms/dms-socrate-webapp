@@ -11,6 +11,7 @@ import OrthographyModal, { OrthographyParams } from "../../../components/Orthogr
 import ComprehensionModal, { ComprehensionParams } from "../../../components/ComprehensionModal";
 import EcritureModal, { EcritureParams } from "../../../components/EcritureModal";
 import GenerationLoadingModal from "../../../components/GenerationLoadingModal";
+import WordListSelector from "../../../components/WordListSelector";
 import { useSubscription } from "../../../context/SubscriptionContext";
 import { useAuth } from "../../../context/AuthContext";
 // Import top-level functions to avoid Turbopack interop issues with object properties
@@ -45,7 +46,7 @@ interface ExercisePreview {
 export default function GenerateFrenchPage() {
   const { t } = useTranslation();
   const { status, usageView, canGenerateMore, getRemainingFiches, updateStatusFromQuotaInfo } = useSubscription();
-  const { user, userPreferences } = useAuth();
+  const { user, userPreferences, wordLists } = useAuth();
   const router = useRouter();
   
   // Form state - Initialize with user preferences from AuthContext
@@ -96,6 +97,7 @@ export default function GenerateFrenchPage() {
   const [tagInput, setTagInput] = useState("");
   const [ficheTheme, setFicheTheme] = useState(""); // Theme for the entire fiche
   const [showAllFicheThemes, setShowAllFicheThemes] = useState(false);
+  const [previewWordList, setPreviewWordList] = useState<string>(""); // Word list selected in preview modal
 
   // Last generated parameters for regeneration
   const [lastGeneratedParams, setLastGeneratedParams] = useState<{
@@ -130,10 +132,8 @@ export default function GenerateFrenchPage() {
 
   // Helper function to convert old grammar type names to new ones
   const convertGrammarType = (oldType: string): string => {
-    const conversionMap: Record<string, string> = {
-      'accord_adjectif': 'nom_adjectif'
-    };
-    return conversionMap[oldType] || oldType;
+    // No conversion needed - use IDs as-is from config
+    return oldType;
   };
 
   // Helper function to format grammar types for display
@@ -243,6 +243,12 @@ export default function GenerateFrenchPage() {
     setTagInput("");
     setFicheTheme("");
     setShowAllFicheThemes(false);
+    setPreviewWordList("");
+  };
+
+  const handlePreviewWordListSelect = (listName: string, words: string[]) => {
+    setPreviewWordList(listName);
+    // Optional: Could use words for additional context in generation
   };
 
   // Helper function to format style labels
@@ -872,6 +878,20 @@ export default function GenerateFrenchPage() {
         throw new Error("Utilisateur non authentifié");
       }
 
+      // Get word list if selected in preview modal OR from dictée personnalisée
+      let wordListString: string | undefined = undefined;
+      
+      // Check if dictée personnalisée has words
+      if (exerciceTypeParams.orthographe?.words && exerciceTypeParams.orthographe.words.startsWith('#dictee,')) {
+        wordListString = exerciceTypeParams.orthographe.words.replace('#dictee,', '');
+        console.log('Word list from dictée personnalisée:', wordListString);
+      }
+      // Otherwise check if word list selected in preview modal (and not already from dictée)
+      else if (previewWordList && wordLists[previewWordList]) {
+        wordListString = wordLists[previewWordList].join(', ');
+        console.log('Word list selected in preview modal:', previewWordList, '→', wordListString);
+      }
+
       // Preview the backend request (for debugging)
       previewBackendRequest(level, duration, selectedTypes, mainTheme);
       
@@ -1074,7 +1094,8 @@ export default function GenerateFrenchPage() {
         undefined, // specific requirements
         exercicesByType, // New parameter with exercise lists
         ficheTitle || undefined, // exercice_title
-        ficheTags.length > 0 ? ficheTags : undefined // exercice_tags
+        ficheTags.length > 0 ? ficheTags : undefined, // exercice_tags
+        wordListString // words from selected word list
       );
       
       console.log('About to call generateExercisesApi with:', { userId: user.user_id, request });
@@ -1841,213 +1862,302 @@ export default function GenerateFrenchPage() {
         </Row>
         
         {/* Preview Modal */}
-        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered>
+        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered size="lg">
           <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
             <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
               Aperçu de votre fiche
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body style={{ padding: '1.5rem' }}>
+          <Modal.Body style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
             {preview && (
               <div>
-                {/* Basic Information - Compact */}
-                <div className="d-flex gap-3 mb-3">
-                  <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                    <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
-                    <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                      {preview.level}
-                    </Badge>
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                    <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
-                    <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                      {preview.duration}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Theme - Required for generation */}
-                <div className="mb-3">
-                  <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
-                    Thème de la fiche
-                  </label>
-                  
-                  {/* If lecture exercise exists, show locked theme from lecture */}
-                  {exerciceTypeParams.lecture?.theme ? (
-                    <>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={ficheTheme}
-                        readOnly
-                        disabled
-                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                        style={{ fontSize: '0.9rem', backgroundColor: '#e9ecef', cursor: 'not-allowed' }}
-                      />
-                      <small className="text-muted">
-                        <i className="bi bi-lock me-1"></i>
-                        Thème défini par l'exercice de lecture.
-                      </small>
-                    </>
-                  ) : (
-                    <>
-                      {/* Theme suggestions based on level - only if no lecture */}
-                      {(() => {
-                        const levelData = lectureThemesData.find((item: any) => item.niveau === level);
-                        const allThemes = levelData?.themes || [];
-                        const displayedThemes = showAllFicheThemes ? allThemes : allThemes.slice(0, 6);
-                        
-                        return allThemes.length > 0 ? (
-                          <div className="mb-2">
-                            <small className="text-muted d-flex align-items-center justify-content-between mb-2">
-                              <span>
-                                <i className="bi bi-lightbulb me-1"></i>
-                                Suggestions de thèmes :
-                              </span>
-                              {allThemes.length > 6 && (
-                                <Button 
-                                  variant="link" 
-                                  size="sm" 
-                                  className="p-0 text-decoration-none"
-                                  onClick={() => setShowAllFicheThemes(!showAllFicheThemes)}
-                                  style={{ fontSize: '0.75rem' }}
-                                >
-                                  {showAllFicheThemes ? 'Voir moins' : `Voir tout (${allThemes.length})`}
-                                </Button>
-                              )}
-                            </small>
-                            <div className="d-flex flex-wrap gap-2 mb-2">
-                              {displayedThemes.map((themeObj: any, index: number) => (
-                                <Badge
-                                  key={index}
-                                  bg={ficheTheme === themeObj.theme ? "primary" : "light"}
-                                  text={ficheTheme === themeObj.theme ? "white" : "dark"}
-                                  className="border"
-                                  style={{ 
-                                    cursor: 'pointer',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 'normal',
-                                    padding: '0.4rem 0.8rem',
-                                    transition: 'all 0.2s ease',
-                                    borderColor: ficheTheme === themeObj.theme ? '#0d6efd' : '#dee2e6'
-                                  }}
-                                  onClick={() => setFicheTheme(themeObj.theme)}
-                                  title={themeObj.description}
-                                >
-                                  {themeObj.theme}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null;
-                      })()}
-                      
-                      {/* Custom theme input - only if no lecture */}
-                      <input
-                        type="text"
-                        className={`form-control ${!ficheTheme.trim() ? 'border-danger' : ''}`}
-                        placeholder={!ficheTheme.trim() ? "Veuillez saisir un thème" : "Thème personnalisé ou sélectionnez une suggestion ci-dessus"}
-                        value={ficheTheme}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value.length <= 60) {
-                            setFicheTheme(value);
-                          }
-                        }}
-                        onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                        maxLength={60}
-                        style={{ fontSize: '0.9rem' }}
-                      />
-                      <small className="text-muted">
-                        <i className="bi bi-info-circle me-1"></i>
-                        Cliquez sur une suggestion ci-dessus ou saisissez votre propre thème. ({ficheTheme.length}/60 caractères)
-                      </small>
-                    </>
-                  )}
-                </div>
-
-                {/* Selected Exercises - Compact List with Labels */}
-                <div className="mb-3">
-                  <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
-                    Exercices sélectionnés
-                  </h6>
-                  <div style={{ fontSize: '0.85rem' }}>
-                    {preview.types.map((type, index) => {
-                      const exerciseInfo = frenchTypes.find(ft => ft.key === type);
-                      return (
-                        <div 
-                          key={type} 
-                          style={{ 
-                            padding: '0.5rem 0',
-                            borderBottom: index < preview.types.length - 1 ? '1px solid #f0f0f0' : 'none'
-                          }}
-                        >
-                          <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
-                            {exerciseInfo?.label}
-                          </div>
-                          <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
-                            {getConfiguredExerciseLabels(type)}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
-
-                {/* Tags Input */}
-                <div className="mb-3">
-                  <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
-                    Tags <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
-                  </label>
-                  <div className="d-flex gap-2 align-items-center">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Ajouter un tag..."
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={handleTagInputKeyDown}
-                      onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                      style={{ fontSize: '0.9rem' }}
-                    />
-                    <Button 
-                      variant="outline-secondary" 
-                      size="sm" 
-                      onClick={addTag}
-                      disabled={!tagInput.trim()}
-                      style={{ whiteSpace: 'nowrap' }}
-                    >
-                      Ajouter
-                    </Button>
-                  </div>
-                  {ficheTags.length > 0 && (
-                    <div className="d-flex gap-2 flex-wrap mt-2">
-                      {ficheTags.map(tag => (
-                        <span 
-                          key={tag} 
-                          className="badge d-flex align-items-center gap-1" 
-                          style={{ 
-                            fontSize: '0.8rem', 
-                            backgroundColor: '#e3f2fd', 
-                            color: '#1976d2',
-                            padding: '0.35rem 0.6rem'
-                          }}
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            className="btn-close"
-                            style={{ fontSize: '0.6rem' }}
-                            onClick={() => removeTag(tag)}
-                            aria-label={`Remove ${tag}`}
-                          ></button>
-                        </span>
-                      ))}
+                {/* Main Row: Left (Basic Info + Exercises + Tags) and Right (Theme + Word List) */}
+                <Row>
+                  {/* Left Column: Basic Info + Exercises + Tags */}
+                  <Col md={4}>
+                    {/* Basic Info */}
+                    <div className="mb-3">
+                      <div style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '0.5rem' }}>
+                        <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
+                        <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                          {preview.level}
+                        </Badge>
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                        <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
+                        <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                          {preview.duration}
+                        </Badge>
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Exercises in rounded box */}
+                    <div className="mb-3">
+                      <h6 style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '0.5rem' }}>
+                        Exercices sélectionnés
+                      </h6>
+                      <div 
+                        style={{ 
+                          fontSize: '0.8rem', 
+                          maxHeight: '200px', 
+                          overflowY: 'auto',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '12px',
+                          padding: '0.75rem',
+                          border: '1px solid #e9ecef'
+                        }}
+                      >
+                        {preview.types.map((type, index) => {
+                          const exerciseInfo = frenchTypes.find(ft => ft.key === type);
+                          return (
+                            <div 
+                              key={type} 
+                              style={{ 
+                                padding: '0.4rem 0',
+                                borderBottom: index < preview.types.length - 1 ? '1px solid #dee2e6' : 'none'
+                              }}
+                            >
+                              <div style={{ color: '#2c3e50', fontWeight: '500', fontSize: '0.85rem' }}>
+                                {exerciseInfo?.label}
+                              </div>
+                              <div style={{ color: '#6c757d', fontSize: '0.75rem', paddingLeft: '1rem' }}>
+                                {getConfiguredExerciseLabels(type)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
+                        Tags <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
+                      </label>
+                      <div className="d-flex gap-2 align-items-center">
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="Ajouter un tag..."
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleTagInputKeyDown}
+                          onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
+                          style={{ fontSize: '0.85rem' }}
+                        />
+                        <Button 
+                          variant="outline-secondary" 
+                          size="sm" 
+                          onClick={addTag}
+                          disabled={!tagInput.trim()}
+                          style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}
+                        >
+                          Ajouter
+                        </Button>
+                      </div>
+                      {ficheTags.length > 0 && (
+                        <div className="d-flex gap-2 flex-wrap mt-2">
+                          {ficheTags.map(tag => (
+                            <span 
+                              key={tag} 
+                              className="badge d-flex align-items-center gap-1" 
+                              style={{ 
+                                fontSize: '0.75rem', 
+                                backgroundColor: '#e3f2fd', 
+                                color: '#1976d2',
+                                padding: '0.3rem 0.5rem'
+                              }}
+                            >
+                              {tag}
+                              <button
+                                type="button"
+                                className="btn-close"
+                                style={{ fontSize: '0.5rem' }}
+                                onClick={() => removeTag(tag)}
+                                aria-label={`Remove ${tag}`}
+                              ></button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Col>
+
+                  {/* Right Column: Theme + Word List */}
+                  <Col md={8}>
+                    {/* Theme */}
+                    <div className="mb-3">
+                      <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '0.5rem' }}>
+                        Thème de la fiche
+                      </label>
+                      
+                      {/* If lecture exercise exists, show locked theme from lecture */}
+                      {exerciceTypeParams.lecture?.theme ? (
+                        <>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={ficheTheme}
+                            readOnly
+                            disabled
+                            onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
+                            style={{ 
+                              fontSize: '0.9rem', 
+                              backgroundColor: '#fffbeb', 
+                              borderColor: '#fbbf24',
+                              color: '#d97706',
+                              cursor: 'not-allowed' 
+                            }}
+                          />
+                          <small style={{ color: '#d97706' }}>
+                            <i className="bi bi-lock me-1"></i>
+                            Thème défini par l'exercice de lecture.
+                          </small>
+                        </>
+                      ) : (
+                        <>
+                          {/* Theme suggestions based on level - only if no lecture */}
+                          {(() => {
+                            const levelData = lectureThemesData.find((item: any) => item.niveau === level);
+                            const allThemes = levelData?.themes || [];
+                            
+                            return allThemes.length > 0 ? (
+                              <div className="mb-2">
+                                <small className="text-muted mb-2">
+                                  <i className="bi bi-lightbulb me-1"></i>
+                                  Suggestions :
+                                </small>
+                                <div className="d-flex flex-wrap gap-2 mb-2">
+                                  {allThemes.map((themeObj: any, index: number) => (
+                                    <Badge
+                                      key={index}
+                                      bg="light"
+                                      text="dark"
+                                      className="border"
+                                      style={{ 
+                                        cursor: 'pointer',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'normal',
+                                        padding: '0.3rem 0.6rem',
+                                        transition: 'all 0.2s ease',
+                                        backgroundColor: ficheTheme === themeObj.theme ? '#fffbeb' : '#f8f9fa',
+                                        borderColor: ficheTheme === themeObj.theme ? '#fbbf24' : '#dee2e6',
+                                        color: ficheTheme === themeObj.theme ? '#d97706' : '#212529'
+                                      }}
+                                      onClick={() => setFicheTheme(themeObj.theme)}
+                                      title={themeObj.description}
+                                    >
+                                      {themeObj.theme}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null;
+                          })()}
+                          
+                          {/* Custom theme input - only if no lecture */}
+                          <input
+                            type="text"
+                            className={`form-control form-control-sm ${!ficheTheme.trim() ? 'border-danger' : ''}`}
+                            placeholder={!ficheTheme.trim() ? "Veuillez saisir un thème" : "Thème personnalisé..."}
+                            value={ficheTheme}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value.length <= 60) {
+                                setFicheTheme(value);
+                              }
+                            }}
+                            onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
+                            maxLength={60}
+                            style={{ 
+                              fontSize: '0.9rem',
+                              backgroundColor: ficheTheme.trim() ? '#fffbeb' : 'white',
+                              borderColor: ficheTheme.trim() ? '#fbbf24' : undefined
+                            }}
+                          />
+                          <small className="text-muted">
+                            {ficheTheme.length}/60 caractères
+                          </small>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Word List */}
+                    <div>
+                      {(() => {
+                        // Check if orthographe with dictée is selected
+                        const hasDictee = selectedTypes.includes("orthographe") && 
+                          exerciceTypeParams.orthographe?.words?.startsWith("#dictee,");
+                        
+                        // Try to match the dictée words with a word list
+                        let matchedListName: string | null = null;
+                        if (hasDictee) {
+                          const dicteeWords = exerciceTypeParams.orthographe?.words?.replace("#dictee,", "").trim();
+                          const dicteeWordsArray = dicteeWords?.split(',').map(w => w.trim()).sort();
+                          
+                          // Check each word list to see if it matches
+                          for (const [listName, words] of Object.entries(wordLists)) {
+                            const listWordsArray = words.map(w => w.trim()).sort();
+                            if (JSON.stringify(dicteeWordsArray) === JSON.stringify(listWordsArray)) {
+                              matchedListName = listName;
+                              break;
+                            }
+                          }
+                        }
+                        
+                        return (
+                          <div>
+                            <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
+                              Liste de mots <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
+                            </label>
+                            {hasDictee ? (
+                              <div>
+                                {matchedListName ? (
+                                  <div
+                                    className="p-2"
+                                    style={{
+                                      backgroundColor: "#fffbeb",
+                                      borderRadius: "6px",
+                                      border: "1px solid #fbbf24",
+                                    }}
+                                  >
+                                    <small style={{ color: "#d97706", fontWeight: "500", fontSize: '0.85rem' }}>
+                                      <i className="bi bi-check-circle-fill me-1"></i>
+                                      Liste chargée: <strong>{matchedListName}</strong> ({wordLists[matchedListName].length} mots)
+                                    </small>
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    value="Définie par la dictée personnalisée"
+                                    readOnly
+                                    disabled
+                                    style={{ fontSize: '0.85rem', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                                  />
+                                )}
+                                <small className="text-muted" style={{ fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                                  <i className="bi bi-lock me-1"></i>
+                                  Définie par l'orthographe
+                                </small>
+                              </div>
+                            ) : (
+                              <div>
+                                <WordListSelector
+                                  selectedListName={previewWordList}
+                                  onSelectList={handlePreviewWordListSelect}
+                                  label=""
+                                  showCreateButton={true}
+                                  compact={true}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </Col>
+                </Row>
               </div>
             )}
           </Modal.Body>

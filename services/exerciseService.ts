@@ -44,7 +44,7 @@ export const exerciseService = {  // Generate exercises
       // Call the real backend endpoint with userId in path
       // Use longer timeout for exercise generation since it can take 15-20 seconds
       const response = await api.post(`/api/education/exercises/generate/${userId}`, request, {
-        timeout: 60000 // 60 seconds timeout instead of default 10 seconds
+        timeout: 90000 // 90 seconds (1m30) timeout instead of default 10 seconds
       });
       console.log('Full HTTP response:', response);
       console.log('Response status:', response.status);
@@ -86,18 +86,27 @@ export const exerciseService = {  // Generate exercises
       console.error('Error message:', (error as any)?.message);
       console.error('Error response:', (error as any)?.response);
       debugLog.error('Exercise generation API failed', error);
-      // Fall back to mock response for development
-      const mockSession: ExerciseSession = {
-        id: `session_${Date.now()}`,
-        subject: request.exercice_domain,
-        level: request.class_level,
-        exercise_types: request.exercice_types,
-        created_at: new Date().toISOString(),
-        status: 'completed',
-        pdf_url: '/exercice_mock.pdf'
-      };
-      debugLog.exercises('Mock exercise session (API failed)', mockSession);
-      return mockSession;
+      
+      // Check if this is a timeout error
+      const isTimeout = (error as any)?.code === 'ECONNABORTED' || 
+                       (error as any)?.message?.includes('timeout');
+      
+      // Check if this is a 500 server error
+      const is500Error = (error as any)?.response?.status === 500;
+      
+      // Re-throw the error with a user-friendly message
+      if (isTimeout) {
+        throw new Error('La génération a pris plus de temps que prévu. Veuillez regénérer une nouvelle fois. Si le problème persiste, merci de nous le signaler.');
+      }
+      
+      if (is500Error) {
+        throw new Error('La génération a échoué. Veuillez relancer une nouvelle génération et nous contacter si le problème persiste.');
+      }
+      
+      // For other errors, throw with the original message or a generic one
+      throw new Error((error as any)?.response?.data?.error_message || 
+                     (error as any)?.message || 
+                     'Une erreur est survenue lors de la génération. Veuillez réessayer.');
     }
   },
 

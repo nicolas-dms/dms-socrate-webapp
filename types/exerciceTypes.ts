@@ -165,6 +165,7 @@ export interface ExerciceGenerationRequest {
   specific_requirements?: string;
   exercice_title?: string;
   exercice_tags?: string[];
+  words?: string;
 }
 
 // Helper functions to convert UI values to backend enums
@@ -220,14 +221,25 @@ export const buildExerciceGenerationRequest = (
   specificRequirements?: string,
   exercices_by_type?: ExercicesByType,
   exercice_title?: string,
-  exercice_tags?: string[]
+  exercice_tags?: string[],
+  words?: string
 ): ExerciceGenerationRequest => {
   
   // Debug: Log the input params
   console.log('buildExerciceGenerationRequest input exercices:', exercices_by_type);
 
+  // Check if there's a lecture exercise with a specific theme - if so, it overrides the global theme
+  let finalTheme = theme || "Exercices généraux";
+  if (exercices_by_type?.lecture && exercices_by_type.lecture.length > 0) {
+    const lectureTheme = exercices_by_type.lecture[0]?.params?.theme;
+    if (lectureTheme) {
+      finalTheme = lectureTheme;
+      console.log('🎯 Lecture theme overrides global theme:', finalTheme);
+    }
+  }
+
   return {
-    theme: theme || "Exercices généraux",
+    theme: finalTheme,
     class_level: convertLevelToBackend(level),
     exercice_domain: domain,
     exercice_time: convertTimeToBackend(duration),
@@ -235,6 +247,7 @@ export const buildExerciceGenerationRequest = (
     exercices_by_type: exercices_by_type,
     specific_requirements: specificRequirements,
     exercice_title: exercice_title,
-    exercice_tags: exercice_tags
+    exercice_tags: exercice_tags,
+    words: words
   };
 };

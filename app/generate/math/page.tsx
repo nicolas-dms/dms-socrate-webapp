@@ -1338,82 +1338,89 @@ export default function GenerateMathPage() {
         </Row>
 
         {/* Preview Modal */}
-        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered>
+        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered size="xl">
           <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
             <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
               Aperçu de votre fiche
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body style={{ padding: '1.5rem' }}>
+          <Modal.Body style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
             <div>
-              {/* Basic Information - Compact */}
-              <div className="d-flex gap-3 mb-3">
-                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                  <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
-                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                    {level}
-                  </Badge>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                  <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
-                  <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
-                    {duration}
-                  </Badge>
-                </div>
-              </div>
+              {/* Top Row: Basic Info + Exercises */}
+              <Row className="mb-3">
+                {/* Left Column: Basic Info */}
+                <Col md={4}>
+                  <div className="mb-2">
+                    <div style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
+                      <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                        {level}
+                      </Badge>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                      <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
+                      <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                        {duration}
+                      </Badge>
+                    </div>
+                  </div>
+                </Col>
 
-              {/* Selected Exercises - Compact List with Labels */}
-              <div className="mb-3">
-                <h6 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#495057', marginBottom: '0.75rem' }}>
-                  Exercices sélectionnés
-                </h6>
-                <div style={{ fontSize: '0.85rem' }}>
-                  {selectedTypes.map((type, index) => {
-                    const exerciseInfo = mathDomains.find(domain => domain.key === type);
-                    return (
-                      <div 
-                        key={type} 
-                        style={{ 
-                          padding: '0.5rem 0',
-                          borderBottom: index < selectedTypes.length - 1 ? '1px solid #f0f0f0' : 'none'
-                        }}
-                      >
-                        <div style={{ color: '#2c3e50', fontWeight: '500', marginBottom: '0.25rem' }}>
-                          {exerciseInfo?.label}
-                        </div>
-                        <div style={{ color: '#6c757d', fontSize: '0.8rem', paddingLeft: '1rem' }}>
-                          {getConfiguredExerciseLabels(type)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                {/* Right Column: Exercises */}
+                <Col md={8}>
+                  <div>
+                    <h6 style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '0.5rem' }}>
+                      Exercices sélectionnés
+                    </h6>
+                    <div style={{ fontSize: '0.8rem', maxHeight: '200px', overflowY: 'auto' }}>
+                      {selectedTypes.map((type, index) => {
+                        const exerciseInfo = mathDomains.find(domain => domain.key === type);
+                        return (
+                          <div 
+                            key={type} 
+                            style={{ 
+                              padding: '0.4rem 0',
+                              borderBottom: index < selectedTypes.length - 1 ? '1px solid #f0f0f0' : 'none'
+                            }}
+                          >
+                            <div style={{ color: '#2c3e50', fontWeight: '500', fontSize: '0.85rem' }}>
+                              {exerciseInfo?.label}
+                            </div>
+                            <div style={{ color: '#6c757d', fontSize: '0.75rem', paddingLeft: '1rem' }}>
+                              {getConfiguredExerciseLabels(type)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
 
-              <hr style={{ margin: '1rem 0', borderTop: '1px solid #e9ecef' }} />
+              <hr style={{ margin: '0.75rem 0', borderTop: '1px solid #e9ecef' }} />
 
-              {/* Tags Input */}
-              <div className="mb-3">
+              {/* Bottom Row: Tags */}
+              <div>
                 <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
                   Tags <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
                 </label>
                 <div className="d-flex gap-2 align-items-center">
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     placeholder="Ajouter un tag..."
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagInputKeyDown}
                     onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                    style={{ fontSize: '0.9rem' }}
+                    style={{ fontSize: '0.85rem' }}
                   />
                   <Button 
                     variant="outline-secondary" 
                     size="sm" 
                     onClick={addTag}
                     disabled={!tagInput.trim()}
-                    style={{ whiteSpace: 'nowrap' }}
+                    style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}
                   >
                     Ajouter
                   </Button>
@@ -1425,17 +1432,17 @@ export default function GenerateMathPage() {
                         key={tag} 
                         className="badge d-flex align-items-center gap-1" 
                         style={{ 
-                          fontSize: '0.8rem', 
+                          fontSize: '0.75rem', 
                           backgroundColor: '#e3f2fd', 
                           color: '#1976d2',
-                          padding: '0.35rem 0.6rem'
+                          padding: '0.3rem 0.5rem'
                         }}
                       >
                         {tag}
                         <button
                           type="button"
                           className="btn-close"
-                          style={{ fontSize: '0.6rem' }}
+                          style={{ fontSize: '0.5rem' }}
                           onClick={() => removeTag(tag)}
                           aria-label={`Remove ${tag}`}
                         ></button>

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { authService, User } from "../services/authService";
 import { userService } from "../services/userService";
 import initializationService from "../services/initializationService";
+import { WordLists, getAllWordLists } from "../services/wordListService";
 
 interface UserPreferences {
   default_level: string;
@@ -16,11 +17,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isNewUser: boolean | null;
   userPreferences: UserPreferences;
+  wordLists: WordLists;
   login: (email: string, code: string) => Promise<{ success: boolean; isNewUser?: boolean; message?: string }>;
   sendMagicCode: (email: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateUserPreferences: (prefs: Partial<UserPreferences>) => Promise<void>;
+  updateWordLists: (lists: WordLists) => void;
+  refreshWordLists: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState<boolean | null>(null);
+  const [wordLists, setWordLists] = useState<WordLists>({});
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     default_level: 'CE2',
     default_domain: 'tous',
@@ -61,6 +66,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               default_domain: prefs.default_domain || 'tous',
               default_period: prefs.default_period || '20 min'
             });
+          }
+          
+          // Load word lists (non-blocking)
+          if (initData.user.user_id) {
+            getAllWordLists(String(initData.user.user_id))
+              .then(lists => setWordLists(lists))
+              .catch(err => {
+                console.warn('Failed to load word lists on init:', err);
+                setWordLists({});
+              });
           }
         }
       } catch (error) {
@@ -131,6 +146,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
       
+      // Load word lists (non-blocking)
+      if (initData.user.user_id) {
+        getAllWordLists(String(initData.user.user_id))
+          .then(lists => setWordLists(lists))
+          .catch(err => {
+            console.warn('Failed to load word lists on login:', err);
+            setWordLists({});
+          });
+      }
+      
       return { 
         success: true, 
         isNewUser: initData.is_new_user, 
@@ -157,6 +182,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setUser(null);
       setIsNewUser(null);
+      setWordLists({});
       // Reset preferences to defaults
       setUserPreferences({
         default_level: 'CE2',
@@ -172,6 +198,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Still clear user state even if backend call fails
       setUser(null);
       setIsNewUser(null);
+      setWordLists({});
       setUserPreferences({
         default_level: 'CE2',
         default_domain: 'tous',
@@ -214,6 +241,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Update word lists in context (called after successful save)
+  const updateWordLists = (lists: WordLists): void => {
+    setWordLists(lists);
+    console.log('✅ [AuthContext] Word lists updated:', Object.keys(lists).length, 'lists');
+  };
+
+  // Refresh word lists from backend
+  const refreshWordLists = async (): Promise<void> => {
+    if (!user?.user_id) {
+      console.warn('Cannot refresh word lists: user not authenticated');
+      return;
+    }
+    
+    try {
+      const lists = await getAllWordLists(user.user_id);
+      setWordLists(lists);
+      console.log('✅ [AuthContext] Word lists refreshed:', Object.keys(lists).length, 'lists');
+    } catch (error) {
+      console.error('❌ [AuthContext] Failed to refresh word lists:', error);
+      throw error;
+    }
+  };
+
   const isAuthenticated = !!user && authService.isAuthenticated();
 
   return (    <AuthContext.Provider value={{ 
@@ -222,11 +272,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthenticated,
       isNewUser,
       userPreferences,
+      wordLists,
       login, 
       sendMagicCode,
       logout,
       refreshUser,
-      updateUserPreferences 
+      updateUserPreferences,
+      updateWordLists,
+      refreshWordLists
     }}>
       {children}
     </AuthContext.Provider>

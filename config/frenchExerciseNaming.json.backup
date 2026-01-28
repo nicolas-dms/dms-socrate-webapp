@@ -1,58 +1,76 @@
 {
   "grammaire": [
     {
-      "id": "ordre_des_mots",
-      "label": "Ordre des mots dans la phrase",
+      "id": "majuscules",
+      "label": "Majuscules et points",
       "levels": ["CP"],
-      "description": "Ordonner les mots d'une phrases simple"
+      "description": "Utilisation des majuscules et des points"
     },
     {
       "id": "masculin_feminin",
-      "label": "Masculin et Féminin",
+      "label": "Masculin/Féminin",
       "levels": ["CP", "CE1"],
       "description": "Identifier et utiliser le genre des mots"
     },
     {
       "id": "singulier_pluriel",
-      "label": "Singulier et Pluriel",
+      "label": "Singulier-Pluriel",
       "levels": ["CP", "CE1", "CE2"],
       "description": "Accords en nombre"
     },
     {
       "id": "sujet_verbe",
-      "label": "Sujet et Verbe",
-      "levels": ["CE1", "CE2"],
+      "label": "Sujet-Verbe",
+      "levels": ["CE1", "CE2", "CM1"],
       "description": "Identifier le sujet et le verbe"
     },
     {
+      "id": "actif_passif",
+      "label": "Voix active et passive",
+      "levels": ["CE1"],
+      "description": "Voix active et passive"
+    },
+    {
       "id": "noms_propres_communs",
-      "label": "Noms Propres et Communs",
+      "label": "Noms Propres/Communs",
       "levels": ["CE1"],
       "description": "Distinguer noms propres et communs"
     },
     {
       "id": "determinants",
       "label": "Les déterminants",
-      "levels": ["CE1","CE2"],
+      "levels": ["CE1"],
       "description": "Identifier et utiliser les déterminants"
     },
     {
       "id": "accord_adjectif",
-      "label": "Accord de l'adjectif",
+      "label": "Accord des adjectifs",
       "levels": ["CE2", "CM1", "CM2"],
       "description": "Accords de l'adjectif qualificatif"
     },
     {
-      "id": "complements",
+      "id": "complement",
       "label": "Compléments",
-      "levels": ["CE2", "CM1", "CM2"],
+      "levels": ["CE2", "CM2"],
       "description": "Compléments du verbe et de phrase"
     },
     {
-      "id": "nature_des_mots",
+      "id": "propositions",
+      "label": "Propositions",
+      "levels": ["CM1"],
+      "description": "Propositions indépendantes et subordonnées"
+    },
+    {
+      "id": "Nature des mots",
       "label": "Identifier la nature des mots",
-      "levels": ["CE2", "CM1", "CM2"],
+      "levels": ["CE1", "CE2", "CM1", "CM2"],
       "description": "Classer les mots selon leur nature : nom, verbe, adjectif, déterminant."
+    },
+    {
+      "id": "voix_active_passive",
+      "label": "Voix active/passive",
+      "levels": ["CM2"],
+      "description": "Transformation voix active et passive"
     }
   ],
   "conjugaison": [
@@ -211,10 +229,58 @@
       "description": "Distinguer 'sont' (verbe être) de 'son' (pronom possessif)"
     },
     {
+      "id": "pluriels",
+      "label": "Pluriels en -s, -x",
+      "levels": ["CE2"],
+      "description": "Formation des pluriels"
+    },
+    {
+      "id": "feminins",
+      "label": "Féminins des mots",
+      "levels": ["CE2"],
+      "description": "Formation du féminin"
+    },
+    {
+      "id": "accord_participe",
+      "label": "Accord du participe passé",
+      "levels": ["CM1"],
+      "description": "Règles d'accord du participe passé"
+    },
+    {
       "id": "mots_invariables",
       "label": "Mots invariables",
-      "levels": ["CE2","CM1","CM2"],
+      "levels": ["CM1"],
       "description": "Liste de mots invariables"
+    },
+    {
+      "id": "prefixes_suffixes",
+      "label": "Préfixes et suffixes",
+      "levels": ["CM1"],
+      "description": "Formation des mots par affixes"
+    },
+    {
+      "id": "accord_participe_avance",
+      "label": "Accord du participe passé avancé",
+      "levels": ["CM2"],
+      "description": "Cas complexes d'accord"
+    },
+    {
+      "id": "subjonctif",
+      "label": "Terminaisons du subjonctif",
+      "levels": ["CM2"],
+      "description": "Orthographe du subjonctif"
+    },
+    {
+      "id": "mots_complexes",
+      "label": "Orthographe des mots complexes",
+      "levels": ["CM2"],
+      "description": "Mots difficiles"
+    },
+    {
+      "id": "etymologie",
+      "label": "Étymologie et orthographe",
+      "levels": ["CM2"],
+      "description": "Origine des mots et orthographe"
     },
     {
       "id": "dictee",
@@ -307,6 +373,20 @@
       "text_type": "histoire"
     },
     {
+      "id": "lecture_dialogue",
+      "label": "Dialogue (échanges)",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Textes sous forme de dialogues entre personnages",
+      "text_type": "dialogue"
+    },
+    {
+      "id": "lecture_poeme",
+      "label": "Poème (texte rimé)",
+      "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
+      "description": "Textes poétiques avec rimes et rythme",
+      "text_type": "poeme"
+    },
+    {
       "id": "lecture_culture",
       "label": "Culture (texte informatif)",
       "levels": ["CE1", "CE2", "CM1", "CM2"],
@@ -357,7 +437,7 @@
   {
     "id": "info_explicit",
     "label": "Trouver les informations du texte",
-    "levels": ["CP", "CE1", "CE2", "CM1","CM2"],
+    "levels": ["CP", "CE1", "CE2", "CM1"],
     "description": "Repérer les informations clairement exprimées dans le texte.",
     "text_types": ["histoire", "dialogue", "culture"],
     "examples": [
@@ -367,14 +447,96 @@
     ]
   },
   {
+    "id": "ordonner_evenements",
+    "label": "Remettre l'histoire en ordre",
+    "levels": ["CP", "CE1"],
+    "description": "Ranger les événements d'une histoire dans l'ordre chronologique.",
+    "text_types": ["histoire"],
+    "examples": [
+      "Replace ces phrases dans le bon ordre.",
+      "Quelle action vient en premier ?"
+    ]
+  },
+  {
     "id": "vrai_faux",
     "label": "Vrai ou faux",
-    "levels": ["CP","CE1", "CE2", "CM1"],
+    "levels": ["CE1", "CE2", "CM1"],
     "description": "Décider si des affirmations sont vraies ou fausses d’après le texte.",
     "text_types": ["histoire", "dialogue", "culture"],
     "examples": [
       "Le personnage habite à la campagne. (Vrai/Faux)",
       "L’auteur parle d’un animal. (Vrai/Faux)"
+    ]
+  },
+  {
+    "id": "personnage_action",
+    "label": "Associer personnage et action",
+    "levels": ["CE1", "CE2"],
+    "description": "Relier les personnages aux actions qu’ils accomplissent ou aux paroles qu’ils prononcent.",
+    "text_types": ["histoire", "dialogue"],
+    "examples": [
+      "Qui dit cette phrase ?",
+      "Que fait Léa dans cette scène ?"
+    ]
+  },
+  {
+    "id": "repere_inference",
+    "label": "Repérer et déduire",
+    "levels": ["CE2", "CM1", "CM2"],
+    "description": "Faire des inférences simples à partir d'indices présents dans le texte.",
+    "text_types": ["histoire", "dialogue", "culture"],
+    "examples": [
+      "Pourquoi le personnage est-il triste ?",
+      "Comment sait-on qu’il a peur ?",
+      "Que peut-on déduire de cette information ?"
+    ]
+  },
+  {
+    "id": "emotion_intention",
+    "label": "Deviner les sentiments ou intentions",
+    "levels": ["CM1", "CM2"],
+    "description": "Comprendre les émotions ou intentions implicites des personnages.",
+    "text_types": ["histoire", "dialogue", "poesie"],
+    "examples": [
+      "Que ressent le personnage à la fin ?",
+      "Pourquoi ne dit-il pas la vérité ?",
+      "Que veut exprimer l’auteur dans ce passage ?"
+    ]
+  },
+  {
+    "id": "theme_morale",
+    "label": "Identifier le thème ou la morale",
+    "levels": ["CM1", "CM2"],
+    "description": "Comprendre le message principal, la morale ou le thème du texte.",
+    "text_types": ["histoire", "poesie", "culture"],
+    "examples": [
+      "Quelle est la morale de cette histoire ?",
+      "Que veut nous apprendre ce texte ?",
+      "Quel est le message principal ?"
+    ]
+  },
+  {
+    "id": "point_de_vue",
+    "label": "Analyser le point de vue",
+    "levels": ["CM2"],
+    "description": "Identifier le narrateur, son rôle et son point de vue sur l’histoire.",
+    "text_types": ["histoire", "dialogue"],
+    "examples": [
+      "Qui raconte l’histoire ?",
+      "Est-ce que le narrateur est un personnage ?",
+      "Comment le narrateur voit-il les événements ?"
+    ]
+  },
+  {
+    "id": "comparer_passages",
+    "label": "Comparer deux passages",
+    "levels": ["CM2"],
+    "description": "Comparer deux textes ou extraits pour repérer ressemblances, différences ou évolutions.",
+    "text_types": ["histoire", "poesie", "culture"],
+    "examples": [
+      "Ces deux poèmes parlent-ils du même sujet ?",
+      "Comment évolue le personnage d’un passage à l’autre ?",
+      "Qu’est-ce qui change entre ces deux descriptions ?"
     ]
   },
   {

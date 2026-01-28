@@ -2,16 +2,16 @@
   {
     "niveau": "CP",
     "themes": [
-      { "theme": "Les animaux de la ferme", "types_de_textes": ["histoire", "poeme"], "description": "Découverte des animaux familiers et de leurs sons.", "tags": ["animaux", "ferme", "vie quotidienne"] },
-      { "theme": "L'école", "types_de_textes": ["histoire", "dialogue"], "description": "Histoires et échanges autour de la vie à l'école.", "tags": ["école", "élèves", "enseignant"] },
-      { "theme": "Les saisons", "types_de_textes": ["poeme", "culture"], "description": "Découverte des quatre saisons et de la nature.", "tags": ["nature", "temps", "météo"] },
-      { "theme": "La famille", "types_de_textes": ["dialogue", "histoire"], "description": "Textes sur la vie familiale et les liens affectifs.", "tags": ["famille", "parents", "enfants"] },
-      { "theme": "Les couleurs", "types_de_textes": ["poeme"], "description": "Jeux de rimes et d'images autour des couleurs.", "tags": ["couleurs", "vocabulaire", "perception"] },
-      { "theme": "Les émotions", "types_de_textes": ["histoire", "dialogue"], "description": "Exprimer et reconnaître les émotions.", "tags": ["émotions", "sentiments", "expression"] },
-      { "theme": "Les fêtes", "types_de_textes": ["histoire", "poeme"], "description": "Noël, Pâques et autres fêtes racontées aux enfants.", "tags": ["fêtes", "célébrations", "traditions"] },
-      { "theme": "Les animaux sauvages", "types_de_textes": ["histoire", "culture"], "description": "Découverte du monde animal à travers de petits récits.", "tags": ["animaux", "nature", "exploration"] },
-      { "theme": "Le corps humain", "types_de_textes": ["culture"], "description": "Découverte des parties du corps et des cinq sens.", "tags": ["corps", "santé", "sciences"] },
-      { "theme": "Les contes classiques", "types_de_textes": ["histoire"], "description": "Histoires inspirées de Perrault ou Andersen.", "tags": ["contes", "classiques", "imaginaire"] }
+      { "theme": "Les animaux de la ferme", "types_de_textes": ["syllabique", "histoire", "poeme"], "description": "Découverte des animaux familiers et de leurs sons.", "tags": ["animaux", "ferme", "vie quotidienne"] },
+      { "theme": "L'école", "types_de_textes": ["syllabique", "histoire", "dialogue"], "description": "Histoires et échanges autour de la vie à l'école.", "tags": ["école", "élèves", "enseignant"] },
+      { "theme": "Les saisons", "types_de_textes": ["syllabique", "poeme", "culture"], "description": "Découverte des quatre saisons et de la nature.", "tags": ["nature", "temps", "météo"] },
+      { "theme": "La famille", "types_de_textes": ["syllabique", "dialogue", "histoire"], "description": "Textes sur la vie familiale et les liens affectifs.", "tags": ["famille", "parents", "enfants"] },
+      { "theme": "Les couleurs", "types_de_textes": ["syllabique", "poeme"], "description": "Jeux de rimes et d'images autour des couleurs.", "tags": ["couleurs", "vocabulaire", "perception"] },
+      { "theme": "Les émotions", "types_de_textes": ["syllabique", "histoire", "dialogue"], "description": "Exprimer et reconnaître les émotions.", "tags": ["émotions", "sentiments", "expression"] },
+      { "theme": "Les fêtes", "types_de_textes": ["syllabique", "histoire", "poeme"], "description": "Noël, Pâques et autres fêtes racontées aux enfants.", "tags": ["fêtes", "célébrations", "traditions"] },
+      { "theme": "Les animaux sauvages", "types_de_textes": ["syllabique", "histoire", "culture"], "description": "Découverte du monde animal à travers de petits récits.", "tags": ["animaux", "nature", "exploration"] },
+      { "theme": "Le corps humain", "types_de_textes": ["syllabique", "culture"], "description": "Découverte des parties du corps et des cinq sens.", "tags": ["corps", "santé", "sciences"] },
+      { "theme": "Les contes classiques", "types_de_textes": ["syllabique", "histoire"], "description": "Histoires inspirées de Perrault ou Andersen.", "tags": ["contes", "classiques", "imaginaire"] }
     ]
   },
   {

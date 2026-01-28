@@ -67,9 +67,7 @@ export default function LectureModal({
   const getStyleOptionsByLevel = (level: string) => {
     const allOptions = [
       { value: "histoire", label: "Histoire", icon: "📖" },
-      { value: "dialogue", label: "Dialogue", icon: "💬" },
-      { value: "culture", label: "Culture", icon: "🏛️" },
-      { value: "poeme", label: "Poème", icon: "✍️" }
+      { value: "culture", label: "Culture & découverte", icon: "🏛️" }
     ];
 
     const cpSpecialOption = { value: "syllabique", label: "Lecture syllabique", icon: "🔤" };
@@ -78,10 +76,10 @@ export default function LectureModal({
       case "CP":
         return [
           cpSpecialOption,
-          ...allOptions.filter(opt => ["histoire", "dialogue", "poeme"].includes(opt.value))
+          ...allOptions.filter(opt => ["histoire"].includes(opt.value))
         ];
       case "CE1":
-        return allOptions.filter(opt => ["histoire", "dialogue", "poeme", "culture"].includes(opt.value));
+        return allOptions.filter(opt => ["histoire", "culture"].includes(opt.value));
       case "CE2":
         return allOptions;
       case "CM1":

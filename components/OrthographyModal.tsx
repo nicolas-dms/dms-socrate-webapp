@@ -3,6 +3,9 @@ import { useState, useEffect, useMemo } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { formatExercisesForModal } from '../types/frenchExerciseNaming';
+import WordListSelector from './WordListSelector';
+import { formatWordsToString } from '../services/wordListService';
+import { useAuth } from '../context/AuthContext';
 
 export interface OrthographyParams {
   words: string;
@@ -22,15 +25,17 @@ export default function OrthographyModal({
   onHide, 
   onSave, 
   initialParams,
-  level 
+  level
 }: OrthographyModalProps) {
   const { t } = useTranslation();
+  const { wordLists } = useAuth();
   
   // Load orthography rules from configuration - memoized to prevent infinite loops
   const orthographyRules = useMemo(() => formatExercisesForModal('orthographe', level), [level]);
   
   const [customWords, setCustomWords] = useState("");
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
+  const [selectedWordList, setSelectedWordList] = useState<string>("");
   
   useEffect(() => {
     if (initialParams) {
@@ -59,9 +64,20 @@ export default function OrthographyModal({
         // Deselecting dictée
         setSelectedRules(prev => prev.filter(r => r !== ruleKey));
         setCustomWords("");
+        setSelectedWordList("");
       } else {
-        // Selecting dictée - allow multiple selection
+        // Selecting dictée - automatically load first word list if available
         setSelectedRules(prev => [...prev, ruleKey]);
+        
+        // Auto-select first word list if exists
+        const wordListNames = Object.keys(wordLists);
+        if (wordListNames.length > 0) {
+          const firstListName = wordListNames[0];
+          const firstListWords = wordLists[firstListName];
+          setSelectedWordList(firstListName);
+          setCustomWords(formatWordsToString(firstListWords));
+          console.log('Auto-selected first word list:', firstListName, firstListWords);
+        }
       }
     } else {
       // Regular rule toggle - allow multiple selection
@@ -110,9 +126,15 @@ export default function OrthographyModal({
     onHide();
   };
 
+  const handleWordListSelect = (listName: string, words: string[]) => {
+    setSelectedWordList(listName);
+    setCustomWords(formatWordsToString(words));
+  };
+
   const handleReset = () => {
     setCustomWords("");
     setSelectedRules([]);
+    setSelectedWordList("");
   };
 
   return (
@@ -223,6 +245,17 @@ export default function OrthographyModal({
                 borderRadius: '10px',
                 border: '1px solid #fcd34d'
               }}>
+                {/* Word List Selector */}
+                <div className="mb-3">
+                  <WordListSelector
+                    selectedListName={selectedWordList}
+                    onSelectList={handleWordListSelect}
+                    label="Charger une liste de mots"
+                    showCreateButton={true}
+                    compact={true}
+                  />
+                </div>
+
                 <Form.Group className="mb-0">
                   <Form.Label className="fw-semibold mb-2" style={{ color: '#374151' }}>
                     <i className="bi bi-pencil-fill me-2" style={{ color: '#fbbf24' }}></i>
