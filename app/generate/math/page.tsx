@@ -1338,28 +1338,28 @@ export default function GenerateMathPage() {
         </Row>
 
         {/* Preview Modal */}
-        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered size="xl">
-          <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
-            <Modal.Title className="w-100 text-center" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50' }}>
+        <Modal show={showPreviewModal} onHide={handleClosePreviewModal} centered>
+          <Modal.Header closeButton style={{ borderBottom: '1px solid #e9ecef', padding: '0.5rem 0.75rem' }}>
+            <Modal.Title className="w-100 text-center" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#2c3e50' }}>
               Aperçu de votre fiche
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+          <Modal.Body style={{ padding: '0.75rem', maxHeight: '60vh', overflowY: 'auto' }}>
             <div>
               {/* Top Row: Basic Info + Exercises */}
-              <Row className="mb-3">
+              <Row className="mb-1">
                 {/* Left Column: Basic Info */}
                 <Col md={4}>
-                  <div className="mb-2">
-                    <div style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '0.5rem' }}>
+                  <div className="mb-1">
+                    <div style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '0.25rem' }}>
                       <strong style={{ color: '#495057' }}>Niveau:</strong>{' '}
-                      <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                      <Badge bg="light" text="dark" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
                         {level}
                       </Badge>
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>
                       <strong style={{ color: '#495057' }}>Durée:</strong>{' '}
-                      <Badge bg="light" text="dark" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                      <Badge bg="light" text="dark" style={{ fontSize: '0.7rem', fontWeight: '500' }}>
                         {duration}
                       </Badge>
                     </div>
@@ -1369,24 +1369,24 @@ export default function GenerateMathPage() {
                 {/* Right Column: Exercises */}
                 <Col md={8}>
                   <div>
-                    <h6 style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057', marginBottom: '0.5rem' }}>
+                    <h6 style={{ fontSize: '0.75rem', fontWeight: '600', color: '#495057', marginBottom: '0.25rem' }}>
                       Exercices sélectionnés
                     </h6>
-                    <div style={{ fontSize: '0.8rem', maxHeight: '200px', overflowY: 'auto' }}>
+                    <div style={{ fontSize: '0.7rem', maxHeight: '120px', overflowY: 'auto' }}>
                       {selectedTypes.map((type, index) => {
                         const exerciseInfo = mathDomains.find(domain => domain.key === type);
                         return (
                           <div 
                             key={type} 
                             style={{ 
-                              padding: '0.4rem 0',
+                              padding: '0.2rem 0',
                               borderBottom: index < selectedTypes.length - 1 ? '1px solid #f0f0f0' : 'none'
                             }}
                           >
-                            <div style={{ color: '#2c3e50', fontWeight: '500', fontSize: '0.85rem' }}>
+                            <div style={{ color: '#2c3e50', fontWeight: '500', fontSize: '0.75rem' }}>
                               {exerciseInfo?.label}
                             </div>
-                            <div style={{ color: '#6c757d', fontSize: '0.75rem', paddingLeft: '1rem' }}>
+                            <div style={{ color: '#6c757d', fontSize: '0.65rem', paddingLeft: '0.5rem' }}>
                               {getConfiguredExerciseLabels(type)}
                             </div>
                           </div>
@@ -1397,11 +1397,11 @@ export default function GenerateMathPage() {
                 </Col>
               </Row>
 
-              <hr style={{ margin: '0.75rem 0', borderTop: '1px solid #e9ecef' }} />
+              <hr style={{ margin: '0.4rem 0', borderTop: '1px solid #e9ecef' }} />
 
               {/* Bottom Row: Tags */}
               <div>
-                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
+                <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: '600', color: '#495057', marginBottom: '0.25rem' }}>
                   Tags <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
                 </label>
                 <div className="d-flex gap-2 align-items-center">
@@ -1413,36 +1413,36 @@ export default function GenerateMathPage() {
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagInputKeyDown}
                     onFocus={(e) => { e.preventDefault(); window.scrollTo(0, 0); }}
-                    style={{ fontSize: '0.85rem' }}
+                    style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
                   />
                   <Button 
                     variant="outline-secondary" 
                     size="sm" 
                     onClick={addTag}
                     disabled={!tagInput.trim()}
-                    style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}
+                    style={{ whiteSpace: 'nowrap', fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
                   >
                     Ajouter
                   </Button>
                 </div>
                 {ficheTags.length > 0 && (
-                  <div className="d-flex gap-2 flex-wrap mt-2">
+                  <div className="d-flex gap-1 flex-wrap mt-1">
                     {ficheTags.map(tag => (
                       <span 
                         key={tag} 
                         className="badge d-flex align-items-center gap-1" 
                         style={{ 
-                          fontSize: '0.75rem', 
+                          fontSize: '0.65rem', 
                           backgroundColor: '#e3f2fd', 
                           color: '#1976d2',
-                          padding: '0.3rem 0.5rem'
+                          padding: '0.2rem 0.35rem'
                         }}
                       >
                         {tag}
                         <button
                           type="button"
                           className="btn-close"
-                          style={{ fontSize: '0.5rem' }}
+                          style={{ fontSize: '0.4rem' }}
                           onClick={() => removeTag(tag)}
                           aria-label={`Remove ${tag}`}
                         ></button>
@@ -1453,11 +1453,11 @@ export default function GenerateMathPage() {
               </div>
             </div>
           </Modal.Body>
-          <Modal.Footer style={{ borderTop: '1px solid #e9ecef', padding: '1rem 1.5rem' }}>
+          <Modal.Footer style={{ borderTop: '1px solid #e9ecef', padding: '0.5rem 0.75rem' }}>
             <Button 
               variant="outline-secondary" 
               onClick={handleClosePreviewModal}
-              style={{ fontSize: '0.9rem' }}
+              style={{ fontSize: '0.8rem', padding: '0.375rem 0.75rem' }}
             >
               Modifier
             </Button>
@@ -1467,9 +1467,10 @@ export default function GenerateMathPage() {
               style={{
                 background: canGenerateMore() ? 'linear-gradient(135deg, #60a5fa, #3b82f6)' : undefined,
                 border: 'none',
-                fontSize: '0.9rem',
+                fontSize: '0.8rem',
                 fontWeight: '500',
-                color: 'white'
+                color: 'white',
+                padding: '0.375rem 0.75rem'
               }}
             >
               {!canGenerateMore() ? 'Limite atteinte' : 'Confirmer et générer'}

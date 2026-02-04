@@ -71,7 +71,7 @@
     {
       "id": "division",
       "label": "Division",
-      "levels": ["CE1", "CE2","CM1","CM2"],
+      "levels": ["CE2","CM1","CM2"],
       "description": "Divisions"
     },
     {
