@@ -366,8 +366,8 @@ export default function GenerateFrenchPage() {
             // Count orthography exercises - each rule is a separate exercise + dictée if present
             let orthographyCount = 0;
             
-            // Count custom words (dictée) if present
-            if (params.words && params.words.startsWith('#dictee,')) {
+            // Count custom words (dictée or dictée inverse) if present
+            if (params.words && (params.words.startsWith('#dictee,') || params.words.startsWith('#dictee_inverse,'))) {
               orthographyCount += 1;
             }
             
@@ -469,7 +469,7 @@ export default function GenerateFrenchPage() {
             break;
           case 'orthographe':
             let orthographyCount = 0;
-            if (params.words && params.words.startsWith('#dictee,')) {
+            if (params.words && (params.words.startsWith('#dictee,') || params.words.startsWith('#dictee_inverse,'))) {
               orthographyCount += 1;
             }
             if (params.rules) {
@@ -881,10 +881,13 @@ export default function GenerateFrenchPage() {
       // Get word list if selected in preview modal OR from dictée personnalisée
       let wordListString: string | undefined = undefined;
       
-      // Check if dictée personnalisée has words
+      // Check if dictée personnalisée or dictée inverse has words
       if (exerciceTypeParams.orthographe?.words && exerciceTypeParams.orthographe.words.startsWith('#dictee,')) {
         wordListString = exerciceTypeParams.orthographe.words.replace('#dictee,', '');
         console.log('Word list from dictée personnalisée:', wordListString);
+      } else if (exerciceTypeParams.orthographe?.words && exerciceTypeParams.orthographe.words.startsWith('#dictee_inverse,')) {
+        wordListString = exerciceTypeParams.orthographe.words.replace('#dictee_inverse,', '');
+        console.log('Word list from dictée inverse:', wordListString);
       }
       // Otherwise check if word list selected in preview modal (and not already from dictée)
       else if (previewWordList && wordLists[previewWordList]) {
@@ -964,11 +967,19 @@ export default function GenerateFrenchPage() {
           if (exerciceTypeParams.orthographe) {
             const orthographyExercises: ExerciseWithParams[] = [];
             
-            // Handle custom words (dictée) - check if words start with #dictee
+            // Handle custom words (dictée or dictée inverse) - check if words start with #dictee or #dictee_inverse
             if (exerciceTypeParams.orthographe.words && exerciceTypeParams.orthographe.words.startsWith('#dictee,')) {
               const customWords = exerciceTypeParams.orthographe.words.replace('#dictee,', '');
               orthographyExercises.push({
                 exercice_id: 'dictee',
+                params: {
+                  words: customWords
+                }
+              });
+            } else if (exerciceTypeParams.orthographe.words && exerciceTypeParams.orthographe.words.startsWith('#dictee_inverse,')) {
+              const customWords = exerciceTypeParams.orthographe.words.replace('#dictee_inverse,', '');
+              orthographyExercises.push({
+                exercice_id: 'dictee_inverse',
                 params: {
                   words: customWords
                 }
@@ -2085,14 +2096,17 @@ export default function GenerateFrenchPage() {
                     {/* Word List */}
                     <div>
                       {(() => {
-                        // Check if orthographe with dictée is selected
+                        // Check if orthographe with dictée or dictée inverse is selected
                         const hasDictee = selectedTypes.includes("orthographe") && 
                           exerciceTypeParams.orthographe?.words?.startsWith("#dictee,");
+                        const hasDicteeInverse = selectedTypes.includes("orthographe") && 
+                          exerciceTypeParams.orthographe?.words?.startsWith("#dictee_inverse,");
                         
                         // Try to match the dictée words with a word list
                         let matchedListName: string | null = null;
-                        if (hasDictee) {
-                          const dicteeWords = exerciceTypeParams.orthographe?.words?.replace("#dictee,", "").trim();
+                        if (hasDictee || hasDicteeInverse) {
+                          const prefix = hasDictee ? "#dictee," : "#dictee_inverse,";
+                          const dicteeWords = exerciceTypeParams.orthographe?.words?.replace(prefix, "").trim();
                           const dicteeWordsArray = dicteeWords?.split(',').map((w: string) => w.trim()).sort();
                           
                           // Check each word list to see if it matches
@@ -2110,7 +2124,7 @@ export default function GenerateFrenchPage() {
                             <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '600', color: '#495057' }}>
                               Liste de mots <span style={{ color: '#6c757d', fontWeight: '400' }}>(optionnel)</span>
                             </label>
-                            {hasDictee ? (
+                            {(hasDictee || hasDicteeInverse) ? (
                               <div>
                                 {matchedListName ? (
                                   <div

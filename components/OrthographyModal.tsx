@@ -39,11 +39,15 @@ export default function OrthographyModal({
   
   useEffect(() => {
     if (initialParams) {
-      // Check if words contain the #dictee prefix
+      // Check if words contain the #dictee or #dictee_inverse prefix
       if (initialParams.words && initialParams.words.startsWith("#dictee,")) {
         const wordsWithoutPrefix = initialParams.words.replace("#dictee,", "");
         setCustomWords(wordsWithoutPrefix);
         setSelectedRules(["dictee"]);
+      } else if (initialParams.words && initialParams.words.startsWith("#dictee_inverse,")) {
+        const wordsWithoutPrefix = initialParams.words.replace("#dictee_inverse,", "");
+        setCustomWords(wordsWithoutPrefix);
+        setSelectedRules(["dictee_inverse"]);
       } else {
         setCustomWords("");
         setSelectedRules(initialParams.rules ? initialParams.rules.split(",") : []);
@@ -59,15 +63,22 @@ export default function OrthographyModal({
     const rule = orthographyRules.find(r => r.key === ruleKey);
     
     if (rule?.isCustom) {
-      // If selecting custom dictée
+      // If selecting custom dictée or dictée inverse
       if (selectedRules.includes(ruleKey)) {
-        // Deselecting dictée
+        // Deselecting this custom exercise
         setSelectedRules(prev => prev.filter(r => r !== ruleKey));
         setCustomWords("");
         setSelectedWordList("");
       } else {
-        // Selecting dictée - automatically load first word list if available
-        setSelectedRules(prev => [...prev, ruleKey]);
+        // Selecting a custom exercise - remove any other custom exercises first
+        setSelectedRules(prev => {
+          // Filter out any other custom exercises
+          const nonCustomRules = prev.filter(r => {
+            const existingRule = orthographyRules.find(or => or.key === r);
+            return !existingRule?.isCustom;
+          });
+          return [...nonCustomRules, ruleKey];
+        });
         
         // Auto-select first word list if exists
         const wordListNames = Object.keys(wordLists);
@@ -95,9 +106,11 @@ export default function OrthographyModal({
       return;
     }
 
-    // Check if dictée is selected and if custom words are provided
+    // Check if dictée or dictee_inverse is selected and if custom words are provided
     const hasDictee = selectedRules.includes("dictee");
-    if (hasDictee && !customWords.trim()) {
+    const hasDicteeInverse = selectedRules.includes("dictee_inverse");
+    
+    if ((hasDictee || hasDicteeInverse) && !customWords.trim()) {
       alert("Veuillez saisir des mots personnalisés pour la dictée");
       return;
     }
@@ -110,6 +123,12 @@ export default function OrthographyModal({
       wordsValue = `#dictee,${customWords.trim()}`;
       // Include other rules (excluding dictée) in the rules parameter
       const otherRules = selectedRules.filter(rule => rule !== "dictee");
+      rulesValue = otherRules.join(",");
+    } else if (hasDicteeInverse) {
+      // If dictée inverse is selected, include the prefix and custom words
+      wordsValue = `#dictee_inverse,${customWords.trim()}`;
+      // Include other rules (excluding dictée_inverse) in the rules parameter
+      const otherRules = selectedRules.filter(rule => rule !== "dictee_inverse");
       rulesValue = otherRules.join(",");
     } else {
       // Only regular rules selected
@@ -238,8 +257,8 @@ export default function OrthographyModal({
               </small>
             </div>
             
-            {/* Custom Words Input - Show when dictée is selected */}
-            {selectedRules.includes("dictee") && (
+            {/* Custom Words Input - Show when dictée or dictée inverse is selected */}
+            {(selectedRules.includes("dictee") || selectedRules.includes("dictee_inverse")) && (
               <div className="mt-3 p-3" style={{ 
                 backgroundColor: '#fffbeb',
                 borderRadius: '10px',

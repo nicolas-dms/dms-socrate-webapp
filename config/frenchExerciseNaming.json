@@ -224,10 +224,11 @@
       "isCustom": true
     },
     {
-      "id": "dictee_flash",
-      "label": "Dictée Flash",
+      "id": "dictee_inverse",
+      "label": "Dictée à corriger",
       "levels": ["CP", "CE1", "CE2", "CM1", "CM2"],
-      "description": "Quelques phrases sur le thème de la fiche"
+      "description": "Quelques phrases à corriger avec des erreurs d'orthographe",
+      "isCustom": true
     }
   ],
   "lecture": [
