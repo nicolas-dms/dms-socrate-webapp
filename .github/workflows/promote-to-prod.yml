@@ -1,0 +1,112 @@
+name: Promote WebApp to Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: |
+          Image tag to promote (e.g. 20260222-1430-abc1234).
+          Leave empty to promote the image currently deployed in test.
+        required: false
+        default: ''
+      confirm:
+        description: 'Type "prod" to confirm production deployment'
+        required: true
+
+env:
+  AZURE_SUBSCRIPTION_ID: dc247650-4ab3-4b8e-bec7-2286ecf3ff7c
+  ACR_NAME: exominutesacr
+  ACR_LOGIN_SERVER: exominutesacr.azurecr.io
+  WEBAPP_IMAGE_NAME: exominutes-webapp
+
+jobs:
+
+  # ---------------------------------------------------------
+  #  PROMOTE IMAGE TO PROD
+  # ---------------------------------------------------------
+  promote-to-prod:
+    name: Promote WebApp Image to Prod
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.inputs.confirm == 'prod' }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name $ACR_NAME
+
+      # ✨ Resolve source image & pinned timestamp tag:
+      #    - If image_tag provided  → use that pinned tag directly
+      #    - If empty               → use :test from ACR (= latest build, same as what
+      #                               deploy.yml just pushed), resolve its timestamp tag
+      #                               via ACR manifest so prod ACA uses a pinned tag too
+      - name: Resolve source image
+        id: source
+        run: |
+          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
+            PINNED_TAG="${{ github.event.inputs.image_tag }}"
+            SOURCE="$ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:$PINNED_TAG"
+            echo "Using provided image tag: $SOURCE"
+          else
+            # Pull :test and find its sibling timestamp tag in ACR
+            SOURCE="$ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test"
+            echo "No tag provided — resolving :test digest from ACR..."
+            TEST_DIGEST=$(az acr manifest show-metadata \
+              --registry $ACR_NAME \
+              --name $WEBAPP_IMAGE_NAME:test \
+              --query "digest" -o tsv)
+            echo "Digest of :test → $TEST_DIGEST"
+            # Find all tags sharing that digest, pick the timestamp-shaped one
+            PINNED_TAG=$(az acr repository show-tags \
+              --name $ACR_NAME \
+              --repository $WEBAPP_IMAGE_NAME \
+              --detail --orderby time_desc \
+              --query "[?digest=='$TEST_DIGEST' && name != 'test' && name != 'prod'].name | [0]" \
+              -o tsv)
+            if [ -z "$PINNED_TAG" ]; then
+              echo "⚠️  Could not resolve pinned tag — falling back to :test"
+              PINNED_TAG="test"
+            fi
+            echo "Resolved pinned tag: $PINNED_TAG"
+          fi
+
+          echo "SOURCE_IMAGE=$ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:$PINNED_TAG" >> $GITHUB_OUTPUT
+          echo "PINNED_TAG=$PINNED_TAG" >> $GITHUB_OUTPUT
+
+      # ✨ Re-tag the pinned image as :prod in ACR (mutable pointer)
+      - name: Re-tag image as :prod
+        run: |
+          docker pull ${{ steps.source.outputs.SOURCE_IMAGE }}
+          docker tag  ${{ steps.source.outputs.SOURCE_IMAGE }} $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod
+          docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:prod
+
+      # ✨ HUMAN READABLE revision: prod-20260222-1430
+      - name: Set revision tag
+        id: tag
+        run: |
+          echo "REV_TAG=prod-$(date +%Y%m%d-%H%M)" >> $GITHUB_OUTPUT
+
+      # ✨ Deploy to prod ACA using the PINNED timestamp tag (not :prod)
+      #    so ACA revision history always shows the exact immutable image
+      - name: Deploy Prod Revision
+        run: |
+          az containerapp update \
+            --name aca-exominutes-webapp-prod \
+            --resource-group rg-exominute-prod \
+            --image $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ steps.source.outputs.PINNED_TAG }} \
+            --revision-suffix "${{ steps.tag.outputs.REV_TAG }}"
+
+      - name: Output Prod URL
+        run: |
+          URL=$(az containerapp show \
+            --name aca-exominutes-webapp-prod \
+            --resource-group rg-exominute-prod \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Prod WebApp URL: https://$URL"
+          echo "Prod Revision:   ${{ steps.tag.outputs.REV_TAG }}"
+          echo "Promoted from:   ${{ steps.source.outputs.SOURCE_IMAGE }}"
+          echo "ACR :prod tag now points to: ${{ steps.source.outputs.PINNED_TAG }}"

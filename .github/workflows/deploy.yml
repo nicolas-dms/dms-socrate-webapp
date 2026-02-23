@@ -45,14 +45,28 @@ jobs:
       - name: Login to ACR
         run: az acr login --name $ACR_NAME
 
+      - name: Load build args from env/test.env
+        id: envfile
+        run: |
+          # Parse env/test.env — skip comments, blanks, and NEXT_PUBLIC_STRIPE (comes from secret)
+          while IFS= read -r line; do
+            [[ "$line" =~ ^\s*# ]] && continue
+            [[ -z "$line" ]] && continue
+            [[ "$line" =~ ^NEXT_PUBLIC_STRIPE ]] && continue
+            echo "$line" >> $GITHUB_ENV
+          done < env/test.env
+
       - name: Build & Push WebApp Image (Test)
         run: |
           docker build \
             -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ steps.tag.outputs.IMAGE_TAG }} \
             -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test \
-            --build-arg NEXT_PUBLIC_API_URL=https://aca-exominutes-api-test.kindocean-d336a5c4.francecentral.azurecontainerapps.io \
-            --build-arg NEXT_PUBLIC_ENVIRONMENT=test \
+            --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+            --build-arg NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT \
+            --build-arg NEXT_PUBLIC_DEBUG_MODE=$NEXT_PUBLIC_DEBUG_MODE \
             --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_TEST }} \
+            --build-arg NEXT_PUBLIC_APP_VERSION=${{ steps.tag.outputs.IMAGE_TAG }} \
+            --build-arg NEXT_PUBLIC_BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
             -f Dockerfile .
 
           docker push $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ steps.tag.outputs.IMAGE_TAG }}
@@ -79,8 +93,9 @@ jobs:
           az containerapp update \
             --name aca-exominutes-webapp-test \
             --resource-group rg-exominute-test \
-            --image $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test \
+            --image $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ needs.build.outputs.image-tag }} \
             --revision-suffix "${{ needs.build.outputs.revision-tag }}"
+          echo "Deployed image tag: ${{ needs.build.outputs.image-tag }}"
 
       - name: Output Test URL
         run: |
