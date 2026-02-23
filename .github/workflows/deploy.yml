@@ -48,10 +48,11 @@ jobs:
       - name: Load build args from env/test.env
         id: envfile
         run: |
-          # Parse env/test.env — skip comments, blanks, and NEXT_PUBLIC_STRIPE (comes from secret)
+          # Parse env/test.env — skip comments, blanks, API_URL (runtime) and NEXT_PUBLIC_STRIPE (secret)
           while IFS= read -r line; do
             [[ "$line" =~ ^\s*# ]] && continue
             [[ -z "$line" ]] && continue
+            [[ "$line" =~ ^API_URL ]] && continue
             [[ "$line" =~ ^NEXT_PUBLIC_STRIPE ]] && continue
             echo "$line" >> $GITHUB_ENV
           done < env/test.env
@@ -61,7 +62,6 @@ jobs:
           docker build \
             -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:${{ steps.tag.outputs.IMAGE_TAG }} \
             -t $ACR_LOGIN_SERVER/$WEBAPP_IMAGE_NAME:test \
-            --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
             --build-arg NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT \
             --build-arg NEXT_PUBLIC_DEBUG_MODE=$NEXT_PUBLIC_DEBUG_MODE \
             --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_TEST }} \

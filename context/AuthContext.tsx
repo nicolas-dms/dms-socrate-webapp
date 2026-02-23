@@ -4,6 +4,7 @@ import { authService, User } from "../services/authService";
 import { userService } from "../services/userService";
 import initializationService from "../services/initializationService";
 import { WordLists, getAllWordLists } from "../services/wordListService";
+import { getApiUrl } from "../services/configService";
 
 interface UserPreferences {
   default_level: string;
@@ -44,6 +45,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // Pre-warm the API URL cache so all services have it ready immediately
+        await getApiUrl();
+
         if (authService.isAuthenticated()) {
           console.log('🔄 [AuthContext] Initializing session with combined endpoint...');
           const startTime = performance.now();

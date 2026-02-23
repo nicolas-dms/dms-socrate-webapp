@@ -7,7 +7,7 @@ import {
   MessageStatus
 } from '../types/message';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { getApiUrl } from './configService';
 
 class MessageService {
   /**
@@ -17,8 +17,9 @@ class MessageService {
     userEmail: string,
     messageData: SubmitMessageRequest
   ): Promise<Message> {
+    const apiUrl = await getApiUrl();
     const response = await axios.post<Message>(
-      `${API_BASE_URL}/api/messages`,
+      `${apiUrl}/api/messages`,
       messageData,
       {
         params: { user_email: userEmail }
@@ -35,8 +36,9 @@ class MessageService {
     category?: 'feedback' | 'support',
     limit: number = 50
   ): Promise<MessageListResponse> {
+    const apiUrl = await getApiUrl();
     const response = await axios.get<MessageListResponse>(
-      `${API_BASE_URL}/api/messages`,
+      `${apiUrl}/api/messages`,
       {
         params: {
           user_email: userEmail,
@@ -55,8 +57,9 @@ class MessageService {
     messageId: string,
     userEmail: string
   ): Promise<Message> {
+    const apiUrl = await getApiUrl();
     const response = await axios.get<Message>(
-      `${API_BASE_URL}/api/messages/${messageId}`,
+      `${apiUrl}/api/messages/${messageId}`,
       {
         params: { user_email: userEmail }
       }
@@ -74,8 +77,9 @@ class MessageService {
     status?: MessageStatus,
     limit: number = 100
   ): Promise<MessageListResponse> {
+    const apiUrl = await getApiUrl();
     const response = await axios.get<MessageListResponse>(
-      `${API_BASE_URL}/api/admin/support-messages`,
+      `${apiUrl}/api/admin/support-messages`,
       {
         params: { status, limit },
         headers: { 'X-Admin-Email': adminEmail }
@@ -96,8 +100,9 @@ class MessageService {
       admin_response?: string;
     }
   ): Promise<Message> {
+    const apiUrl = await getApiUrl();
     const response = await axios.put<Message>(
-      `${API_BASE_URL}/api/admin/support-messages/${messageId}`,
+      `${apiUrl}/api/admin/support-messages/${messageId}`,
       updates,
       {
         params: { user_email: userEmail },
@@ -113,8 +118,9 @@ class MessageService {
   async getSupportStatistics(
     adminEmail: string
   ): Promise<SupportStatistics> {
+    const apiUrl = await getApiUrl();
     const response = await axios.get<SupportStatistics>(
-      `${API_BASE_URL}/api/admin/support-statistics`,
+      `${apiUrl}/api/admin/support-statistics`,
       {
         headers: { 'X-Admin-Email': adminEmail }
       }
@@ -130,8 +136,9 @@ class MessageService {
     userEmail: string,
     adminEmail: string
   ): Promise<void> {
+    const apiUrl = await getApiUrl();
     await axios.delete(
-      `${API_BASE_URL}/api/admin/messages/${messageId}`,
+      `${apiUrl}/api/admin/messages/${messageId}`,
       {
         params: { user_email: userEmail },
         headers: { 'X-Admin-Email': adminEmail }

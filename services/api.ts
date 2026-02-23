@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { getApiUrlSync } from './configService';
 
-// Create axios instance with base configuration
+// Create axios instance — baseURL is overridden per-request from the cached config
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+  baseURL: 'http://localhost:8000', // overridden by request interceptor below
   // Increase default timeout to 60s to accommodate slower endpoints (e.g., auth email send)
   timeout: 60000,
   headers: {
@@ -32,9 +33,11 @@ export const tokenManager = {
   },
 };
 
-// Request interceptor to add JWT token
+// Request interceptor: set baseURL from runtime config cache + attach JWT
 api.interceptors.request.use(
   (config) => {
+    // Override baseURL with the runtime value resolved from /api/config
+    config.baseURL = getApiUrlSync();
     const token = tokenManager.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

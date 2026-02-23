@@ -3,7 +3,7 @@
  * Manages CRUD operations for user word lists
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { getApiUrl } from './configService';
 
 export interface WordLists {
   [listName: string]: string[];
@@ -14,8 +14,9 @@ export interface WordLists {
  */
 export async function getAllWordLists(userId: string): Promise<WordLists> {
   try {
+    const apiUrl = await getApiUrl();
     const response = await fetch(
-      `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}/word-lists`,
+      `${apiUrl}/api/users/${encodeURIComponent(userId)}/word-lists`,
       {
         method: "GET",
         headers: {
@@ -49,8 +50,9 @@ export async function getWordList(
   listName: string
 ): Promise<string[]> {
   try {
+    const apiUrl = await getApiUrl();
     const response = await fetch(
-      `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
+      `${apiUrl}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
       {
         method: "GET",
         headers: {
@@ -98,8 +100,9 @@ export async function createOrUpdateWordList(
       .map(w => w.trim())
       .filter(w => w.length > 0 && w.length <= 100);
 
+    const apiUrl = await getApiUrl();
     const response = await fetch(
-      `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
+      `${apiUrl}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
       {
         method: "PUT",
         headers: {
@@ -136,8 +139,9 @@ export async function addWordsToList(
       .map(w => w.trim())
       .filter(w => w.length > 0 && w.length <= 100);
 
+    const apiUrl = await getApiUrl();
     const response = await fetch(
-      `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
+      `${apiUrl}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
       {
         method: "PATCH",
         headers: {
@@ -169,8 +173,9 @@ export async function deleteWordList(
   listName: string
 ): Promise<WordLists> {
   try {
+    const apiUrl = await getApiUrl();
     const response = await fetch(
-      `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
+      `${apiUrl}/api/users/${encodeURIComponent(userId)}/word-lists/${encodeURIComponent(listName)}`,
       {
         method: "DELETE",
         headers: {

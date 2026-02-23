@@ -11,6 +11,7 @@ import SkeletonFileCard from "../../components/SkeletonFileCard";
 import EmptyState from "../../components/EmptyState";
 import { useDebounce } from "../../hooks/useDebounce";
 import styles from './sessions.module.css';
+import { getApiUrl } from '../../services/configService';
 
 // Phase 6: localStorage key for filter persistence
 const FILTERS_STORAGE_KEY = 'mesFiches_lastFilters_v1';
@@ -274,8 +275,9 @@ export default function SessionsPage() {
 
       console.log('🔍 Recherche avec filtres (debounced):', searchBody);
 
+      const apiUrl = await getApiUrl();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/search`,
+        `${apiUrl}/api/education/exercises/files/${user.user_id}/search`,
         {
           method: 'POST',
           headers: {
@@ -336,13 +338,13 @@ export default function SessionsPage() {
       // Charger le compteur total ET les fiches récentes (7 derniers jours) en parallèle
       const [countData, recentFiles] = await Promise.all([
         // Compteur total
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/count?active_only=false`)
+        getApiUrl().then(apiUrl => fetch(`${apiUrl}/api/education/exercises/files/${user.user_id}/count?active_only=false`))
           .then(res => {
             if (!res.ok) throw new Error('Erreur lors de la récupération du compteur');
             return res.json();
           }),
         // Fiches récentes (7 derniers jours)
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/by-period/week?active_only=false`)
+        getApiUrl().then(apiUrl => fetch(`${apiUrl}/api/education/exercises/files/${user.user_id}/by-period/week?active_only=false`))
           .then(res => {
             if (!res.ok) throw new Error('Erreur lors de la récupération des fiches récentes');
             return res.json();
@@ -386,8 +388,9 @@ export default function SessionsPage() {
       setShowingPeriod('all');
       
       // Charger toutes les fiches
+      const apiUrl = await getApiUrl();
       const allFiles = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/by-period/all?active_only=false`
+        `${apiUrl}/api/education/exercises/files/${user.user_id}/by-period/all?active_only=false`
       ).then(res => {
         if (!res.ok) throw new Error('Erreur lors de la récupération de toutes les fiches');
         return res.json();
@@ -414,8 +417,9 @@ export default function SessionsPage() {
       setLoadingTags(true);
       console.log('🏷️ Chargement des tags disponibles depuis le backend...');
       
+      const apiUrl = await getApiUrl();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/education/exercises/files/${user.user_id}/available-tags?active_only=false`
+        `${apiUrl}/api/education/exercises/files/${user.user_id}/available-tags?active_only=false`
       );
 
       if (!response.ok) {

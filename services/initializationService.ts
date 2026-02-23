@@ -103,10 +103,10 @@ export const initializeSession = async (token?: string): Promise<InitializationR
     // Fetch fresh data
     console.log('🔄 Fetching fresh initialization data...');
     
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const apiUrl = await (await import('./configService')).getApiUrl();
     const authToken = token || localStorage.getItem('auth_token');
     
-    const response = await fetch(`${baseURL}/api/auth/initialize`, {
+    const response = await fetch(`${apiUrl}/api/auth/initialize`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${authToken}`,

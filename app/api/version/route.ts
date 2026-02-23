@@ -5,5 +5,6 @@ export async function GET() {
     version: process.env.NEXT_PUBLIC_APP_VERSION || 'local',
     environment: process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
     builtAt: process.env.NEXT_PUBLIC_BUILD_TIME || null,
+    apiUrl: process.env.API_URL || 'http://localhost:8000',
   });
 }
