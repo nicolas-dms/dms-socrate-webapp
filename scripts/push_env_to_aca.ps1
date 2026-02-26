@@ -35,9 +35,13 @@ $acaConfig = @{
 
 $aca = $acaConfig[$Env]
 
-# Parse env file — skip comments and blank lines
+# Parse env file — skip full-line comments and blank lines,
+# and strip inline comments (e.g. "KEY=value # comment")
 $allVars = Get-Content $envFile | Where-Object {
     $_ -notmatch '^\s*#' -and $_ -notmatch '^\s*$'
+} | ForEach-Object {
+    # Strip inline comments: everything from ' #' onwards
+    $_ -replace '\s+#.*$', ''
 }
 
 # Split into runtime vs build-time vars
@@ -59,11 +63,13 @@ if ($runtimeVars.Count -eq 0) {
 }
 
 Write-Host "🚀 Pushing $($runtimeVars.Count) runtime env var(s) to ACA '$($aca.Name)'..." -ForegroundColor Cyan
+$runtimeVars | ForEach-Object { Write-Host "   $_" -ForegroundColor DarkCyan }
 
+# Pass as array — az CLI receives each KEY=VALUE as a separate argument
 az containerapp update `
     --name $aca.Name `
     --resource-group $aca.ResourceGroup `
-    --set-env-vars @runtimeVars `
+    --set-env-vars $runtimeVars `
     --query "properties.latestRevisionName" --output tsv
 
 Write-Host "✅ Done." -ForegroundColor Green
